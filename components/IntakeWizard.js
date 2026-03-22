@@ -14,6 +14,7 @@ import Allergies from './steps/Allergies';
 import SocialHistory from './steps/SocialHistory';
 import FamilyHistory from './steps/FamilyHistory';
 import ReviewOfSystems from './steps/ReviewOfSystems';
+import PROMs from './steps/PROMs';
 import FinalReview from './steps/FinalReview';
 
 // Map step index to component
@@ -29,6 +30,7 @@ const STEP_COMPONENTS = [
   SocialHistory,
   FamilyHistory,
   ReviewOfSystems,
+  PROMs,
   FinalReview,
 ];
 

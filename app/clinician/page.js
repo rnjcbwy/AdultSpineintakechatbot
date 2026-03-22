@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { SYMPTOM_REGIONS } from '../../lib/constants';
+import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 
 const STORAGE_KEY = 'spine-intake-data';
 
@@ -343,6 +344,11 @@ function StructuredTab({ data }) {
           ));
         })}
       </DataSection>
+
+      {/* PROMs */}
+      {data.proms && Object.keys(data.proms).length > 0 && (
+        <PromsSection proms={data.proms} />
+      )}
     </div>
   );
 }
@@ -431,4 +437,94 @@ function formatLabel(key) {
     .replace(/([A-Z])/g, ' $1')
     .replace(/^./, (s) => s.toUpperCase())
     .replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
+
+const PROM_LABELS = { odi: 'ODI', ndi: 'NDI', mjoa: 'mJOA', srs22r: 'SRS-22r' };
+const PROM_FULL_NAMES = {
+  odi: 'Oswestry Disability Index',
+  ndi: 'Neck Disability Index',
+  mjoa: 'Modified Japanese Orthopedic Association',
+  srs22r: 'Scoliosis Research Society-22r',
+};
+
+function PromsSection({ proms }) {
+  return (
+    <DataSection title="Patient-Reported Outcome Measures (PROMs)">
+      {Object.entries(proms).map(([id, entry]) => {
+        const name = PROM_LABELS[id] || id;
+        const fullName = PROM_FULL_NAMES[id] || '';
+        if (!entry.score) {
+          return <DataRow key={id} label={name} value="Not completed" />;
+        }
+        if (id === 'odi' || id === 'ndi') {
+          return (
+            <div key={id} className="py-2">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-sm font-semibold text-navy-600">{name}</span>
+                <span className="text-xs text-gray-400">{fullName}</span>
+              </div>
+              <div className="flex items-center gap-4 ml-4">
+                <span className="text-lg font-bold text-navy-600">{entry.score.percentage}%</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getScoreBadge(entry.score.interpretation)}`}>
+                  {entry.score.interpretation}
+                </span>
+                <span className="text-xs text-gray-400">({entry.score.sectionsAnswered} sections answered)</span>
+              </div>
+            </div>
+          );
+        }
+        if (id === 'mjoa') {
+          return (
+            <div key={id} className="py-2">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-sm font-semibold text-navy-600">{name}</span>
+                <span className="text-xs text-gray-400">{fullName}</span>
+              </div>
+              <div className="flex items-center gap-4 ml-4">
+                <span className="text-lg font-bold text-navy-600">{entry.score.totalScore}/{entry.score.maxScore}</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getScoreBadge(entry.score.interpretation)}`}>
+                  {entry.score.interpretation}
+                </span>
+              </div>
+            </div>
+          );
+        }
+        if (id === 'srs22r') {
+          return (
+            <div key={id} className="py-2">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-sm font-semibold text-navy-600">{name}</span>
+                <span className="text-xs text-gray-400">{fullName}</span>
+              </div>
+              <div className="ml-4">
+                {entry.score.totalScore && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg font-bold text-navy-600">{entry.score.totalScore}</span>
+                    <span className="text-xs text-gray-400">/ 5.0 overall mean</span>
+                  </div>
+                )}
+                <div className="flex gap-2 flex-wrap">
+                  {Object.values(entry.score.domainScores || {}).map((d) => (
+                    <span key={d.name} className="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600">
+                      {d.name}: <strong>{d.score}</strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return <DataRow key={id} label={name} value="Completed" />;
+      })}
+    </DataSection>
+  );
+}
+
+function getScoreBadge(interpretation) {
+  if (interpretation?.includes('Minimal') || interpretation?.includes('No ')) return 'bg-green-100 text-green-700';
+  if (interpretation?.includes('Mild')) return 'bg-yellow-100 text-yellow-700';
+  if (interpretation?.includes('Moderate')) return 'bg-orange-100 text-orange-700';
+  if (interpretation?.includes('Severe') || interpretation?.includes('Crippled')) return 'bg-red-100 text-red-700';
+  return 'bg-gray-100 text-gray-600';
 }

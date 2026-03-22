@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import { INTAKE_STEPS, SYMPTOM_REGIONS } from '../../lib/constants';
 import { detectRedFlags } from '../../lib/redFlags';
+import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 
 export default function FinalReview({ onBack, onGoToStep }) {
   const { data, setSubmitted, setSummary, setRedFlags } = useIntake();
@@ -214,6 +215,14 @@ export default function FinalReview({ onBack, onGoToStep }) {
             { label: 'Completed', value: 'Yes' },
           ]}
         />
+
+        {/* PROMs */}
+        <ReviewCard
+          title="Outcome Questionnaires"
+          step={11}
+          onEdit={() => onGoToStep(11)}
+          items={getPromsReviewItems(data.proms)}
+        />
       </div>
 
       {/* Disclaimer */}
@@ -283,9 +292,39 @@ function ReviewCard({ title, step, onEdit, items }) {
 }
 
 
+const PROM_NAMES = { odi: 'ODI', ndi: 'NDI', mjoa: 'mJOA', srs22r: 'SRS-22r' };
+
+function getPromsReviewItems(proms) {
+  if (!proms || Object.keys(proms).length === 0) {
+    return [{ label: 'Questionnaires', value: 'None applicable' }];
+  }
+  return Object.entries(proms).map(([id, entry]) => {
+    const name = PROM_NAMES[id] || id;
+    if (!entry.score) return { label: name, value: 'Not completed' };
+    if (id === 'odi' || id === 'ndi') {
+      return { label: name, value: `${entry.score.percentage}% — ${entry.score.interpretation}` };
+    }
+    if (id === 'mjoa') {
+      return { label: name, value: `${entry.score.totalScore}/18 — ${entry.score.interpretation}` };
+    }
+    if (id === 'srs22r') {
+      return { label: name, value: entry.score.totalScore ? `${entry.score.totalScore}/5.0 mean` : 'Partial' };
+    }
+    return { label: name, value: 'Completed' };
+  });
+}
+
+
 function SubmittedView({ data }) {
+  const { resetIntake } = useIntake();
   const [copied, setCopied] = useState(false);
   const summary = data.generatedSummary;
+
+  const handleReset = () => {
+    if (confirm('This will clear all data and start a new patient intake form. Are you sure?')) {
+      resetIntake();
+    }
+  };
 
   const copyToClipboard = async () => {
     try {
@@ -368,7 +407,7 @@ function SubmittedView({ data }) {
         </div>
       </div>
 
-      <div className="flex justify-center gap-4">
+      <div className="flex justify-center gap-4 flex-wrap">
         <a
           href="/clinician"
           target="_blank"
@@ -379,6 +418,15 @@ function SubmittedView({ data }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
         </a>
+        <button
+          onClick={handleReset}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Start New Intake
+        </button>
       </div>
 
       <p className="text-xs text-gray-400 mt-8">
