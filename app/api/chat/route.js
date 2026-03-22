@@ -50,9 +50,9 @@ export async function POST(request) {
 
     return NextResponse.json({ reply });
   } catch (error) {
-    console.error('Chat API error:', error);
+    console.error('Chat API error:', error?.message || error);
     return NextResponse.json(
-      { error: 'Failed to get response from AI assistant.' },
+      { error: `Failed to get response from AI assistant: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }

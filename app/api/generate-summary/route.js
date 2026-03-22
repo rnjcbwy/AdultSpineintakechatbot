@@ -28,9 +28,9 @@ export async function POST(request) {
 
     return NextResponse.json({ summary });
   } catch (error) {
-    console.error('Summary generation error:', error);
+    console.error('Summary generation error:', error?.message || error);
     return NextResponse.json(
-      { error: 'Failed to generate clinical summary.' },
+      { error: `Failed to generate clinical summary: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }
