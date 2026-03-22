@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { HPI_CHAT_SYSTEM_PROMPT } from '../../../lib/prompts';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy initialization to avoid build-time errors when env var is not set
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
+    const openai = getOpenAI();
     const { messages, context } = await request.json();
 
     // Build the message array for OpenAI

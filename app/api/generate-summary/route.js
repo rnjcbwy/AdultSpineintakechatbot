@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { NOTE_SUMMARY_SYSTEM_PROMPT, buildSummaryPrompt } from '../../../lib/prompts';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy initialization to avoid build-time errors when env var is not set
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
+    const openai = getOpenAI();
     const { intakeData } = await request.json();
 
     const completion = await openai.chat.completions.create({
