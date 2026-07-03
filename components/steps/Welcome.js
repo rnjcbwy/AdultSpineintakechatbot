@@ -2,13 +2,77 @@
 
 import { useIntake } from '../../lib/store';
 
-const INTAKE_STEPS = [
-  'Basic demographic information',
-  'A guided conversation about your symptoms',
-  'Structured medical history forms',
-  'Quality of life questionnaires',
-  'Review and submission',
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+  { code: 'zh', label: '中文' },
 ];
+
+const T = {
+  en: {
+    subtitle: 'New Patient Intake',
+    banner:
+      '⚠️ PROTOTYPE / DEMONSTRATION ONLY — Please do not enter real patient information. Use fictional names and details for testing purposes.',
+    under18Prefix: 'Patient under 18 years old? ',
+    under18Link: 'Please use our pediatric intake form',
+    description:
+      'Welcome! This intake form helps us learn about you before your appointment. The process takes about 15–25 minutes and includes:',
+    steps: [
+      'Basic demographic information',
+      'A guided conversation about your symptoms',
+      'Structured medical history forms',
+      'Quality of life questionnaires',
+      'Review and submission',
+    ],
+    begin: 'Begin Intake',
+    continue: 'Continue Where You Left Off',
+    startNew: 'Start New Form',
+    resetConfirm: 'This will start a new form and clear your previous answers. Continue?',
+    hipaa: '🚧 This is a prototype — not HIPAA compliant',
+  },
+  es: {
+    subtitle: 'Admisión de Nuevo Paciente',
+    banner:
+      '⚠️ SOLO PROTOTIPO / DEMOSTRACIÓN — Por favor, no ingrese información real de pacientes. Use nombres y datos ficticios con fines de prueba.',
+    under18Prefix: '¿Paciente menor de 18 años? ',
+    under18Link: 'Por favor, use nuestro formulario de admisión pediátrica',
+    description:
+      '¡Bienvenido! Este formulario nos ayuda a conocerlo antes de su cita. El proceso toma entre 15 y 25 minutos e incluye:',
+    steps: [
+      'Información demográfica básica',
+      'Una conversación guiada sobre sus síntomas',
+      'Formularios estructurados de historia médica',
+      'Cuestionarios de calidad de vida',
+      'Revisión y envío',
+    ],
+    begin: 'Comenzar Admisión',
+    continue: 'Continuar Donde lo Dejó',
+    startNew: 'Comenzar Nuevo Formulario',
+    resetConfirm: 'Esto iniciará un formulario nuevo y borrará sus respuestas anteriores. ¿Continuar?',
+    hipaa: '🚧 Esto es un prototipo — no cumple con HIPAA',
+  },
+  zh: {
+    subtitle: '新患者登记',
+    banner:
+      '⚠️ 仅供原型/演示 — 请勿输入真实患者信息。请使用虚构的姓名和信息进行测试。',
+    under18Prefix: '患者未满 18 岁？',
+    under18Link: '请使用我们的儿科登记表',
+    description:
+      '欢迎！此登记表可帮助我们在您就诊前了解您的情况。整个过程大约需要 15–25 分钟，包括：',
+    steps: [
+      '基本人口统计信息',
+      '关于症状的引导式对话',
+      '结构化病史表格',
+      '生活质量问卷',
+      '查看并提交',
+    ],
+    begin: '开始登记',
+    continue: '从上次中断处继续',
+    startNew: '开始新表格',
+    resetConfirm: '这将开始一个新表格并清除您之前的答案。是否继续？',
+    hipaa: '🚧 这是一个原型 — 不符合 HIPAA 标准',
+  },
+};
 
 function SpineLogo() {
   const vertebrae = [10, 25, 40, 55, 70, 85, 100];
@@ -38,8 +102,10 @@ function SpineLogo() {
 }
 
 export default function Welcome({ onNext }) {
-  const { data, resetIntake } = useIntake();
+  const { data, resetIntake, setLanguage } = useIntake();
   const hasExisting = data.lastUpdated && data.demographics?.firstName;
+  const lang = data.language || 'en';
+  const t = T[lang] || T.en;
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
@@ -55,35 +121,55 @@ export default function Welcome({ onNext }) {
         <p className="text-lg font-medium text-teal-400 tracking-wide mb-2">
           Aaron Wey, MD, FAAOS, FACS
         </p>
-        <h2 className="text-xl font-normal text-gray-500 mb-6">
-          New Patient Intake
+        <h2 className="text-xl font-normal text-gray-500 mb-5">
+          {t.subtitle}
         </h2>
+
+        {/* Language selector */}
+        <div className="flex items-center justify-center gap-2 mb-6" role="group" aria-label="Select language">
+          {LANGUAGES.map((l) => {
+            const active = lang === l.code;
+            return (
+              <button
+                key={l.code}
+                onClick={() => setLanguage(l.code)}
+                aria-pressed={active}
+                className={
+                  'px-5 py-2 rounded-full text-sm font-medium border transition-all duration-150 ' +
+                  (active
+                    ? 'bg-navy-600 text-white border-navy-600 shadow-sm'
+                    : 'bg-white text-navy-600 border-navy-200 hover:border-teal-300 hover:bg-teal-50')
+                }
+              >
+                {l.label}
+              </button>
+            );
+          })}
+        </div>
 
         {/* Prototype banner */}
         <div className="bg-amber-100 border-2 border-amber-500 rounded-xl px-4 py-3 mb-3 text-sm font-semibold text-amber-800 leading-snug">
-          ⚠️ PROTOTYPE / DEMONSTRATION ONLY — Please do not enter real patient
-          information. Use fictional names and details for testing purposes.
+          {t.banner}
         </div>
 
         {/* Under-18 redirect */}
         <p className="text-sm text-gray-600 mb-6">
-          Patient under 18 years old?{' '}
+          {t.under18Prefix}
           <a
             href="https://peds-spine-intake.vercel.app/"
             className="font-semibold text-teal-500 underline hover:text-teal-600"
           >
-            Please use our pediatric intake form
+            {t.under18Link}
           </a>
           .
         </p>
 
         <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-6">
-          Welcome! This intake form helps us learn about you before your appointment.
-          The process takes about 15–25 minutes and includes:
+          {t.description}
         </p>
 
         <ul className="bg-white rounded-2xl shadow-sm p-6 mb-8 text-left divide-y divide-cream-200">
-          {INTAKE_STEPS.map((label, i) => (
+          {t.steps.map((label, i) => (
             <li key={i} className="flex items-center gap-4 py-3 text-gray-600">
               <span className="flex items-center justify-center w-7 h-7 flex-shrink-0 bg-navy-600 text-white rounded-full text-sm font-semibold">
                 {i + 1}
@@ -96,13 +182,13 @@ export default function Welcome({ onNext }) {
         <div className="space-y-3">
           {hasExisting && (
             <button onClick={onNext} className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block">
-              Continue Where You Left Off
+              {t.continue}
             </button>
           )}
           <button
             onClick={() => {
               if (hasExisting) {
-                if (confirm('This will start a new form and clear your previous answers. Continue?')) {
+                if (confirm(t.resetConfirm)) {
                   resetIntake();
                   setTimeout(onNext, 100);
                 }
@@ -115,9 +201,9 @@ export default function Welcome({ onNext }) {
               : 'btn-primary inline-flex items-center justify-center gap-3 text-lg px-10 py-4 mx-auto'
             }
           >
-            {hasExisting ? 'Start New Form' : (
+            {hasExisting ? t.startNew : (
               <>
-                Begin Intake
+                {t.begin}
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -127,7 +213,7 @@ export default function Welcome({ onNext }) {
         </div>
 
         <p className="mt-8 text-sm font-medium text-amber-600">
-          🚧 This is a prototype — not HIPAA compliant
+          {t.hipaa}
         </p>
       </div>
     </div>
