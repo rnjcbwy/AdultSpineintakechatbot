@@ -94,6 +94,20 @@ input[type="radio"] {
   transition: width 0.5s ease-out;
 }
 
+/* Animated spine logo (welcome screen) */
+.spine-logo {
+  width: 80px;
+  height: 100px;
+}
+.spine-logo .vertebra {
+  animation: vertebra-pulse 2s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes vertebra-pulse {
+  0%, 100% { opacity: 0.7; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.05); }
+}
+
 /* Card hover effects */
 .card-hover {
   @apply transition-all duration-200;
