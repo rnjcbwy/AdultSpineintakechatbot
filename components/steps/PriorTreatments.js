@@ -15,13 +15,15 @@ export default function PriorTreatments({ onNext, onBack }) {
 
   const updateTx = (path, value) => setNested(`hpiData.conservativeTreatments.${path}`, value);
 
-  const [newInjection, setNewInjection] = useState({ type: '', when: '', helped: '', count: '' });
+  const [newInjection, setNewInjection] = useState({
+    type: '', location: '', provider: '', when: '', count: '', reliefDuration: '', helped: '',
+  });
 
   const addInjection = () => {
     if (newInjection.type) {
       const current = tx.injections || [];
       setNested('hpiData.conservativeTreatments.injections', [...current, { ...newInjection }]);
-      setNewInjection({ type: '', when: '', helped: '', count: '' });
+      setNewInjection({ type: '', location: '', provider: '', when: '', count: '', reliefDuration: '', helped: '' });
     }
   };
 
@@ -44,20 +46,41 @@ export default function PriorTreatments({ onNext, onBack }) {
         <div className="card space-y-6">
           <TreatmentToggle label="Physical therapy" tried={tx.physicalTherapy?.tried} onToggle={(v) => updateTx('physicalTherapy.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="form-label text-sm">When / how long?</label>
-                <input type="text" value={tx.physicalTherapy?.duration || ''}
-                  onChange={(e) => updateTx('physicalTherapy.duration', e.target.value)} placeholder="e.g., 3 months in 2024" />
-              </div>
+              <TextField label="Where? (clinic name & city)" value={tx.physicalTherapy?.facility}
+                onChange={(v) => updateTx('physicalTherapy.facility', v)} placeholder="e.g., ProCare PT, Denver" />
+              <TextField label="Who referred or performed it?" value={tx.physicalTherapy?.provider}
+                onChange={(v) => updateTx('physicalTherapy.provider', v)} placeholder="e.g., Dr. Smith / therapist name" />
+              <TextField label="When / for how long?" value={tx.physicalTherapy?.duration}
+                onChange={(v) => updateTx('physicalTherapy.duration', v)} placeholder="e.g., 3 months in 2024" />
+              <TextField label="How often?" value={tx.physicalTherapy?.frequency}
+                onChange={(v) => updateTx('physicalTherapy.frequency', v)} placeholder="e.g., 2x per week" />
               <HelpedSelect value={tx.physicalTherapy?.helped} onChange={(v) => updateTx('physicalTherapy.helped', v)} includeWorse />
             </div>
+            <RecordsNote text="If you have PT visit notes or a discharge summary, please bring them to your visit." />
           </TreatmentToggle>
 
           <TreatmentToggle label="Home exercise program" tried={tx.homeExercise?.tried} onToggle={(v) => updateTx('homeExercise.tried', v)}>
-            <div className="mt-3">
-              <label className="form-label text-sm">Details</label>
-              <input type="text" value={tx.homeExercise?.details || ''}
-                onChange={(e) => updateTx('homeExercise.details', e.target.value)} placeholder="e.g., Stretching, core exercises" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <div>
+                <label className="form-label text-sm">Was it guided?</label>
+                <select value={tx.homeExercise?.guided || ''} onChange={(e) => updateTx('homeExercise.guided', e.target.value)}>
+                  <option value="">Select...</option>
+                  <option value="On my own">On my own</option>
+                  <option value="Guided by a therapist">Guided by a therapist</option>
+                  <option value="App or online program">App or online program</option>
+                  <option value="Handout / printed exercises">Handout / printed exercises</option>
+                </select>
+              </div>
+              <TextField label="What app or service? (if any)" value={tx.homeExercise?.appService}
+                onChange={(v) => updateTx('homeExercise.appService', v)} placeholder="e.g., Sword Health, YouTube, none" />
+              <TextField label="For how long?" value={tx.homeExercise?.duration}
+                onChange={(v) => updateTx('homeExercise.duration', v)} placeholder="e.g., 2 months" />
+              <TextField label="How frequent?" value={tx.homeExercise?.frequency}
+                onChange={(v) => updateTx('homeExercise.frequency', v)} placeholder="e.g., Daily, 3x per week" />
+              <div className="sm:col-span-2">
+                <TextField label="What did you work on?" value={tx.homeExercise?.details}
+                  onChange={(v) => updateTx('homeExercise.details', v)} placeholder="e.g., Core strengthening, stretching, walking program" />
+              </div>
             </div>
           </TreatmentToggle>
 
@@ -96,16 +119,22 @@ export default function PriorTreatments({ onNext, onBack }) {
 
           {/* Injections */}
           <div className="border border-gray-200 rounded-xl p-4">
-            <h4 className="text-base font-medium text-navy-600 mb-3">Injections</h4>
-            <p className="text-sm text-gray-400 mb-3">Have you had any spine injections?</p>
+            <h4 className="text-base font-medium text-navy-600 mb-1">Injections</h4>
+            <p className="text-sm text-gray-400 mb-3">
+              Have you had any spine injections? Add each one with as much detail as you can —
+              this is important for insurance authorization.
+            </p>
 
             {(tx.injections || []).map((inj, i) => (
-              <div key={i} className="flex items-center gap-2 mb-2 p-2 bg-teal-50 rounded-lg text-sm">
+              <div key={i} className="flex items-start gap-2 mb-2 p-2 bg-teal-50 rounded-lg text-sm">
                 <span className="flex-1 text-teal-700">
-                  {inj.type} {inj.when && `(${inj.when})`} — {inj.helped || 'unknown response'}
+                  {inj.type}{inj.location && ` — ${inj.location}`} {inj.when && `(${inj.when})`}
+                  {' — '}{inj.helped || 'unknown response'}
+                  {inj.reliefDuration && `, relief lasted ${inj.reliefDuration}`}
                   {inj.count && `, ${inj.count}x`}
+                  {inj.provider && ` · by ${inj.provider}`}
                 </span>
-                <button onClick={() => removeInjection(i)} className="text-gray-400 hover:text-red-500">
+                <button onClick={() => removeInjection(i)} className="text-gray-400 hover:text-red-500 mt-0.5">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -118,21 +147,28 @@ export default function PriorTreatments({ onNext, onBack }) {
                 <option value="">Injection type...</option>
                 {INJECTION_TYPES.map((t) => (<option key={t} value={t}>{t}</option>))}
               </select>
+              <input type="text" value={newInjection.location}
+                onChange={(e) => setNewInjection((p) => ({ ...p, location: e.target.value }))} placeholder="Where? (e.g., L4-L5, left side)" />
+              <input type="text" value={newInjection.provider}
+                onChange={(e) => setNewInjection((p) => ({ ...p, provider: e.target.value }))} placeholder="Who did it? (doctor / clinic)" />
               <input type="text" value={newInjection.when}
                 onChange={(e) => setNewInjection((p) => ({ ...p, when: e.target.value }))} placeholder="When? (e.g., June 2024)" />
-              <select value={newInjection.helped} onChange={(e) => setNewInjection((p) => ({ ...p, helped: e.target.value }))}>
+              <input type="text" value={newInjection.count}
+                onChange={(e) => setNewInjection((p) => ({ ...p, count: e.target.value }))} placeholder="How many? (e.g., 3)" />
+              <input type="text" value={newInjection.reliefDuration}
+                onChange={(e) => setNewInjection((p) => ({ ...p, reliefDuration: e.target.value }))} placeholder="How long did relief last? (e.g., 2 weeks)" />
+              <select value={newInjection.helped} onChange={(e) => setNewInjection((p) => ({ ...p, helped: e.target.value }))} className="sm:col-span-2">
                 <option value="">Did it help?</option>
                 <option value="Helped a lot">Helped a lot</option>
                 <option value="Helped temporarily">Helped temporarily</option>
                 <option value="Helped somewhat">Helped somewhat</option>
                 <option value="Did not help">Did not help</option>
               </select>
-              <input type="text" value={newInjection.count}
-                onChange={(e) => setNewInjection((p) => ({ ...p, count: e.target.value }))} placeholder="How many? (e.g., 3)" />
             </div>
             <button onClick={addInjection} disabled={!newInjection.type} className="btn-secondary text-sm mt-3">
               + Add Injection
             </button>
+            <RecordsNote text="If you have injection records or procedure notes, please bring them to your visit." />
           </div>
 
           {/* Prior Imaging */}
@@ -159,11 +195,17 @@ export default function PriorTreatments({ onNext, onBack }) {
 
           {/* EMG */}
           <TreatmentToggle label="EMG or nerve conduction study" tried={tx.priorEMG?.done} onToggle={(v) => updateTx('priorEMG.done', v)}>
-            <div className="mt-3">
-              <label className="form-label text-sm">Results (if known)</label>
-              <input type="text" value={tx.priorEMG?.results || ''}
-                onChange={(e) => updateTx('priorEMG.results', e.target.value)} placeholder="What did it show? (if you know)" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <TextField label="When?" value={tx.priorEMG?.when}
+                onChange={(v) => updateTx('priorEMG.when', v)} placeholder="e.g., March 2024" />
+              <TextField label="Where? (facility & city)" value={tx.priorEMG?.facility}
+                onChange={(v) => updateTx('priorEMG.facility', v)} placeholder="e.g., Denver Neuro Clinic" />
+              <TextField label="Who did it?" value={tx.priorEMG?.provider}
+                onChange={(v) => updateTx('priorEMG.provider', v)} placeholder="Physician / provider name" />
+              <TextField label="Results (if known)" value={tx.priorEMG?.results}
+                onChange={(v) => updateTx('priorEMG.results', v)} placeholder="What did it show?" />
             </div>
+            <RecordsNote text="Please bring a copy of your EMG/nerve study report to your visit." />
           </TreatmentToggle>
         </div>
       </div>
@@ -173,6 +215,24 @@ export default function PriorTreatments({ onNext, onBack }) {
   );
 }
 
+
+function TextField({ label, value, onChange, placeholder }) {
+  return (
+    <div>
+      <label className="form-label text-sm">{label}</label>
+      <input type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
+function RecordsNote({ text }) {
+  return (
+    <p className="flex items-start gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2 mt-3">
+      <span aria-hidden="true">📄</span>
+      <span>{text}</span>
+    </p>
+  );
+}
 
 function HelpedSelect({ value, onChange, includeWorse }) {
   return (
