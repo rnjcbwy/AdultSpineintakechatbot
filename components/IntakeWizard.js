@@ -4,6 +4,7 @@ import { useIntake } from '../lib/store';
 import { INTAKE_STEPS } from '../lib/constants';
 import ProgressBar from './ProgressBar';
 import Welcome from './steps/Welcome';
+import BeforeWeBegin from './steps/BeforeWeBegin';
 import Demographics from './steps/Demographics';
 import ChiefComplaint from './steps/ChiefComplaint';
 import SymptomDetails from './steps/SymptomDetails';
@@ -22,6 +23,7 @@ import FinalReview from './steps/FinalReview';
 // Map step index to component
 const STEP_COMPONENTS = [
   Welcome,
+  BeforeWeBegin,
   Demographics,
   ChiefComplaint,
   SymptomDetails,
@@ -42,6 +44,9 @@ export default function IntakeWizard() {
   const { data, setStep, completeStep } = useIntake();
   const currentStep = data.currentStep;
   const StepComponent = STEP_COMPONENTS[currentStep];
+  const stepId = INTAKE_STEPS[currentStep]?.id;
+  // Welcome (0) and the consent gate show a clean full-page card with no progress header
+  const showChrome = currentStep > 0 && stepId !== 'consent';
 
   const goNext = () => {
     completeStep(currentStep);
@@ -69,7 +74,7 @@ export default function IntakeWizard() {
   return (
     <div className="min-h-screen bg-cream-100">
       {/* Header */}
-      {currentStep > 0 && (
+      {showChrome && (
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between mb-2">
@@ -117,7 +122,7 @@ export default function IntakeWizard() {
       </main>
 
       {/* Footer disclaimer */}
-      {currentStep > 0 && currentStep < INTAKE_STEPS.length - 1 && (
+      {showChrome && currentStep < INTAKE_STEPS.length - 1 && (
         <footer className="max-w-4xl mx-auto px-4 pb-8">
           <p className="text-xs text-gray-400 text-center">
             This intake form is for information gathering only and does not replace direct medical evaluation.

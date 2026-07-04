@@ -1,5 +1,4 @@
 import './globals.css';
-import DisclaimerBanner from '../components/DisclaimerBanner';
 
 export const metadata = {
   title: 'Spine Surgery Intake | Patient History Form',
@@ -18,7 +17,6 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="min-h-screen bg-cream-100">
-        <DisclaimerBanner />
         {children}
         <footer className="py-6 text-center">
           <p className="text-xs text-gray-400">
