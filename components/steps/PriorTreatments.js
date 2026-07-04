@@ -4,6 +4,120 @@ import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import { INJECTION_TYPES } from '../../lib/constants';
 import StepNavigation from '../ui/StepNavigation';
+import { useLang, makeT, COMMON } from '../../lib/i18n';
+
+const LOCAL = {
+  // Title + subtitle
+  'Prior Treatments': { es: 'Tratamientos previos', zh: '既往治疗' },
+  "What treatments have you already tried for your spine symptoms? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.": {
+    es: '¿Qué tratamientos ya ha probado para los síntomas de su columna? Esto ayuda a su cirujano a entender lo que se ha hecho hasta ahora. Responda lo que corresponda y omita el resto.',
+    zh: '您已经为您的脊柱症状尝试过哪些治疗？这有助于您的外科医生了解迄今为止所做的治疗。请回答适用的项目，其余的可以跳过。',
+  },
+
+  // Treatment labels
+  'Physical therapy': { es: 'Fisioterapia', zh: '物理治疗' },
+  'Home exercise program': { es: 'Programa de ejercicios en casa', zh: '居家锻炼计划' },
+  'Chiropractic care': { es: 'Atención quiropráctica', zh: '脊椎推拿治疗' },
+  'Acupuncture': { es: 'Acupuntura', zh: '针灸' },
+  'Back brace or cervical collar': { es: 'Faja lumbar o collarín cervical', zh: '腰背支具或颈托' },
+  'Injections': { es: 'Inyecciones', zh: '注射' },
+  'Prior Imaging': { es: 'Estudios de imagen previos', zh: '既往影像检查' },
+  'EMG or nerve conduction study': { es: 'EMG o estudio de conducción nerviosa', zh: '肌电图或神经传导检查' },
+
+  // Field labels
+  'Where? (clinic name & city)': { es: '¿Dónde? (nombre de la clínica y ciudad)', zh: '在哪里？（诊所名称和城市）' },
+  'Who referred or performed it?': { es: '¿Quién lo remitió o lo realizó?', zh: '谁转诊或执行的？' },
+  'When / for how long?': { es: '¿Cuándo / por cuánto tiempo?', zh: '什么时候／持续多久？' },
+  'How often?': { es: '¿Con qué frecuencia?', zh: '多久一次？' },
+  'Was it guided?': { es: '¿Fue guiado?', zh: '是否有指导？' },
+  'What app or service? (if any)': { es: '¿Qué aplicación o servicio? (si aplica)', zh: '哪个应用或服务？（如有）' },
+  'For how long?': { es: '¿Por cuánto tiempo?', zh: '持续多久？' },
+  'How frequent?': { es: '¿Con qué frecuencia?', zh: '多频繁？' },
+  'What did you work on?': { es: '¿En qué trabajó?', zh: '您锻炼了什么？' },
+  'Type': { es: 'Tipo', zh: '类型' },
+  'Duration': { es: 'Duración', zh: '持续时间' },
+  'Results (if known)': { es: 'Resultados (si se conocen)', zh: '结果（如已知）' },
+  'When?': { es: '¿Cuándo?', zh: '什么时候？' },
+  'Who did it?': { es: '¿Quién lo hizo?', zh: '谁做的？' },
+  'Where? (facility & city)': { es: '¿Dónde? (centro y ciudad)', zh: '在哪里？（机构和城市）' },
+
+  // Guided-select options
+  'On my own': { es: 'Por mi cuenta', zh: '自己进行' },
+  'Guided by a therapist': { es: 'Guiado por un terapeuta', zh: '由治疗师指导' },
+  'App or online program': { es: 'Aplicación o programa en línea', zh: '应用或在线课程' },
+  'Handout / printed exercises': { es: 'Folleto / ejercicios impresos', zh: '讲义／纸质练习' },
+
+  // Imaging chips
+  'X-rays': { es: 'Radiografías', zh: 'X光片' },
+  'MRI': { es: 'Resonancia magnética (MRI)', zh: '磁共振（MRI）' },
+  'CT scan': { es: 'Tomografía (TC)', zh: 'CT扫描' },
+  'Myelogram': { es: 'Mielografía', zh: '脊髓造影' },
+  'Bone density scan (DEXA)': { es: 'Densitometría ósea (DEXA)', zh: '骨密度扫描（DEXA）' },
+  'None': { es: 'Ninguno', zh: '无' },
+
+  // Injection section
+  'Have you had any spine injections? Add each one with as much detail as you can — this is important for insurance authorization.': {
+    es: '¿Se ha hecho alguna inyección en la columna? Agregue cada una con el mayor detalle posible; esto es importante para la autorización del seguro.',
+    zh: '您做过脊柱注射吗？请尽量详细地添加每一次注射，这对保险授权很重要。',
+  },
+  'Injection type...': { es: 'Tipo de inyección...', zh: '注射类型...' },
+
+  // Injection type options (display translated, stored English)
+  'Epidural steroid injection (ESI)': { es: 'Inyección epidural de esteroides (ESI)', zh: '硬膜外类固醇注射 (ESI)' },
+  'Nerve root block / transforaminal ESI': { es: 'Bloqueo de raíz nerviosa / ESI transforaminal', zh: '神经根阻滞／经椎间孔 ESI' },
+  'Facet joint injection': { es: 'Inyección en la articulación facetaria', zh: '小关节注射' },
+  'Medial branch block': { es: 'Bloqueo de la rama medial', zh: '内侧支阻滞' },
+  'Radiofrequency ablation (RFA)': { es: 'Ablación por radiofrecuencia (RFA)', zh: '射频消融 (RFA)' },
+  'Sacroiliac (SI) joint injection': { es: 'Inyección en la articulación sacroilíaca (SI)', zh: '骶髂 (SI) 关节注射' },
+  'Trigger point injection': { es: 'Inyección en punto gatillo', zh: '触发点注射' },
+  'Other': { es: 'Otro', zh: '其他' },
+  'Where? (e.g., L4-L5, left side)': { es: '¿Dónde? (p. ej., L4-L5, lado izquierdo)', zh: '哪个部位？（例如 L4-L5，左侧）' },
+  'Who did it? (doctor / clinic)': { es: '¿Quién lo hizo? (médico / clínica)', zh: '谁做的？（医生／诊所）' },
+  'When? (e.g., June 2024)': { es: '¿Cuándo? (p. ej., junio de 2024)', zh: '什么时候？（例如 2024年6月）' },
+  'How many? (e.g., 3)': { es: '¿Cuántas? (p. ej., 3)', zh: '多少次？（例如 3）' },
+  'How long did relief last? (e.g., 2 weeks)': { es: '¿Cuánto duró el alivio? (p. ej., 2 semanas)', zh: '缓解持续了多久？（例如 2周）' },
+  '+ Add Injection': { es: '+ Agregar inyección', zh: '+ 添加注射' },
+
+  // Prior imaging section
+  'What imaging studies have you had for your spine?': { es: '¿Qué estudios de imagen se ha hecho de la columna?', zh: '您为脊柱做过哪些影像检查？' },
+
+  // Records notes
+  'If you have PT visit notes or a discharge summary, please bring them to your visit.': {
+    es: 'Si tiene notas de las visitas de fisioterapia o un resumen de alta, tráigalos a su cita.',
+    zh: '如果您有物理治疗就诊记录或出院小结，请带到就诊时。',
+  },
+  'If you have injection records or procedure notes, please bring them to your visit.': {
+    es: 'Si tiene registros de inyecciones o notas del procedimiento, tráigalos a su cita.',
+    zh: '如果您有注射记录或操作记录，请带到就诊时。',
+  },
+  'Please bring a copy of your EMG/nerve study report to your visit.': {
+    es: 'Por favor, traiga una copia del informe de su EMG/estudio nervioso a su cita.',
+    zh: '请携带一份您的肌电图／神经检查报告到就诊时。',
+  },
+
+  // Placeholders
+  'e.g., ProCare PT, Denver': { es: 'p. ej., ProCare PT, Denver', zh: '例如 ProCare PT，丹佛' },
+  'e.g., Dr. Smith / therapist name': { es: 'p. ej., Dr. Smith / nombre del terapeuta', zh: '例如 Smith医生／治疗师姓名' },
+  'e.g., 3 months in 2024': { es: 'p. ej., 3 meses en 2024', zh: '例如 2024年做了3个月' },
+  'e.g., 2x per week': { es: 'p. ej., 2 veces por semana', zh: '例如 每周2次' },
+  'e.g., Sword Health, YouTube, none': { es: 'p. ej., Sword Health, YouTube, ninguno', zh: '例如 Sword Health、YouTube、无' },
+  'e.g., 2 months': { es: 'p. ej., 2 meses', zh: '例如 2个月' },
+  'e.g., Daily, 3x per week': { es: 'p. ej., a diario, 3 veces por semana', zh: '例如 每天、每周3次' },
+  'e.g., Core strengthening, stretching, walking program': {
+    es: 'p. ej., fortalecimiento del core, estiramientos, programa de caminata',
+    zh: '例如 核心力量训练、拉伸、步行计划',
+  },
+  'How long did you go?': { es: '¿Por cuánto tiempo asistió?', zh: '您去了多久？' },
+  'How long?': { es: '¿Por cuánto tiempo?', zh: '多久？' },
+  'What kind?': { es: '¿Qué tipo?', zh: '哪种？' },
+  'e.g., March 2024': { es: 'p. ej., marzo de 2024', zh: '例如 2024年3月' },
+  'e.g., Denver Neuro Clinic': { es: 'p. ej., Denver Neuro Clinic', zh: '例如 丹佛神经诊所' },
+  'Physician / provider name': { es: 'Nombre del médico / proveedor', zh: '医生／医疗人员姓名' },
+  'What did it show?': { es: '¿Qué mostró?', zh: '结果显示了什么？' },
+
+  // Nav
+  'Continue to Additional Details': { es: 'Continuar a detalles adicionales', zh: '继续到其他详情' },
+};
 
 /**
  * Prior Treatments — its own full step (previously a small tab within HPI).
@@ -11,6 +125,8 @@ import StepNavigation from '../ui/StepNavigation';
  */
 export default function PriorTreatments({ onNext, onBack }) {
   const { data, setNested } = useIntake();
+  const lang = useLang();
+  const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const tx = data.hpiData.conservativeTreatments;
 
   const updateTx = (path, value) => setNested(`hpiData.conservativeTreatments.${path}`, value);
@@ -35,83 +151,82 @@ export default function PriorTreatments({ onNext, onBack }) {
   return (
     <div className="animate-fade-in">
       <div className="mb-6">
-        <h2 className="section-title">Prior Treatments</h2>
+        <h2 className="section-title">{t('Prior Treatments')}</h2>
         <p className="section-subtitle">
-          What treatments have you already tried for your spine symptoms? This helps your surgeon
-          understand what's been done so far. Answer what applies and skip the rest.
+          {t("What treatments have you already tried for your spine symptoms? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.")}
         </p>
       </div>
 
       <div className="space-y-4">
         <div className="card space-y-6">
-          <TreatmentToggle label="Physical therapy" tried={tx.physicalTherapy?.tried} onToggle={(v) => updateTx('physicalTherapy.tried', v)}>
+          <TreatmentToggle label={t('Physical therapy')} tried={tx.physicalTherapy?.tried} onToggle={(v) => updateTx('physicalTherapy.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <TextField label="Where? (clinic name & city)" value={tx.physicalTherapy?.facility}
-                onChange={(v) => updateTx('physicalTherapy.facility', v)} placeholder="e.g., ProCare PT, Denver" />
-              <TextField label="Who referred or performed it?" value={tx.physicalTherapy?.provider}
-                onChange={(v) => updateTx('physicalTherapy.provider', v)} placeholder="e.g., Dr. Smith / therapist name" />
-              <TextField label="When / for how long?" value={tx.physicalTherapy?.duration}
-                onChange={(v) => updateTx('physicalTherapy.duration', v)} placeholder="e.g., 3 months in 2024" />
-              <TextField label="How often?" value={tx.physicalTherapy?.frequency}
-                onChange={(v) => updateTx('physicalTherapy.frequency', v)} placeholder="e.g., 2x per week" />
+              <TextField label={t('Where? (clinic name & city)')} value={tx.physicalTherapy?.facility}
+                onChange={(v) => updateTx('physicalTherapy.facility', v)} placeholder={t('e.g., ProCare PT, Denver')} />
+              <TextField label={t('Who referred or performed it?')} value={tx.physicalTherapy?.provider}
+                onChange={(v) => updateTx('physicalTherapy.provider', v)} placeholder={t('e.g., Dr. Smith / therapist name')} />
+              <TextField label={t('When / for how long?')} value={tx.physicalTherapy?.duration}
+                onChange={(v) => updateTx('physicalTherapy.duration', v)} placeholder={t('e.g., 3 months in 2024')} />
+              <TextField label={t('How often?')} value={tx.physicalTherapy?.frequency}
+                onChange={(v) => updateTx('physicalTherapy.frequency', v)} placeholder={t('e.g., 2x per week')} />
               <HelpedSelect value={tx.physicalTherapy?.helped} onChange={(v) => updateTx('physicalTherapy.helped', v)} includeWorse />
             </div>
-            <RecordsNote text="If you have PT visit notes or a discharge summary, please bring them to your visit." />
+            <RecordsNote text={t('If you have PT visit notes or a discharge summary, please bring them to your visit.')} />
           </TreatmentToggle>
 
-          <TreatmentToggle label="Home exercise program" tried={tx.homeExercise?.tried} onToggle={(v) => updateTx('homeExercise.tried', v)}>
+          <TreatmentToggle label={t('Home exercise program')} tried={tx.homeExercise?.tried} onToggle={(v) => updateTx('homeExercise.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div>
-                <label className="form-label text-sm">Was it guided?</label>
+                <label className="form-label text-sm">{t('Was it guided?')}</label>
                 <select value={tx.homeExercise?.guided || ''} onChange={(e) => updateTx('homeExercise.guided', e.target.value)}>
-                  <option value="">Select...</option>
-                  <option value="On my own">On my own</option>
-                  <option value="Guided by a therapist">Guided by a therapist</option>
-                  <option value="App or online program">App or online program</option>
-                  <option value="Handout / printed exercises">Handout / printed exercises</option>
+                  <option value="">{t('Select...')}</option>
+                  <option value="On my own">{t('On my own')}</option>
+                  <option value="Guided by a therapist">{t('Guided by a therapist')}</option>
+                  <option value="App or online program">{t('App or online program')}</option>
+                  <option value="Handout / printed exercises">{t('Handout / printed exercises')}</option>
                 </select>
               </div>
-              <TextField label="What app or service? (if any)" value={tx.homeExercise?.appService}
-                onChange={(v) => updateTx('homeExercise.appService', v)} placeholder="e.g., Sword Health, YouTube, none" />
-              <TextField label="For how long?" value={tx.homeExercise?.duration}
-                onChange={(v) => updateTx('homeExercise.duration', v)} placeholder="e.g., 2 months" />
-              <TextField label="How frequent?" value={tx.homeExercise?.frequency}
-                onChange={(v) => updateTx('homeExercise.frequency', v)} placeholder="e.g., Daily, 3x per week" />
+              <TextField label={t('What app or service? (if any)')} value={tx.homeExercise?.appService}
+                onChange={(v) => updateTx('homeExercise.appService', v)} placeholder={t('e.g., Sword Health, YouTube, none')} />
+              <TextField label={t('For how long?')} value={tx.homeExercise?.duration}
+                onChange={(v) => updateTx('homeExercise.duration', v)} placeholder={t('e.g., 2 months')} />
+              <TextField label={t('How frequent?')} value={tx.homeExercise?.frequency}
+                onChange={(v) => updateTx('homeExercise.frequency', v)} placeholder={t('e.g., Daily, 3x per week')} />
               <div className="sm:col-span-2">
-                <TextField label="What did you work on?" value={tx.homeExercise?.details}
-                  onChange={(v) => updateTx('homeExercise.details', v)} placeholder="e.g., Core strengthening, stretching, walking program" />
+                <TextField label={t('What did you work on?')} value={tx.homeExercise?.details}
+                  onChange={(v) => updateTx('homeExercise.details', v)} placeholder={t('e.g., Core strengthening, stretching, walking program')} />
               </div>
             </div>
           </TreatmentToggle>
 
-          <TreatmentToggle label="Chiropractic care" tried={tx.chiropracticCare?.tried} onToggle={(v) => updateTx('chiropracticCare.tried', v)}>
+          <TreatmentToggle label={t('Chiropractic care')} tried={tx.chiropracticCare?.tried} onToggle={(v) => updateTx('chiropracticCare.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div>
-                <label className="form-label text-sm">Duration</label>
+                <label className="form-label text-sm">{t('Duration')}</label>
                 <input type="text" value={tx.chiropracticCare?.duration || ''}
-                  onChange={(e) => updateTx('chiropracticCare.duration', e.target.value)} placeholder="How long did you go?" />
+                  onChange={(e) => updateTx('chiropracticCare.duration', e.target.value)} placeholder={t('How long did you go?')} />
               </div>
               <HelpedSelect value={tx.chiropracticCare?.helped} onChange={(v) => updateTx('chiropracticCare.helped', v)} />
             </div>
           </TreatmentToggle>
 
-          <TreatmentToggle label="Acupuncture" tried={tx.acupuncture?.tried} onToggle={(v) => updateTx('acupuncture.tried', v)}>
+          <TreatmentToggle label={t('Acupuncture')} tried={tx.acupuncture?.tried} onToggle={(v) => updateTx('acupuncture.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div>
-                <label className="form-label text-sm">Duration</label>
+                <label className="form-label text-sm">{t('Duration')}</label>
                 <input type="text" value={tx.acupuncture?.duration || ''}
-                  onChange={(e) => updateTx('acupuncture.duration', e.target.value)} placeholder="How long?" />
+                  onChange={(e) => updateTx('acupuncture.duration', e.target.value)} placeholder={t('How long?')} />
               </div>
               <HelpedSelect value={tx.acupuncture?.helped} onChange={(v) => updateTx('acupuncture.helped', v)} />
             </div>
           </TreatmentToggle>
 
-          <TreatmentToggle label="Back brace or cervical collar" tried={tx.braces?.tried} onToggle={(v) => updateTx('braces.tried', v)}>
+          <TreatmentToggle label={t('Back brace or cervical collar')} tried={tx.braces?.tried} onToggle={(v) => updateTx('braces.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div>
-                <label className="form-label text-sm">Type</label>
+                <label className="form-label text-sm">{t('Type')}</label>
                 <input type="text" value={tx.braces?.type || ''}
-                  onChange={(e) => updateTx('braces.type', e.target.value)} placeholder="What kind?" />
+                  onChange={(e) => updateTx('braces.type', e.target.value)} placeholder={t('What kind?')} />
               </div>
               <HelpedSelect value={tx.braces?.helped} onChange={(v) => updateTx('braces.helped', v)} />
             </div>
@@ -119,10 +234,9 @@ export default function PriorTreatments({ onNext, onBack }) {
 
           {/* Injections */}
           <div className="border border-gray-200 rounded-xl p-4">
-            <h4 className="text-base font-medium text-navy-600 mb-1">Injections</h4>
+            <h4 className="text-base font-medium text-navy-600 mb-1">{t('Injections')}</h4>
             <p className="text-sm text-gray-400 mb-3">
-              Have you had any spine injections? Add each one with as much detail as you can —
-              this is important for insurance authorization.
+              {t('Have you had any spine injections? Add each one with as much detail as you can — this is important for insurance authorization.')}
             </p>
 
             {(tx.injections || []).map((inj, i) => (
@@ -144,37 +258,37 @@ export default function PriorTreatments({ onNext, onBack }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
               <select value={newInjection.type} onChange={(e) => setNewInjection((p) => ({ ...p, type: e.target.value }))}>
-                <option value="">Injection type...</option>
-                {INJECTION_TYPES.map((t) => (<option key={t} value={t}>{t}</option>))}
+                <option value="">{t('Injection type...')}</option>
+                {INJECTION_TYPES.map((it) => (<option key={it} value={it}>{t(it)}</option>))}
               </select>
               <input type="text" value={newInjection.location}
-                onChange={(e) => setNewInjection((p) => ({ ...p, location: e.target.value }))} placeholder="Where? (e.g., L4-L5, left side)" />
+                onChange={(e) => setNewInjection((p) => ({ ...p, location: e.target.value }))} placeholder={t('Where? (e.g., L4-L5, left side)')} />
               <input type="text" value={newInjection.provider}
-                onChange={(e) => setNewInjection((p) => ({ ...p, provider: e.target.value }))} placeholder="Who did it? (doctor / clinic)" />
+                onChange={(e) => setNewInjection((p) => ({ ...p, provider: e.target.value }))} placeholder={t('Who did it? (doctor / clinic)')} />
               <input type="text" value={newInjection.when}
-                onChange={(e) => setNewInjection((p) => ({ ...p, when: e.target.value }))} placeholder="When? (e.g., June 2024)" />
+                onChange={(e) => setNewInjection((p) => ({ ...p, when: e.target.value }))} placeholder={t('When? (e.g., June 2024)')} />
               <input type="text" value={newInjection.count}
-                onChange={(e) => setNewInjection((p) => ({ ...p, count: e.target.value }))} placeholder="How many? (e.g., 3)" />
+                onChange={(e) => setNewInjection((p) => ({ ...p, count: e.target.value }))} placeholder={t('How many? (e.g., 3)')} />
               <input type="text" value={newInjection.reliefDuration}
-                onChange={(e) => setNewInjection((p) => ({ ...p, reliefDuration: e.target.value }))} placeholder="How long did relief last? (e.g., 2 weeks)" />
+                onChange={(e) => setNewInjection((p) => ({ ...p, reliefDuration: e.target.value }))} placeholder={t('How long did relief last? (e.g., 2 weeks)')} />
               <select value={newInjection.helped} onChange={(e) => setNewInjection((p) => ({ ...p, helped: e.target.value }))} className="sm:col-span-2">
-                <option value="">Did it help?</option>
-                <option value="Helped a lot">Helped a lot</option>
-                <option value="Helped temporarily">Helped temporarily</option>
-                <option value="Helped somewhat">Helped somewhat</option>
-                <option value="Did not help">Did not help</option>
+                <option value="">{t('Did it help?')}</option>
+                <option value="Helped a lot">{t('Helped a lot')}</option>
+                <option value="Helped temporarily">{t('Helped temporarily')}</option>
+                <option value="Helped somewhat">{t('Helped somewhat')}</option>
+                <option value="Did not help">{t('Did not help')}</option>
               </select>
             </div>
             <button onClick={addInjection} disabled={!newInjection.type} className="btn-secondary text-sm mt-3">
-              + Add Injection
+              {t('+ Add Injection')}
             </button>
-            <RecordsNote text="If you have injection records or procedure notes, please bring them to your visit." />
+            <RecordsNote text={t('If you have injection records or procedure notes, please bring them to your visit.')} />
           </div>
 
           {/* Prior Imaging */}
           <div className="border border-gray-200 rounded-xl p-4">
-            <h4 className="text-base font-medium text-navy-600 mb-3">Prior Imaging</h4>
-            <p className="text-sm text-gray-400 mb-3">What imaging studies have you had for your spine?</p>
+            <h4 className="text-base font-medium text-navy-600 mb-3">{t('Prior Imaging')}</h4>
+            <p className="text-sm text-gray-400 mb-3">{t('What imaging studies have you had for your spine?')}</p>
             <div className="flex flex-wrap gap-2">
               {['X-rays', 'MRI', 'CT scan', 'Myelogram', 'Bone density scan (DEXA)', 'None'].map((img) => {
                 const selected = (tx.priorImaging || []).includes(img);
@@ -186,7 +300,7 @@ export default function PriorTreatments({ onNext, onBack }) {
                         selected ? current.filter((x) => x !== img) : [...current, img]);
                     }}
                     className={`chip ${selected ? 'chip-selected' : 'chip-unselected'}`}>
-                    {img}
+                    {t(img)}
                   </button>
                 );
               })}
@@ -194,23 +308,23 @@ export default function PriorTreatments({ onNext, onBack }) {
           </div>
 
           {/* EMG */}
-          <TreatmentToggle label="EMG or nerve conduction study" tried={tx.priorEMG?.done} onToggle={(v) => updateTx('priorEMG.done', v)}>
+          <TreatmentToggle label={t('EMG or nerve conduction study')} tried={tx.priorEMG?.done} onToggle={(v) => updateTx('priorEMG.done', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <TextField label="When?" value={tx.priorEMG?.when}
-                onChange={(v) => updateTx('priorEMG.when', v)} placeholder="e.g., March 2024" />
-              <TextField label="Where? (facility & city)" value={tx.priorEMG?.facility}
-                onChange={(v) => updateTx('priorEMG.facility', v)} placeholder="e.g., Denver Neuro Clinic" />
-              <TextField label="Who did it?" value={tx.priorEMG?.provider}
-                onChange={(v) => updateTx('priorEMG.provider', v)} placeholder="Physician / provider name" />
-              <TextField label="Results (if known)" value={tx.priorEMG?.results}
-                onChange={(v) => updateTx('priorEMG.results', v)} placeholder="What did it show?" />
+              <TextField label={t('When?')} value={tx.priorEMG?.when}
+                onChange={(v) => updateTx('priorEMG.when', v)} placeholder={t('e.g., March 2024')} />
+              <TextField label={t('Where? (facility & city)')} value={tx.priorEMG?.facility}
+                onChange={(v) => updateTx('priorEMG.facility', v)} placeholder={t('e.g., Denver Neuro Clinic')} />
+              <TextField label={t('Who did it?')} value={tx.priorEMG?.provider}
+                onChange={(v) => updateTx('priorEMG.provider', v)} placeholder={t('Physician / provider name')} />
+              <TextField label={t('Results (if known)')} value={tx.priorEMG?.results}
+                onChange={(v) => updateTx('priorEMG.results', v)} placeholder={t('What did it show?')} />
             </div>
-            <RecordsNote text="Please bring a copy of your EMG/nerve study report to your visit." />
+            <RecordsNote text={t('Please bring a copy of your EMG/nerve study report to your visit.')} />
           </TreatmentToggle>
         </div>
       </div>
 
-      <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel="Continue to Additional Details" />
+      <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue to Additional Details')} />
     </div>
   );
 }
@@ -235,16 +349,18 @@ function RecordsNote({ text }) {
 }
 
 function HelpedSelect({ value, onChange, includeWorse }) {
+  const lang = useLang();
+  const t = makeT(COMMON, lang);
   return (
     <div>
-      <label className="form-label text-sm">Did it help?</label>
+      <label className="form-label text-sm">{t('Did it help?')}</label>
       <select value={value || ''} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Select...</option>
-        <option value="Helped a lot">Helped a lot</option>
-        <option value="Helped somewhat">Helped somewhat</option>
-        <option value="Helped temporarily">Helped temporarily</option>
-        <option value="Did not help">Did not help</option>
-        {includeWorse && <option value="Made it worse">Made it worse</option>}
+        <option value="">{t('Select...')}</option>
+        <option value="Helped a lot">{t('Helped a lot')}</option>
+        <option value="Helped somewhat">{t('Helped somewhat')}</option>
+        <option value="Helped temporarily">{t('Helped temporarily')}</option>
+        <option value="Did not help">{t('Did not help')}</option>
+        {includeWorse && <option value="Made it worse">{t('Made it worse')}</option>}
       </select>
     </div>
   );

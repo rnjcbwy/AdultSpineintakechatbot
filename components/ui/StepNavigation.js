@@ -1,16 +1,24 @@
 'use client';
 
+import { useLang, makeT, COMMON } from '../../lib/i18n';
+
 export default function StepNavigation({
   onNext,
   onBack,
   canGoNext = true,
-  nextLabel = 'Continue',
-  backLabel = 'Back',
+  nextLabel,
+  backLabel,
   showBack = true,
   showSkip = false,
   onSkip,
-  skipLabel = 'Skip this section',
+  skipLabel,
 }) {
+  const lang = useLang();
+  const t = makeT(COMMON, lang);
+  // Fall back to translated defaults when a label isn't passed in.
+  nextLabel = nextLabel ?? t('Continue');
+  backLabel = backLabel ?? t('Back');
+  skipLabel = skipLabel ?? t('Skip this section');
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between mt-8 pt-6 border-t border-gray-100 gap-4">
       <div>
