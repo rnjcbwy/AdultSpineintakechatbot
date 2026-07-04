@@ -115,13 +115,13 @@ export default function Welcome({ onNext }) {
           <SpineLogo />
         </div>
 
-        <h1 className="font-serif text-3xl md:text-4xl font-semibold text-navy-600 mb-1">
+        <h1 className="font-serif text-[1.75rem] md:text-[2.5rem] leading-tight font-semibold text-[#1A2A44] mb-1">
           Comprehensive Spine &amp; Scoliosis Center
         </h1>
-        <p className="text-lg font-medium text-teal-400 tracking-wide mb-2">
+        <p className="text-[1.1rem] font-medium text-[#2A8A8A] tracking-[0.02em] mb-2">
           Aaron Wey, MD, FAAOS, FACS
         </p>
-        <h2 className="text-xl font-normal text-gray-500 mb-5">
+        <h2 className="text-[1.25rem] font-normal text-[#6B7280] mb-6">
           {t.subtitle}
         </h2>
 
