@@ -6,7 +6,9 @@ import ProgressBar from './ProgressBar';
 import Welcome from './steps/Welcome';
 import Demographics from './steps/Demographics';
 import ChiefComplaint from './steps/ChiefComplaint';
-import HPISection from './steps/HPISection';
+import SymptomDetails from './steps/SymptomDetails';
+import PriorTreatments from './steps/PriorTreatments';
+import AdditionalConcerns from './steps/AdditionalConcerns';
 import PastMedicalHistory from './steps/PastMedicalHistory';
 import PastSurgicalHistory from './steps/PastSurgicalHistory';
 import Medications from './steps/Medications';
@@ -22,7 +24,9 @@ const STEP_COMPONENTS = [
   Welcome,
   Demographics,
   ChiefComplaint,
-  HPISection,
+  SymptomDetails,
+  PriorTreatments,
+  AdditionalConcerns,
   PastMedicalHistory,
   PastSurgicalHistory,
   Medications,
