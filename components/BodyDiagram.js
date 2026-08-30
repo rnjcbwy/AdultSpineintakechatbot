@@ -39,12 +39,6 @@ function LateralFigure({ view }) {
            C140,104 119,104 110,112 Z"
       />
 
-      {/* arm, hanging just anterior to the trunk */}
-      <ellipse cx={148} cy={120} rx={20} ry={20} />
-      <rect x={150} y={112} width={30} height={112} rx={15} />
-      <rect x={154} y={214} width={26} height={102} rx={13} />
-      <ellipse cx={168} cy={330} rx={14} ry={21} />
-
       {/* leg: lateral thigh, calf belly posteriorly, ankle, foot pointing forward */}
       <path
         d={`M106,318 C102,350 104,378 108,404
@@ -70,6 +64,18 @@ function LateralFigure({ view }) {
   // which lets a single canonical zone set serve both lateral views.
   const mirror = view === 'left';
 
+  // The arm is drawn ON TOP of the finished trunk rather than merged into it.
+  // In a true lateral the arm overlaps the ribcage, and if it joins the same
+  // silhouette the patient cannot see where the limb is at all.
+  const arm = (
+    <g fill={SKIN} stroke={OUTLINE} strokeWidth={1.8} strokeLinejoin="round">
+      <ellipse cx={146} cy={122} rx={21} ry={21} />
+      <rect x={150} y={114} width={31} height={112} rx={15.5} />
+      <rect x={155} y={216} width={27} height={102} rx={13.5} />
+      <ellipse cx={170} cy={332} rx={14} ry={21} />
+    </g>
+  );
+
   return (
     <g>
       <g transform={mirror ? `translate(${W},0) scale(-1,1)` : undefined}>
@@ -80,6 +86,7 @@ function LateralFigure({ view }) {
           <path d="M108,286 C120,282 136,284 150,290" />
           <circle cx={127} cy={414} r={9} />
         </g>
+        {arm}
       </g>
       <text x={mirror ? 14 : W - 14} y={26} textAnchor={mirror ? 'start' : 'end'}
         fontSize={13} fill="#8C9BAA">
