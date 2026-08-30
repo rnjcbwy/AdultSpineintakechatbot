@@ -14,3 +14,6 @@ next-env.d.ts
 # Some payers restrict reproduction of their guideline text; only the
 # normalized, quote-stripped lib/payers/rules.json is committed.
 lib/payers/sources/
+
+# Local patient file cabinet (filesystem storage adapter). Never commit.
+.data/

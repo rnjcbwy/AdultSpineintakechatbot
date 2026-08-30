@@ -1,9 +1,10 @@
 {
-  "generatedAt": "2026-08-30T11:54:26.909Z",
+  "generatedAt": "2026-08-30T12:32:10.340Z",
   "disclaimer": "Payer criteria change frequently. Every rule carries its policy ID, source URL and effective date — verify against the current published policy before relying on any readiness result. This tool does not determine coverage.",
   "payers": [
     {
       "id": "aetna",
+      "scoring": "full",
       "name": "Aetna",
       "criteriaAvailability": "public_complete",
       "reproductionRestricted": false,
@@ -1820,6 +1821,7 @@
     },
     {
       "id": "cigna",
+      "scoring": "full",
       "name": "Cigna",
       "criteriaAvailability": "public_complete",
       "reproductionRestricted": false,
@@ -4473,6 +4475,7 @@
     },
     {
       "id": "carelon",
+      "scoring": "full",
       "name": "AmeriHealth NJ (Carelon-delegated)",
       "criteriaAvailability": "public_complete",
       "reproductionRestricted": true,
@@ -11693,6 +11696,7 @@
     },
     {
       "id": "uhc",
+      "scoring": "none",
       "name": "UnitedHealthcare / Oxford / UMR",
       "criteriaAvailability": "proprietary_vendor",
       "reproductionRestricted": false,
@@ -12016,10 +12020,1295 @@
     },
     {
       "id": "horizon",
-      "name": "Horizon BCBSNJ",
+      "scoring": "indicative",
+      "name": "Horizon BCBSNJ — spine surgery",
+      "criteriaAvailability": "proprietary_vendor",
+      "reproductionRestricted": false,
+      "note": "Spine surgery prior authorization is administered by TurningPoint Healthcare Solutions (effective 2022-02-01, when Horizon sunset eviCore for spine surgery). TurningPoint maintains the review criteria and they are NOT published — they sit behind a provider-portal login. The requirements shown here come from Horizon's OWN published medical policies, several of which still name eviCore and may therefore govern only plans carved out of the vendor program (e.g. SHBP/SEHBP). TREAT THESE AS INDICATIVE, NOT AS THE CRITERIA TURNINGPOINT WILL APPLY.",
+      "umVendor": null,
+      "retrievedAt": "2026-08-30",
+      "accessNotes": "BLUNT ACCOUNT OF WHAT WORKED AND WHAT DID NOT.\n\nBLOCKED / NOT RETRIEVED:\n1. horizonblue.com and horizonnjhealth.com are behind Imperva/Incapsula bot protection. Plain curl with a desktop Chrome User-Agent returned a 931-byte Incapsula block page (HTTP 200 with an 'Incapsula incident ID'), and WebFetch returned EMPTY content for every horizonblue.com URL tried. The User-Agent trick did NOT work here. What DID work was driving a real Chrome browser session, which rendered these pages fully. All horizonblue.com / horizonnjhealth.com content in this file came from that browser session on 2026-08-30.\n\n2. TURNINGPOINT'S ACTUAL SPINE MEDICAL POLICIES: NOT RETRIEVED. They sit behind an authenticated provider portal (Availity Essentials Payer Spaces, or myturningpoint-healthcare.com). myturningpoint-healthcare.com returned only a React login shell. I did not create an account or attempt to authenticate. This is the single biggest gap in this file and it is NOT closable from public sources. To close it, a person with provider portal credentials must log in and open Help -> Medical Policies and Clinical Guidelines, or call TurningPoint at 1-833-436-4083 and request the policies (Horizon states they will be provided on request).\n\n3. The 'TurningPoint Medical Policies and Clinical Guidelines' public lookup tool requires entering a Horizon member ID number. NOT USED -- I have no member ID and will not fabricate one. This is likely the easiest path for the surgeon's office to get the real criteria, since it appears not to require a portal login, only a member ID.\n\n4. NO HORIZON MEDICAL POLICY EXISTS FOR CERVICAL SPINAL FUSION / ACDF. I enumerated all 724 policies in Horizon's Medical Policy Manual via the Domino ReadViewEntries XML feed and searched for cervical/arthrodesis/interbody/ corpectomy/osteotomy titles. There is a Lumbar Spinal Fusion policy (073), an Axial Lumbosacral Interbody Fusion policy (161), and a cervical artificial disc policy (072) -- but NO cervical or thoracic fusion policy, no corpectomy policy, and no spinal osteotomy / deformity policy. So for ACDF and posterior cervical fusion (CPT 22551, 22552, 22554, 22600, 22614 etc.), which ARE on the TurningPoint PA list, Horizon publishes NO criteria at all. The only criteria that exist are TurningPoint's proprietary ones. This is a real, load-bearing gap.\n\n5. Horizon NJ Health's Medicaid medical policy manual (https://services3.horizon-bcbsnj.com/ddn/NJhealthWeb.nsf) was NOT enumerated. Medicaid-specific spine policies, if any, are unretrieved.\n\n6. The FEP Medical Policy Manual, which Horizon says takes precedence for FEP members where pertinent guidelines exist, was NOT retrieved.\n\n7. No submission FAX number is published anywhere I could find. Portal and phone only.\n\n8. The exact date the Horizon NJ Health (Medicaid) line joined the TurningPoint SPINE program was not determined; the Horizon NJ Health page states the delegation as current fact without a spine-specific start date.\n\nWHAT WORKED WELL:\nThe Lotus Domino policy server at services3.horizon-bcbsnj.com is NOT behind Incapsula and served full policy documents to plain curl. Its 'MedicalPolicies' and 'Medical Policies By Section' views also expose a '?ReadViewEntries&Count=2000' XML feed that lists all 724 policies with their UNIDs, which is how the spine policies were located. Individual policies are then fetchable at https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/<UNID>?OpenDocument. Note that horizonblue.com now presents the manual at https://www.horizonblue.com/medicalpolicy and the old Domino root says the database 'has been moved', so the Domino copy may be a legacy mirror -- its view index reported Last-Modified 2024-12-18. The policy documents themselves carry their own effective and last-review dates, which are recorded per policy above.",
+      "submissionChecklist": [],
+      "policies": [
+        {
+          "policyId": "Horizon-Surgery-073",
+          "title": "Lumbar Spinal Fusion (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 073)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/21D4C237078B9807852585F3003AEC2A?OpenDocument",
+          "effectiveDate": "2020-01-21",
+          "effectiveThrough": null,
+          "lastReviewed": "2019-08-13",
+          "versionStatus": "current",
+          "verified": true
+        },
+        {
+          "policyId": "Horizon-Surgery-145",
+          "title": "Laminectomy (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 145)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/AB39B5EB45D52CCB852585F3003AE0F2?OpenDocument",
+          "effectiveDate": "2017-02-24",
+          "effectiveThrough": null,
+          "lastReviewed": "2020-07-14",
+          "versionStatus": "current",
+          "verified": true
+        },
+        {
+          "policyId": "Horizon-Surgery-142",
+          "title": "Discectomy (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 142)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/DB219B3509AEFC0B852585F300398EE5?OpenDocument",
+          "effectiveDate": "2017-02-24",
+          "effectiveThrough": null,
+          "lastReviewed": "2020-07-14",
+          "versionStatus": "current",
+          "verified": true
+        },
+        {
+          "policyId": "Horizon-Surgery-072",
+          "title": "Artificial Intervertebral Disc: Cervical Spine (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 072)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/14741ED992A4645A852585F30038C6FD?OpenDocument",
+          "effectiveDate": "2020-05-12",
+          "effectiveThrough": null,
+          "lastReviewed": "2020-05-12",
+          "versionStatus": "current",
+          "verified": true
+        },
+        {
+          "policyId": "Horizon-Surgery-051",
+          "title": "Artificial Intervertebral Disc: Lumbar Spine (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 051)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/5E7E5675FEA084FB852585F30038CBBC?OpenDocument",
+          "effectiveDate": "2017-02-24",
+          "effectiveThrough": null,
+          "lastReviewed": "2020-05-12",
+          "versionStatus": "current",
+          "verified": true
+        },
+        {
+          "policyId": "Horizon-Surgery-139",
+          "title": "Sacroiliac Joint Fusion/Stabilization (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 139)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/84A35F12180C2522852585F3003C1327?OpenDocument",
+          "effectiveDate": "2018-08-01",
+          "effectiveThrough": null,
+          "lastReviewed": "2019-12-10",
+          "versionStatus": "current",
+          "verified": true
+        },
+        {
+          "policyId": "Horizon-Surgery-161",
+          "title": "Axial Lumbosacral Interbody Fusion (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 161)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/A6212689CD7745B1852585F30038F5B5?OpenDocument",
+          "effectiveDate": "2017-11-15",
+          "effectiveThrough": null,
+          "lastReviewed": "2020-05-12",
+          "versionStatus": "current",
+          "verified": true
+        },
+        {
+          "policyId": "Horizon-Surgery-067",
+          "title": "Spinal Cord and Implantable Peripheral Nerve Stimulators (Horizon BCBSNJ Uniform Medical Policy Manual, Section: Surgery, Policy Number 067)",
+          "sourceUrl": "https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf/0/382E2016429B8614852585F3003C2116?OpenDocument",
+          "effectiveDate": "2020-02-14",
+          "effectiveThrough": null,
+          "lastReviewed": "2020-01-14",
+          "versionStatus": "current",
+          "verified": true
+        }
+      ],
+      "procedures": [
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Spinal stenosis",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "instability_documented",
+              "requirement": "Associated spondylolisthesis on plain x-ray, OR spinal instability on imaging, OR anticipated instability from bilateral/wide decompression with facetectomy or pars resection",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Any one of the following 1. Associated spondylolisthesis demonstrated on plain x-rays; OR 2. Spinal instability demonstrated on imaging studies; OR 3. Spinal instability is anticipated due to need for bilateral or wide decompression with facetectomy or resection of pars interarticularis"
+            },
+            {
+              "evidenceId": "imaging_xray",
+              "requirement": "Plain x-rays demonstrating spondylolisthesis (one accepted route to the instability criterion)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Associated spondylolisthesis demonstrated on plain x-rays"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "Central / lateral recess / foraminal stenosis documented on MRI or other imaging",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "documentation of central/lateral recess/or foraminal stenosis on magnetic resonance imaging or other imaging"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "At least 3 months of failed conservative care (waived if severe/rapidly progressive)",
+              "durationRequired": "3 months",
+              "verified": true,
+              "verbatimQuote": "has failed at least 3 months of conservative care"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Neurogenic claudication or radicular pain causing significant functional impairment",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Neurogenic claudication or radicular pain that results in significant functional impairment"
+            },
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Alternative fast track: severe or rapidly progressive motor loss, neurogenic claudication, or cauda equina syndrome",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Severe or rapidly progressive symptoms of motor loss, neurogenic claudication, or cauda equina syndrome."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Severe, progressive idiopathic scoliosis",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "imaging_xray",
+              "requirement": "Cobb angle greater than 40 degrees",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Cobb angle greater than 40"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Alternative route: cord compression with neurogenic claudication or radicular pain causing significant functional impairment after at least 3 months failed conservative care",
+              "durationRequired": "3 months",
+              "verified": true,
+              "verbatimQuote": "Spinal cord compression with neurogenic claudication or radicular pain that results in significant functional impairment in a member who has failed at least 3 months of conservative care."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Severe degenerative (lumbar or thoracolumbar) scoliosis",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "imaging_xray",
+              "requirement": "Minimum Cobb angle of 30 degrees, or significant sagittal imbalance (e.g. sagittal vertical axis greater than 5 cm)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Severe degenerative scoliosis (ie, lumbar or thoracolumbar) with a minimum Cobb angle of 30, or significant sagittal imbalance (eg, sagittal vertical axis >5 cm)"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Documented progression with persistent axial pain and functional loss unresponsive to at least 1 year of conservative therapy, OR persistent significant neurogenic symptoms unresponsive to at least 1 year of conservative nonsurgical care",
+              "durationRequired": "12 months",
+              "verified": true,
+              "verbatimQuote": "unresponsive to at least 1 year of conservative therapy ... unresponsive to at least 1 year of conservative nonsurgical care"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Impairment or loss of function documented",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "with persistent axial (nonradiating) pain and impairment or loss of function"
+            },
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Alternative fast track: severe or rapidly progressive motor loss, neurogenic claudication or cauda equina syndrome",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Severe or rapidly progressive symptoms of motor loss, neurogenic claudication, or cauda equina syndrome."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Isthmic spondylolisthesis",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "imaging_xray",
+              "requirement": "Congenital (Wiltse type I) or acquired pars defect (Wiltse type II) documented on x-ray",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Congenital (Wiltse type I) or acquired pars defect (Wiltse type II), documented on x-ray"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Persistent back pain with impairment or loss of function",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Persistent back pain (with or without neurogenic symptoms), with impairment or loss of function"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Unresponsive to at least 3 months conservative nonsurgical care (waived if severe/rapidly progressive)",
+              "durationRequired": "3 months",
+              "verified": true,
+              "verbatimQuote": "Either unresponsive to at least 3 months of conservative nonsurgical care or with severe or rapidly progressive symptoms of motor loss, neurogenic claudication, or cauda equina syndrome."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Recurrent same-level disc herniation",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "prior_op_report",
+              "requirement": "At least 3 months after previous disc surgery",
+              "durationRequired": "3 months since prior surgery",
+              "verified": true,
+              "verbatimQuote": "Recurrent, same-level disc herniation, at least 3 months after previous disc surgery"
+            },
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Recurrent neurogenic symptoms or nerve root irritation: positive nerve root tension sign, positive femoral tension sign, or corresponding neurologic deficit",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Recurrent neurogenic symptoms (radicular pain or claudication) or evidence of nerve root irritation, as demonstrated by a positive nerve root tension sign or positive femoral tension sign or a corresponding neurologic deficit"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Impairment or loss of function",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Impairment or loss of function"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Unresponsive to at least 3 months conservative nonsurgical care",
+              "durationRequired": "3 months",
+              "verified": true,
+              "verbatimQuote": "Unresponsive to at least 3 months of conservative nonsurgical care"
+            },
+            {
+              "evidenceId": "instability_documented",
+              "requirement": "Neural structure compression AND instability documented by imaging at the level and side corresponding to clinical symptoms",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Neural structure compression and instability documented by imaging at a level and side corresponding to the clinical symptoms."
+            },
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "Imaging findings must correspond to the symptomatic level and side",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "at a level and side corresponding to the clinical symptoms"
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Pseudarthrosis",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "prior_op_report",
+              "requirement": "Radiologically documented pseudarthrosis no less than 6 months after initial fusion, in a member who had significant interval relief of prior symptoms",
+              "durationRequired": "6 months since initial fusion",
+              "verified": true,
+              "verbatimQuote": "No less than 6 months after initial fusion ... in a member who had experienced significant interval relief of prior symptoms."
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Impairment or loss of function",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Impairment or loss of function"
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Adjacent-level disease",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Persistent back pain with impairment or loss of function unresponsive to at least 3 months of conservative therapy",
+              "durationRequired": "3 months",
+              "verified": true,
+              "verbatimQuote": "Persistent back pain (with or without neurogenic symptoms) with impairment or loss of function that is unresponsive to at least 3 months of conservative therapy"
+            },
+            {
+              "evidenceId": "imaging_xray",
+              "requirement": "Eccentric disc space collapse, spondylolisthesis, acute single-level scoliosis, or lateral listhesis on imaging",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Eccentric disc space collapse, spondylolisthesis, acute single-level scoliosis, or lateral listhesis on imaging"
+            },
+            {
+              "evidenceId": "prior_op_report",
+              "requirement": "The previous fusion resulted in significant relief for at least 6 months",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "The previous fusion resulted in significant relief for at least 6 months."
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Symptoms and functional measures must correlate with imaging findings",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Symptoms and functional measures correlate with imaging findings"
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "Discogenic low back pain / single-level degenerative disc disease",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Chronic unremitting discogenic axial low back pain and associated disability from single-level lumbar DDD for at least one year",
+              "durationRequired": "12 months",
+              "verified": true,
+              "verbatimQuote": "Presence of chronic, unremitting, discogenic axial lower back pain and associated disability secondary to single-level degenerative lumbar disc disease (DDD) for at least one year"
+            },
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "Must be SINGLE-level degenerative disc disease",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "single-level degenerative lumbar disc disease (DDD)"
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "Structured physician-supervised multi-modal nonoperative management with regularly scheduled appointments and follow-up evaluation, for at least 12 consecutive months; at least two modalities required, one option being a provider-directed exercise program prescribed by a PT, chiropractor, osteopathic or allopathic physician",
+              "durationRequired": "12 consecutive months",
+              "verified": true,
+              "verbatimQuote": "Structured physician-supervised, multi-modal, nonoperative management of medical care which includes regularly scheduled appointments, follow-up evaluation, and less than clinically meaningful improvement with at least two of the following for at least 12 consecutive months unless contraindicated: ... Provider-directed exercise program prescribed by a physical therapist, chiropractic provider, osteopathic or allopathic physician"
+            },
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Prescription strength analgesics, steroids, and/or NSAIDs (counts as one of the required two modalities)",
+              "durationRequired": "part of the 12 consecutive months",
+              "verified": true,
+              "verbatimQuote": "Prescription strength analgesics, steroids, and/or NSAIDs"
+            },
+            {
+              "evidenceId": "chiropractic",
+              "requirement": "Provider-directed exercise program may be prescribed by a chiropractic provider",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Provider-directed exercise program prescribed by a physical therapist, chiropractic provider, osteopathic or allopathic physician"
+            },
+            {
+              "evidenceId": "injection_esi",
+              "requirement": "Epidural steroid injection(s)/selective nerve root block(s) (counts as one of the required two modalities)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Epidural steroid injection(s)/selective nerve root block(s)"
+            },
+            {
+              "evidenceId": "injection_facet",
+              "requirement": "Facet joint injection(s)/medial branch block(s) (counts as one of the required two modalities)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Facet joint injection(s)/medial branch block(s)/radiofrequency ablation(s)"
+            },
+            {
+              "evidenceId": "rfa",
+              "requirement": "Radiofrequency ablation(s) (counts as one of the required two modalities)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Facet joint injection(s)/medial branch block(s)/radiofrequency ablation(s)"
+            },
+            {
+              "evidenceId": "imaging_xray",
+              "requirement": "Recent (within 6 months) plain X-rays confirming moderate to severe single-level disc degeneration",
+              "durationRequired": "within 6 months",
+              "verified": true,
+              "verbatimQuote": "Moderate to severe single-level disc degeneration has been confirmed on recent (within 6 months) plain X-rays and advanced diagnostic imaging studies (i.e., CT. MRI)."
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "Advanced diagnostic imaging (MRI) confirming moderate to severe single-level disc degeneration, within 6 months",
+              "durationRequired": "within 6 months",
+              "verified": true,
+              "verbatimQuote": "confirmed on recent (within 6 months) plain X-rays and advanced diagnostic imaging studies (i.e., CT. MRI)."
+            },
+            {
+              "evidenceId": "imaging_ct",
+              "requirement": "Advanced diagnostic imaging (CT) confirming moderate to severe single-level disc degeneration, within 6 months",
+              "durationRequired": "within 6 months",
+              "verified": true,
+              "verbatimQuote": "confirmed on recent (within 6 months) plain X-rays and advanced diagnostic imaging studies (i.e., CT. MRI)."
+            }
+          ],
+          "exclusions": [
+            "Lumbar spinal fusion is considered investigational if the sole indication is any one of the following conditions: Disc herniation; Chronic nonspecific low back pain without radiculopathy; Initial discectomy/laminectomy for neural structure decompression; Facet syndrome.",
+            "Lumbar spinal fusion is not considered medically necessary for any indication not addressed above.",
+            "Multiple-level lumbar spinal fusion is not considered medically necessary when the criteria listed above are not met for all levels."
+          ],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-073",
+          "procedure": "Lumbar spinal fusion",
+          "indication": "POLICY GUIDELINES -- cross-cutting documentation requirements applying to all indications above",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Prescription strength analgesics for several weeks at a therapeutic dose, including anti-inflammatories with or without nerve membrane stabilizers or muscle relaxants",
+              "durationRequired": "several weeks",
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "At least 6 weeks of physical therapy including active exercise, or documentation of why the patient could not tolerate PT",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "psych_clearance",
+              "requirement": "Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "symptom_severity",
+              "requirement": "Persistent debilitating pain defined as daily pain with visual analog scale score greater than 4",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Persistent debilitating pain is defined as: Significant level of pain on a daily basis defined on a visual analog scale as a score greater than 4"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Daily pain with documented impact on activities of daily living despite optimal conservative therapy; 'severely restricted functional ability' means loss of function and/or inability or significantly decreased ability to perform normal daily activities of work, school, or at-home duties",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Pain on a daily basis that has a documented impact on activities of daily living despite optimal conservative nonsurgical therapy as outlined above and appropriate for the patient."
+            },
+            {
+              "evidenceId": "nicotine_status",
+              "requirement": "Smoking status is called out in the Policy Guidelines as affecting fusion rates. It is stated as evidence commentary, NOT as an explicit inclusion or exclusion criterion in this policy.",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Smoking within the previous 3 months has been shown to reduce fusion rates (Jackson & Devine, 2016)."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-145",
+          "procedure": "Cervical laminectomy",
+          "indication": "Spinal cord or nerve root compression from spinal stenosis (with or without spondylolisthesis), OPLL/ossification of the yellow ligament, or ligamentum flavum hypertrophy",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "At least one of: rapidly progressive neurologic deficits; symptoms of cervical myelopathy or cervical cord compression (with or without radiculopathy). Policy Guidelines list myelopathy signs: difficulty with fine hand movements, incoordination of hand/upper extremity, thenar and hypothenar atrophy, diffuse hyperreflexia and bilateral Babinski responses, decreased sensation/vibratory sense/proprioception at C5 or below, inability to perform tandem walk, bowel and bladder incontinence",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Neurologic deficits that are rapidly progressive; OR Symptoms of cervical myelopathy (see Policy Guidelines section) or cervical cord compression (with or without radiculopathy)"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Alternative route: persistent debilitating pain refractory to at least 6 weeks of conservative nonsurgical therapy",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Persistent debilitating pain that is refractory to at least 6 weeks of conservative nonsurgical therapy"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "Imaging studies, preferably MRI, showing spinal cord compression, nerve root compression, and/or myelographic changes at a level corresponding to the signs and symptoms",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Imaging studies (preferably magnetic resonance imaging) with findings of spinal cord compression, nerve root compression, and/or myelographic changes, at a level corresponding to the patient's signs and symptoms."
+            },
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "Imaging findings must be at a level corresponding to the patient's signs and symptoms",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "at a level corresponding to the patient's signs and symptoms"
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-145",
+          "procedure": "Lumbar laminectomy",
+          "indication": "Spinal cord or nerve root compression due to spinal stenosis (with or without spondylolisthesis)",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Rapidly progressive neurologic deficits (one accepted route)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Neurologic deficits that are rapidly progressive"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Neurogenic claudication persistent and refractory to at least 6 weeks of conservative nonsurgical therapy, OR persistent debilitating pain refractory to at least 6 weeks of conservative nonsurgical management",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Neurologic claudication that is persistent and refractory to at least 6 weeks of conservative nonsurgical therapy (see Policy Guidelines section); OR Persistent debilitating pain that is refractory to at least 6 weeks of conservative nonsurgical management"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "Imaging studies, preferably MRI, with findings of spinal cord or nerve root compression at a corresponding level",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Imaging studies (preferably magnetic resonance imaging) with findings of spinal cord or nerve root compression, at a level corresponding to the patient's signs and symptoms."
+            },
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "Imaging findings must be at a level corresponding to the patient's signs and symptoms",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "at a level corresponding to the patient's signs and symptoms"
+            }
+          ],
+          "exclusions": [
+            "Laminectomy (cervical or lumbar) is not medically necessary for spinal stenosis when the above criteria are not met.",
+            "Laminectomy is considered investigational for all other indications."
+          ],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-145",
+          "procedure": "Laminectomy (cervical, thoracic, lumbar)",
+          "indication": "Space-occupying lesions of the spinal cord and/or spinal canal",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "icd10_codes",
+              "requirement": "Primary or metastatic tumors, or abscesses/other localized infections",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Laminectomy (cervical, thoracic, lumbar) may be considered medically necessary for space-occupying lesions of the spinal cord and/or spinal canal. Primary or metastatic tumors Abscesses or other localized infections."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-145",
+          "procedure": "Laminectomy",
+          "indication": "POLICY GUIDELINES -- conservative care definition and required documentation",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Prescription strength analgesics for several weeks at therapeutic dose, including anti-inflammatories with or without nerve membrane stabilizers or muscle relaxants; also listed under required history as oral analgesics and/or anti-inflammatory medications",
+              "durationRequired": "several weeks",
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "At least 6 weeks of physical therapy including active exercise, or documentation of why the patient could not tolerate PT",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "psych_clearance",
+              "requirement": "Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues; and assessment of comorbid psychological health conditions",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "symptom_severity",
+              "requirement": "Persistent debilitating pain = daily pain measured as a VAS score of 4 or greater",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Persistent debilitating pain is defined as: Significant level of pain on a daily basis as measured as a visual analog scale score of 4 or greater"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Daily pain with documented impact on activities of daily living despite optimal conservative therapy",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Pain on a daily basis that has a documented impact on activities of daily living despite optimal conservative nonsurgical therapy as outlined above and appropriate for the patient."
+            },
+            {
+              "evidenceId": "bmi",
+              "requirement": "Assessment of comorbid conditions including morbid obesity must be documented in the medical history",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "nicotine_status",
+              "requirement": "Assessment of comorbid conditions including current smoking must be documented in the medical history",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "bone_density",
+              "requirement": "Assessment of comorbid conditions including osteoporosis must be documented in the medical history",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "prior_op_report",
+              "requirement": "History of back surgery, including minimally invasive back procedures, must be documented",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "chiropractic",
+              "requirement": "Chiropractic manipulation is listed among the conservative/nonoperative interventions for which prior trial, failure, or contraindication must be documented",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "injection_esi",
+              "requirement": "Epidural steroid injections are listed among the conservative/nonoperative interventions for which prior trial, failure, or contraindication must be documented",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "imaging_ct",
+              "requirement": "Radiologist's report of an MRI or CT with myelogram of the spine within the past 6 months showing a spine abnormality",
+              "durationRequired": "within past 6 months",
+              "verified": true,
+              "verbatimQuote": "Radiologist's report of a magnetic resonance image or computerized tomography scan with myelogram of the spine within the past 6 months showing a spine abnormality"
+            },
+            {
+              "evidenceId": "imaging_myelogram",
+              "requirement": "CT with myelogram accepted as the required advanced imaging when MRI is not used; myelographic changes are also an accepted cervical finding",
+              "durationRequired": "within past 6 months",
+              "verified": true,
+              "verbatimQuote": "Radiologist's report of a magnetic resonance image or computerized tomography scan with myelogram of the spine within the past 6 months showing a spine abnormality"
+            },
+            {
+              "evidenceId": "injection_esi",
+              "requirement": "Report of the selective nerve root injection results, if applicable to the patient's diagnostic workup",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Report of the selective nerve root injection results, if applicable to the patient's diagnostic workup."
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Activity modification for at least 6 weeks is listed among the conservative interventions to document",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-142",
+          "procedure": "Lumbar discectomy (open discectomy or microdiscectomy)",
+          "indication": "Lumbar herniated disc",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Signs and symptoms of radiculopathy on history and physical exam. Policy Guidelines define this as: history of pain radiating down the back of the leg to below the knee, numbness/tingling in a dermatomal distribution, muscular weakness in a nerve-root pattern; physical exam of positive straight leg raise, loss of deep tendon reflexes corresponding to the affected nerve root level, loss of sensation in a dermatomal pattern",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Signs and symptoms of radiculopathy on history and physical exam (see Policy Guidelines section)."
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Persistent debilitating back or leg pain refractory to at least 6 weeks of conservative therapy (waived if rapidly progressing neurologic deficits)",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Rapidly progressing neurologic deficits; OR Persistent debilitating back or leg pain that is refractory to at least 6 weeks of conservative therapy"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "Documentation of nerve root compression on MRI at a level that corresponds with the member's symptoms",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Documentation of nerve root compression on imaging (magnetic resonance imaging [MRI] or computed tomography [CT]) at a level that corresponds with the member's symptoms"
+            },
+            {
+              "evidenceId": "imaging_ct",
+              "requirement": "CT accepted as an alternative to MRI for documenting nerve root compression",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Documentation of nerve root compression on imaging (magnetic resonance imaging [MRI] or computed tomography [CT]) at a level that corresponds with the member's symptoms"
+            },
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "Imaging-documented compression must correspond to the symptomatic level",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "at a level that corresponds with the member's symptoms"
+            }
+          ],
+          "exclusions": [
+            "Lumbar discectomy is not considered medically necessary for the treatment of lumbar herniated disc when the above criteria are not met."
+          ],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-142",
+          "procedure": "Cervical discectomy (open anterior cervical discectomy with or without fusion, or minimally invasive posterior cervical discectomy/foraminotomy)",
+          "indication": "Cervical herniated disc",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Signs and symptoms of radiculopathy and/or myelopathy on history and physical exam",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Signs and symptoms of radiculopathy and/or myelopathy on history and physical exam (see Policy Guidelines section)."
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Persistent debilitating neck, back or arm pain refractory to at least 6 weeks of conservative therapy, OR persistent/progressive myelopathy symptoms refractory to at least 6 weeks of conservative therapy (waived if rapidly progressing neurologic deficits)",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Persistent debilitating neck, back or arm pain that is refractory to at least 6 weeks of conservative therapy (see Policy Guidelines section); OR Persistent or progressive symptoms of myelopathy that are refractory to at least 6 weeks of conservative therapy"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "Documentation of nerve root compression on MRI at a corresponding level",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Documentation of nerve root compression on imaging (MRI or CT) at a level that corresponds with the member's symptoms"
+            },
+            {
+              "evidenceId": "imaging_ct",
+              "requirement": "CT accepted as an alternative to MRI",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Documentation of nerve root compression on imaging (MRI or CT) at a level that corresponds with the member's symptoms"
+            },
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "Imaging-documented compression must correspond to the symptomatic level",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "at a level that corresponds with the member's symptoms"
+            }
+          ],
+          "exclusions": [
+            "Cervical discectomy is not considered medically necessary for the treatment of cervical herniated disc when the above criteria are not met.",
+            "Discectomy is considered investigational for all other indications.",
+            "Considered investigational for this policy: Laser discectomy; Radiofrequency coblation (nucleoplasty); Automated percutaneous discectomy; Endoscopic discectomy; Intradiscal electrothermal annuloplasty; Intradiscal radiofrequency therapy; Chemonucleolysis."
+          ],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-142",
+          "procedure": "Discectomy",
+          "indication": "POLICY GUIDELINES -- conservative care definition and required documentation",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Prescription-strength analgesics for several weeks at therapeutic dose, including anti-inflammatories with or without nerve membrane stabilizers or muscle relaxants",
+              "durationRequired": "several weeks",
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "At least 6 weeks of physical therapy including active exercise, or documentation of why the patient could not tolerate PT",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "psych_clearance",
+              "requirement": "Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Conservative nonsurgical therapy for the duration specified should include the following: Use of prescription strength analgesics for several weeks at a dose sufficient to induce a therapeutic response; Analgesics should include anti-inflammatory medications with or without adjunctive medications such as nerve membrane stabilizers or muscle relaxants AND Participation in at least 6 weeks of physical therapy (including active exercise) or documentation of why the patient could not tolerate physical therapy, AND Evaluation and appropriate management of associated cognitive, behavioral, or addiction issues AND Documentation of patient compliance with the preceding criteria."
+            },
+            {
+              "evidenceId": "symptom_severity",
+              "requirement": "Persistent debilitating pain = daily pain with VAS score greater than 4",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Persistent debilitating pain is defined as: Significant level of pain on a daily basis, defined on a visual analog scale score as greater than 4"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Daily pain with documented impact on activities of daily living despite optimal conservative therapy",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Pain on a daily basis that has a documented impact on activities of daily living despite optimal conservative nonsurgical therapy, as outlined above, and appropriate for the patient."
+            },
+            {
+              "evidenceId": "bmi",
+              "requirement": "Assessment of comorbid conditions including morbid obesity documented in medical history",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "nicotine_status",
+              "requirement": "Assessment of comorbid conditions including current smoking documented in medical history",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "bone_density",
+              "requirement": "Assessment of comorbid conditions including osteoporosis documented in medical history",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "prior_op_report",
+              "requirement": "History of back surgery, including minimally invasive back procedures",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "chiropractic",
+              "requirement": "Chiropractic manipulation listed among conservative interventions requiring documented trial, failure, or contraindication",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "injection_esi",
+              "requirement": "Epidural steroid injections listed among conservative interventions requiring documented trial, failure, or contraindication",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Activity modification for at least 6 weeks listed among conservative interventions to document",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "Assessment of comorbid physical and psychological health conditions (eg, morbid obesity, current smoking, diabetes, renal disease, osteoporosis, severe physical deconditioning); History of back surgery, including minimally invasive back procedures; Prior trial, failure, or contraindication to conservative medical/nonoperative interventions that may include but are not limited to the following: Activity modification for at least 6 weeks; Oral analgesics and/or anti-inflammatory medications; Physical therapy; Chiropractic manipulation; Epidural steroid injections."
+            }
+          ],
+          "exclusions": [],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-072",
+          "procedure": "Cervical disc arthroplasty (cervical artificial intervertebral disc replacement)",
+          "indication": "Intractable cervical radicular pain or myelopathy from cervical degenerative disc disease C3-C7",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Intractable cervical radicular pain or myelopathy",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "The member has intractable cervical radicular pain or myelopathy"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Failed at least 6 weeks of conservative nonoperative treatment, unless severe or rapidly progressive nerve root or spinal cord compression requiring hospitalization or immediate surgery",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "which has failed at least 6 weeks of conservative nonoperative treatment, including active pain management program or protocol, under the direction of a physician, with pharmacotherapy that addresses neuropathic pain and other pain sources AND physical therapy; OR if the member has severe or rapidly progressive symptoms of nerve root or spinal cord compression requiring hospitalization or immediate surgical treatment"
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "Physical therapy is explicitly required as part of the conservative nonoperative treatment, alongside a physician-directed active pain management program",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "including active pain management program or protocol, under the direction of a physician, with pharmacotherapy that addresses neuropathic pain and other pain sources AND physical therapy"
+            },
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Pharmacotherapy addressing neuropathic pain and other pain sources",
+              "durationRequired": "6 weeks",
+              "verified": true,
+              "verbatimQuote": "with pharmacotherapy that addresses neuropathic pain and other pain sources"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "Degeneration documented by MRI",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Degeneration is documented by magnetic resonance imaging (MRI), computed tomography (CT), or myelography"
+            },
+            {
+              "evidenceId": "imaging_ct",
+              "requirement": "CT accepted as an alternative for documenting degeneration",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Degeneration is documented by magnetic resonance imaging (MRI), computed tomography (CT), or myelography"
+            },
+            {
+              "evidenceId": "imaging_myelogram",
+              "requirement": "Myelography accepted as an alternative for documenting degeneration",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Degeneration is documented by magnetic resonance imaging (MRI), computed tomography (CT), or myelography"
+            },
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "Cervical degenerative disc disease must be from C3 through C7. A second contiguous level is allowed only if criteria are met at each level and the device is FDA-approved for 2 levels (e.g. Mobi-C, Prestige LP). Implantation at more than 2 levels is investigational.",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Cervical degenerative disc disease is from C3 through C7 ... Simultaneous cervical disc arthroplasty at a second contiguous level is considered medically necessary if the above criteria are met for each disc level, and the device is FDA-approved for 2 levels"
+            },
+            {
+              "evidenceId": "prior_op_report",
+              "requirement": "For a subsequent adjacent-level arthroplasty: documentation that the initial cervical artificial disc implantation is fully healed and that the planned procedure is at a different cervical level. Prior surgery at the treated level and previous fusion at another cervical level are investigational.",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Clinical documentation that the initial cervical artificial intervertebral disc implantation is fully healed."
+            },
+            {
+              "evidenceId": "bone_density",
+              "requirement": "Metabolic bone disease (osteoporosis, osteopenia, osteomalacia) is an investigational indication, i.e. a contraindication to coverage",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Cervical disc arthroplasty is considered investigational for all other indications, including the following: ... Metabolic bone disease (eg, osteoporosis, osteopenia, osteomalacia)"
+            },
+            {
+              "evidenceId": "instability_documented",
+              "requirement": "Translational instability is an investigational indication for cervical disc arthroplasty (instability argues for fusion, not arthroplasty)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Cervical disc arthroplasty is considered investigational for all other indications, including the following: ... Translational instability"
+            }
+          ],
+          "exclusions": [
+            "Disc implantation at more than 2 levels",
+            "Combined use of an artificial cervical disc and fusion",
+            "Prior surgery at the treated level",
+            "Previous fusion at another cervical level",
+            "Translational instability",
+            "Anatomic deformity (e.g., ankylosing spondylitis)",
+            "Rheumatoid arthritis or other autoimmune disease",
+            "Presence of facet arthritis",
+            "Active infection",
+            "Metabolic bone disease (eg, osteoporosis, osteopenia, osteomalacia)",
+            "Malignancy",
+            "Member must be skeletally mature and the device must be FDA-approved"
+          ],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-051",
+          "procedure": "Lumbar artificial intervertebral disc replacement (FDA-approved device, e.g. Charite, ProDisc-L, activL)",
+          "indication": "Single-level lumbar degenerative disc disease",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "spinal_levels",
+              "requirement": "DDD at ONE level only, at L4-L5 or L5-S1 for Charite and activL; L3-L4, L4-L5 or L5-S1 for ProDisc-L",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "have degenerative disc disease (DDD) at one level in the lumbar spine at either L4-L5 or L5-S1 for the Charite and activL; L-3-L4, L4-L5, or L5-S1 for the ProDisc-L"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "DDD confirmed by member history and radiographic studies, i.e. MR imaging and provocative discography",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "have degenerative disc disease (DDD) confirmed by member history and radiographic studies (i.e., MR imaging and provocative discography)"
+            },
+            {
+              "evidenceId": "instability_documented",
+              "requirement": "No more than 3 mm of spondylolisthesis at the involved level for Charite, or no more than Grade I spondylolisthesis for ProDisc-L and activL",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "have no more than 3 mm of spondylolisthesis at the involved level for Charite or no more than Grade I spondylolisthesis for ProDisc-L, and activL"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "No relief from pain after at least six months of conservative/non-operative treatment",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "have had no relief from pain after at least six months of conservative/non-operative treatment (e.g., physical therapy, facet joint injections, epidural steroids, ultrasound, manipulation, anti-inflammatory medications, analgesic medications, muscle relaxants, lumbosacral stabilization therapy)"
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "Physical therapy and lumbosacral stabilization therapy are named conservative treatments in the required 6-month trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "physical therapy ... lumbosacral stabilization therapy"
+            },
+            {
+              "evidenceId": "injection_facet",
+              "requirement": "Facet joint injections named among the conservative treatments in the required 6-month trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "facet joint injections"
+            },
+            {
+              "evidenceId": "injection_esi",
+              "requirement": "Epidural steroids named among the conservative treatments in the required 6-month trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "epidural steroids"
+            },
+            {
+              "evidenceId": "chiropractic",
+              "requirement": "Manipulation named among the conservative treatments in the required 6-month trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "manipulation"
+            },
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Anti-inflammatory medications, analgesic medications and muscle relaxants named among the conservative treatments in the required 6-month trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "anti-inflammatory medications, analgesic medications, muscle relaxants"
+            },
+            {
+              "evidenceId": "bone_density",
+              "requirement": "Osteoporosis and osteopenia are explicit contraindications to lumbar disc arthroplasty",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "do not have a contraindication to disc arthroplasty including, but not limited to, any of the following: - active systemic infection or infection localized to the site of implantation, - osteoporosis, - osteopenia"
+            }
+          ],
+          "exclusions": [
+            "Member must be skeletally mature",
+            "Active systemic infection or infection localized to the site of implantation",
+            "Osteoporosis",
+            "Osteopenia",
+            "Bony lumbar stenosis",
+            "Allergy or sensitivity to implant materials (e.g., cobalt, chromium, titanium, polyethylene)",
+            "Isolated radicular compression syndromes, especially due to disc herniation",
+            "Pars defect",
+            "Involved vertebral endplate dimensionally smaller than 34.5 mm medial-lateral and/or 27 mm anterior-posterior (ProDisc-L); smaller than 31 mm medial-lateral and/or 26 mm anterior-posterior (activL)"
+          ],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-139",
+          "procedure": "Minimally invasive fixation/fusion of the sacroiliac joint using a titanium triangular implant",
+          "indication": "Sacroiliac joint pain",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "symptom_severity",
+              "requirement": "Pain at least 5 on a 0 to 10 rating scale that impacts quality of life or limits activities of daily living",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Pain is at least 5 on a 0 to 10 rating scale that impacts quality of life or limits activities of daily living"
+            },
+            {
+              "evidenceId": "functional_impairment_score",
+              "requirement": "Pain must impact quality of life or limit activities of daily living",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Pain is at least 5 on a 0 to 10 rating scale that impacts quality of life or limits activities of daily living"
+            },
+            {
+              "evidenceId": "psych_clearance",
+              "requirement": "Absence of generalized pain behavior (e.g. somatoform disorder) or generalized pain disorders (e.g. fibromyalgia)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "There is an absence of generalized pain behavior (eg, somatoform disorder) or generalized pain disorders (eg, fibromyalgia)"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Minimum 6 months of intensive nonoperative treatment, undergone and failed",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "Member has undergone and failed a minimum 6 months of intensive nonoperative treatment"
+            },
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Medication optimization is a required component of the 6-month nonoperative trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "must include medication optimization, activity modification, bracing, and active therapeutic exercise targeted at the lumbar spine, pelvis, sacroiliac joint, and hip, including a home exercise program"
+            },
+            {
+              "evidenceId": "bracing",
+              "requirement": "Bracing is a required component of the 6-month nonoperative trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "must include medication optimization, activity modification, bracing, and active therapeutic exercise"
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "Active therapeutic exercise targeted at the lumbar spine, pelvis, sacroiliac joint and hip is a required component of the 6-month nonoperative trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "active therapeutic exercise targeted at the lumbar spine, pelvis, sacroiliac joint, and hip, including a home exercise program"
+            },
+            {
+              "evidenceId": "home_exercise",
+              "requirement": "A home exercise program is explicitly required as part of the 6-month nonoperative trial",
+              "durationRequired": "6 months",
+              "verified": true,
+              "verbatimQuote": "including a home exercise program"
+            },
+            {
+              "evidenceId": "imaging_xray",
+              "requirement": "Plain radiographs of the SI joint to exclude destructive lesions or inflammatory arthropathy, AND an anteroposterior plain radiograph of the pelvis to rule out concomitant hip pathology",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Imaging (plain radiographs and computed tomography or magnetic resonance imaging) of the sacroiliac joint excludes the presence of destructive lesions (eg, tumor, infection) or inflammatory arthropathy of the sacroiliac joint; AND Imaging of the pelvis (anteroposterior plain radiograph) rules out concomitant hip pathology"
+            },
+            {
+              "evidenceId": "imaging_ct",
+              "requirement": "CT (or MRI) of the SI joint to exclude destructive lesions/inflammatory arthropathy, and CT (or MRI) of the lumbar spine to rule out neural compression or other degenerative cause of low back or buttock pain",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Imaging of the lumbar spine (computed tomography or magnetic resonance imaging) is performed to rule out neural compression or other degenerative condition that can be causing low back or buttock pain"
+            },
+            {
+              "evidenceId": "imaging_mri",
+              "requirement": "MRI (or CT) of the SI joint and of the lumbar spine, as above; SI joint imaging must also show evidence of injury and/or degeneration",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Imaging of the sacroiliac joint indicates evidence of injury and/or degeneration"
+            },
+            {
+              "evidenceId": "injection_si",
+              "requirement": "At least 75% reduction in pain for the expected duration of the anesthetic following an image-guided, contrast-enhanced INTRA-ARTICULAR SI joint injection on TWO separate occasions; PLUS a therapeutic SI joint corticosteroid injection performed at least once",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "There is at least a 75% reduction in pain for the expected duration of the anesthetic used following an image-guided, contrast-enhanced intra-articular sacroiliac joint injection on 2 separate occasions; AND A trial of a therapeutic sacroiliac joint injection (ie, corticosteroid injection) has been performed on at least once."
+            },
+            {
+              "evidenceId": "neuro_deficit",
+              "requirement": "Pain must be caudal to L5, localized over the posterior SI joint, with localized tenderness on palpation over the sacral sulcus (Fortin's point) in the absence of similar tenderness elsewhere, AND a positive response to a cluster of 3 provocative tests (e.g. thigh thrust, compression, Gaenslen sign, distraction, Patrick, posterior provocation)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "A thorough physical examination demonstrates localized tenderness with palpation over the sacral sulcus (Fortin's point) in the absence of tenderness of similar severity elsewhere; AND There is a positive response to a cluster of 3 provocative tests (eg, thigh thrust test, compression test, Gaenslen sign, distraction test, Patrick test, posterior provocation test)"
+            }
+          ],
+          "exclusions": [
+            "Fixation/fusion of the sacroiliac joint for the treatment of back pain presumed to originate from the sacroiliac joint is considered investigational under all other conditions and with any other devices not listed above.",
+            "This policy does not address treatment of pain in the sacroiliac joint due to infection, trauma, or neoplasm."
+          ],
+          "cptCodes": [
+            "27279",
+            "27280"
+          ]
+        },
+        {
+          "policyId": "Horizon-Surgery-161",
+          "procedure": "Axial lumbosacral interbody fusion (AxiaLIF)",
+          "indication": "All indications",
+          "criteriaLogic": null,
+          "requirements": [],
+          "exclusions": [
+            "Axial lumbosacral interbody fusion is considered investigational."
+          ],
+          "cptCodes": []
+        },
+        {
+          "policyId": "Horizon-Surgery-067",
+          "procedure": "Spinal cord stimulator -- short-term trial and permanent implantation",
+          "indication": "Chronic intractable pain secondary to failed back surgery syndrome (FBSS) with intractable neuropathic leg pain",
+          "criteriaLogic": null,
+          "requirements": [
+            {
+              "evidenceId": "prior_op_report",
+              "requirement": "Diagnosis of failed back surgery syndrome presupposes documented prior spine surgery",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "chronic, intractable pain secondary to failed back surgery syndrome (FBSS) with intractable neuropathic leg pain"
+            },
+            {
+              "evidenceId": "symptom_duration",
+              "requirement": "Failure of at least six consecutive months of provider-supervised conservative medical management",
+              "durationRequired": "6 consecutive months",
+              "verified": true,
+              "verbatimQuote": "Failure of at least six consecutive months of provider-supervised conservative medical management (e.g., pharmacotherapy, physical therapy, cognitive therapy, and activity lifestyle modification)"
+            },
+            {
+              "evidenceId": "pt_supervised",
+              "requirement": "Physical therapy named within the required six months of provider-supervised conservative medical management",
+              "durationRequired": "6 consecutive months",
+              "verified": true,
+              "verbatimQuote": "provider-supervised conservative medical management (e.g., pharmacotherapy, physical therapy, cognitive therapy, and activity lifestyle modification)"
+            },
+            {
+              "evidenceId": "medication_trial",
+              "requirement": "Pharmacotherapy named within the required six months of provider-supervised conservative medical management",
+              "durationRequired": "6 consecutive months",
+              "verified": true,
+              "verbatimQuote": "provider-supervised conservative medical management (e.g., pharmacotherapy, physical therapy, cognitive therapy, and activity lifestyle modification)"
+            },
+            {
+              "evidenceId": "psych_clearance",
+              "requirement": "An evaluation by a mental health provider (face-to-face assessment, with or without psychological questionnaires and/or testing) revealing no evidence of an inadequately controlled mental health problem",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "An evaluation by a mental health provider (e.g., a face-to-face assessment with or without psychological questionnaires and/or psychological testing) reveals no evidence of an inadequately controlled mental health problem (eg, alcohol or drug dependence, depression, psychosis) that would impact perception of pain and/or negatively impact the success of a SCS or contraindicate placement of the device."
+            },
+            {
+              "evidenceId": "symptom_severity",
+              "requirement": "Permanent implantation requires at least a 50% reduction in pain demonstrated during the short-term trial (trial greater than 48 hours)",
+              "durationRequired": null,
+              "verified": true,
+              "verbatimQuote": "Permanent implantation of a spinal cord stimulator (i.e., non high- frequency, HF 10 SCS) is considered medically necessary for the treatment of chronic, intractable pain secondary to failed back surgery syndrome (FBSS) with intractable neuropathic leg pain when at least a 50% reduction in pain has been demonstrated during a short-term trial of SCS."
+            }
+          ],
+          "exclusions": [
+            "Surgical intervention is not indicated, or the member does not wish to proceed with spinal surgery (this is an inclusion condition -- SCS is not an alternative offered when surgery is indicated and desired)"
+          ],
+          "cptCodes": [
+            "63650",
+            "63655",
+            "63685"
+          ]
+        }
+      ],
+      "unverified": [
+        "TurningPoint's proprietary spine medical policies -- the criteria that actually decide these authorizations. Behind portal login. NOT RETRIEVED. Affects every evidenceId.",
+        "Cervical spinal fusion / ACDF medical necessity criteria for Horizon. NO Horizon policy exists (confirmed by enumerating all 724 policies). Criteria are TurningPoint-proprietary only.",
+        "Thoracic spinal fusion, vertebral corpectomy, spinal osteotomy, and spinal deformity surgery criteria. No Horizon policy exists for these; codes are on the TurningPoint PA list.",
+        "Kyphoplasty/vertebroplasty criteria. Horizon has a policy ('Percutaneous Balloon Kyphoplasty, Radiofrequency Kyphoplasty, and Mechanical Vertebral Augmentation', Treatment section) that I located by UNID but did NOT retrieve or extract.",
+        "Whether Horizon policies 073, 142, 145, 072 and 051 remain in force for TurningPoint-program members. Their scope notes still name eviCore, which has been wrong since 2022-02-01. Horizon has not published a corrected note. The inference that they now govern only SHBP/SEHBP is MINE, not Horizon's.",
+        "Whether TurningPoint uses MCG, InterQual, or its own criteria. Horizon says only that 'TurningPoint manages and maintains the medical policy criteria and guidelines'. TurningPoint's own marketing says 'nationally recognized, evidence-based criteria' without naming a vendor. No named criteria set (MCG/InterQual) was ever confirmed for the Horizon spine program.",
+        "Whether nicotine_status, bmi, and bone_density are hard gates for TurningPoint spine approvals. In Horizon's own policies these appear only as documentation/comorbidity-assessment items (except osteoporosis/osteopenia, which ARE explicit contraindications for lumbar disc arthroplasty in policy 051, and metabolic bone disease in policy 072). TurningPoint's spine policies for Horizon may well impose hard BMI/tobacco thresholds -- other payers' TurningPoint programs do -- but that is NOT verified for Horizon.",
+        "emg_ncs -- NO Horizon spine policy retrieved requires or even mentions EMG/NCS. Whether TurningPoint requires it is unknown.",
+        "imaging_flexion_extension -- NO Horizon spine policy retrieved names flexion/extension radiographs. Policy 073 requires instability 'demonstrated on imaging studies' without specifying flexion/extension views. Whether TurningPoint requires them is unknown.",
+        "acupuncture -- not mentioned in any Horizon spine policy retrieved.",
+        "Turnaround times / decision timeframes for TurningPoint spine PA/MND. Not published on the Horizon pages retrieved.",
+        "Appeal and peer-to-peer process specifics for TurningPoint spine denials under Horizon.",
+        "Horizon NJ Health (Medicaid) spine-specific medical policies. Manual not enumerated.",
+        "FEP Medical Policy Manual spine content, which takes precedence for FEP members where pertinent guidelines exist.",
+        "Exact spine-program start date for the Horizon NJ Health Medicaid line.",
+        "Full extraction of Horizon policy 067 (Spinal Cord and Implantable Peripheral Nerve Stimulators) -- only the Failed Back Surgery Syndrome indication was extracted; CRPS/RSD and other indications were not.",
+        "Which specific ASO employer groups participate. Horizon says only 'certain' ASO groups."
+      ]
+    },
+    {
+      "id": "horizon-pain",
+      "scoring": "indicative",
+      "name": "Horizon BCBSNJ — interventional pain management",
       "criteriaAvailability": "public_partial",
       "reproductionRestricted": false,
-      "note": "eviCore administers Horizon INTERVENTIONAL PAIN MANAGEMENT only (injections/RFA). Spine SURGERY prior authorization appears to run through TurningPoint under Horizon's Surgical and Implantable Device Management Program — unconfirmed. No Horizon spine surgery criteria were retrievable, so surgery readiness cannot be scored for Horizon.",
+      "note": "eviCore administers Horizon INTERVENTIONAL PAIN MANAGEMENT only — spinal injections and RFA, not surgery. The numeric thresholds captured here come from a 2022 provider orientation deck; the 2026 edition removed the criteria slides, so verify before relying on them.",
       "umVendor": "SPLIT — see scopeCorrection. eviCore by Evernorth administers Interventional Pain Management (spinal injections) ONLY. Spine SURGERY prior authorization is administered by TurningPoint Healthcare Solutions under Horizon's Surgical and Implantable Device Management Program, NOT by eviCore.",
       "retrievedAt": "2026-08-30",
       "accessNotes": "WHAT I RETRIEVED AND READ IN FULL: (1) eviCore 'Musculoskeletal Prior Authorization — Pain Management' Horizon provider orientation, dated 05/23/2022 (https://www.evicore.com/sites/default/files/resources/2023-07/Horizon-Pain-Management-Provider-Orientation-052322.pdf) — this is the ONLY document I found anywhere that contains Horizon-specific numeric clinical criteria, and it is the source of every threshold recorded below. (2) eviCore 'Horizon Interventional Pain Management Frequently Asked Questions', May 2026 — read in full. (3) eviCore 'Horizon Interventional Pain Management Provider Orientation', May 2026 (05-13-2026) — read in full; contains process only, NO clinical criteria. (4) eviCore 'Horizon Quick Reference Guide', May 2026 — read in full. (5) eviCore 'Horizon Pain Management Code List', effective 01/01/2026 — CPT codes extracted. (6) The eviCore Horizon resource page HTML, scraped for the complete document inventory. WHAT I COULD NOT RETRIEVE — BLUNTLY: (a) The eviCore clinical guidelines themselves. https://www.evicore.com/provider/clinical-guidelines and .../clinical-guidelines-details?solution=...&hPlan=Horizon are JavaScript applications; the HTML contains no guideline PDF links. I probed for a JSON/Drupal API and found none (404s). Browser automation to evicore.com was DENIED in this environment. So I could not confirm which eviCore CMM guideline documents (e.g. the CMM-200 epidural / CMM-201 facet / CMM-203 sacroiliac series) Horizon has adopted, nor their current effective dates, nor their text. eviCore guideline PDFs also carry the notice 'This presentation contains CONFIDENTIAL and PROPRIETARY information.' (b) Every horizonblue.com page. horizonblue.com is a fully client-side rendered application: direct HTTP fetch returns a 929-byte shell with no content, WebFetch returns an empty document, and browser automation to horizonblue.com was DENIED. This blocked the 'Musculoskeletal Program' page, the 'Pain Management Procedure Codes' page, the 'Musculoskeletal Program Update' news item, the Carelon 'Musculoskeletal Program' page, and critically the TurningPoint 'Spine Services' and 'Spine Procedure Codes' pages. (c) The 'Horizon Musculoskeletal Guidelines' the 2022 deck points to (https://services3.horizon-bcbsnj.com/hcm/MedPol2.nsf) — not retrieved; not verified as live. (d) Horizon spine surgery criteria of any kind, from any administrator. NOT RETRIEVED. (e) Note on a source I deliberately did NOT use: the scratchpad in this environment contained Carelon Medical Benefits Management 'Appropriate Use Criteria: Spine Surgery' PDFs (Doc IDs MSK03-1125.1 and MSK03-0926.1) placed there by a different agent's work on a different payer. Search results indicate Carelon does contract with Horizon for some musculoskeletal services, but I could NOT verify from any retrievable Horizon source that Carelon's spine surgery guideline applies to Horizon spine surgery. I have therefore recorded nothing from those documents. Do not merge them into this payer without independent verification.",

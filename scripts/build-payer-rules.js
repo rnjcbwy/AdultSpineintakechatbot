@@ -24,6 +24,7 @@ const OUT_FILE = path.join(__dirname, '..', 'lib', 'payers', 'rules.json');
 const PAYER_META = {
   'aetna.json': {
     id: 'aetna',
+    scoring: 'full',
     name: 'Aetna',
     criteriaAvailability: 'public_complete',
     reproductionRestricted: false,
@@ -31,6 +32,7 @@ const PAYER_META = {
   },
   'cigna-evicore.json': {
     id: 'cigna',
+    scoring: 'full',
     name: 'Cigna',
     criteriaAvailability: 'public_complete',
     reproductionRestricted: false,
@@ -38,6 +40,7 @@ const PAYER_META = {
   },
   'carelon.json': {
     id: 'carelon',
+    scoring: 'full',
     name: 'AmeriHealth NJ (Carelon-delegated)',
     criteriaAvailability: 'public_complete',
     reproductionRestricted: true,
@@ -47,6 +50,7 @@ const PAYER_META = {
   },
   'uhc.json': {
     id: 'uhc',
+    scoring: 'none',
     name: 'UnitedHealthcare / Oxford / UMR',
     criteriaAvailability: 'proprietary_vendor',
     reproductionRestricted: false,
@@ -54,15 +58,29 @@ const PAYER_META = {
       'UnitedHealthcare does not publish spine medical-necessity criteria; its policy defers to proprietary InterQual subsets ' +
       'that sit behind provider login and a commercial license. Readiness cannot be scored for UHC — plan-specific verification is required.',
   },
-  'horizon-evicore.json': {
+  'horizon-surgery.json': {
     id: 'horizon',
-    name: 'Horizon BCBSNJ',
+    scoring: 'indicative',
+    name: 'Horizon BCBSNJ — spine surgery',
+    criteriaAvailability: 'proprietary_vendor',
+    reproductionRestricted: false,
+    note:
+      'Spine surgery prior authorization is administered by TurningPoint Healthcare Solutions (effective 2022-02-01, when ' +
+      'Horizon sunset eviCore for spine surgery). TurningPoint maintains the review criteria and they are NOT published — ' +
+      'they sit behind a provider-portal login. The requirements shown here come from Horizon\'s OWN published medical ' +
+      'policies, several of which still name eviCore and may therefore govern only plans carved out of the vendor program ' +
+      '(e.g. SHBP/SEHBP). TREAT THESE AS INDICATIVE, NOT AS THE CRITERIA TURNINGPOINT WILL APPLY.',
+  },
+  'horizon-evicore.json': {
+    id: 'horizon-pain',
+    scoring: 'indicative',
+    name: 'Horizon BCBSNJ — interventional pain management',
     criteriaAvailability: 'public_partial',
     reproductionRestricted: false,
     note:
-      'eviCore administers Horizon INTERVENTIONAL PAIN MANAGEMENT only (injections/RFA). Spine SURGERY prior authorization ' +
-      'appears to run through TurningPoint under Horizon\'s Surgical and Implantable Device Management Program — unconfirmed. ' +
-      'No Horizon spine surgery criteria were retrievable, so surgery readiness cannot be scored for Horizon.',
+      'eviCore administers Horizon INTERVENTIONAL PAIN MANAGEMENT only — spinal injections and RFA, not surgery. ' +
+      'The numeric thresholds captured here come from a 2022 provider orientation deck; the 2026 edition removed the ' +
+      'criteria slides, so verify before relying on them.',
   },
 };
 
