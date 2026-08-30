@@ -20,10 +20,75 @@ import { SYMPTOM_TYPES, getType } from '../../lib/bodyMap';
 
 const SKIN = 0xe8ddd2;
 
+/**
+ * Sweep an elliptical cross-section along Y, varying its radii.
+ *
+ * This is the difference between a body and a mannequin: a capsule has ONE
+ * radius, so shoulders, waist and hips all come out the same width. Defining
+ * the section at intervals gives real taper — deltoid flare, waist, calf belly.
+ * `sections` runs bottom to top: { y, rx, rz }.
+ */
+function sweep(sections, radial = 28) {
+  const pos = [];
+  const idx = [];
+  const n = sections.length;
+
+  for (const { y, rx, rz } of sections) {
+    for (let j = 0; j <= radial; j++) {
+      const a = (j / radial) * Math.PI * 2;
+      pos.push(Math.cos(a) * rx, y, Math.sin(a) * rz);
+    }
+  }
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < radial; j++) {
+      const a = i * (radial + 1) + j;
+      const b = a + radial + 1;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Rounded-off ends so a swept limb does not read as a cut pipe. */
+function tapered(len, profile) {
+  const y0 = -len / 2;
+  const capFrac = 0.05;           // proportion of length given to each rounded end
+  const body = len * (1 - capFrac * 2);
+
+  // Linear interpolation through the supplied radius profile.
+  const rAt = (u) => {
+    const i = Math.min(profile.length - 2, Math.floor(u * (profile.length - 1)));
+    const f = u * (profile.length - 1) - i;
+    return profile[i] * (1 - f) + profile[i + 1] * f;
+  };
+  // Quarter-circle falloff, so ends read as rounded rather than cut off.
+  const cap = (t, r) => r * Math.sqrt(Math.max(0, 1 - t * t));
+
+  const out = [];
+  for (const t of [1, 0.82, 0.55]) {
+    out.push({ y: y0 + (1 - t) * capFrac * len, r: cap(t, rAt(0)) });
+  }
+  const steps = 10;
+  for (let i = 0; i <= steps; i++) {
+    const u = i / steps;
+    out.push({ y: y0 + capFrac * len + u * body, r: rAt(u) });
+  }
+  const y1 = y0 + len;
+  for (const t of [0.55, 0.82, 1]) {
+    out.push({ y: y1 - (1 - t) * capFrac * len, r: cap(t, rAt(1)) });
+  }
+  return out;
+}
+
 /** Build the figure. Every mesh carries the metadata the resolver needs. */
 function buildBody() {
   const group = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: SKIN, roughness: 0.85, metalness: 0.02 });
+  const mat = new THREE.MeshStandardMaterial({ color: SKIN, roughness: 0.92, metalness: 0.0 });
 
   const add = (geo, [x, y, z], part, opts = {}) => {
     const m = new THREE.Mesh(geo, mat);
@@ -36,32 +101,61 @@ function buildBody() {
     return m;
   };
 
-  add(new THREE.SphereGeometry(0.115, 24, 18), [0, 0.74, 0], 'head', { radius: 0.115 });
-  add(new THREE.CylinderGeometry(0.052, 0.058, 0.1, 16), [0, 0.625, 0], 'neck', { radius: 0.055 });
+  /** Limb from a radius profile, flattened front-to-back by `depth`. */
+  const limb = (len, profile, depth = 0.92) =>
+    sweep(tapered(len, profile).map(({ y, r }) => ({ y, rx: r, rz: r * depth })), 22);
 
-  // Torso: wider than it is deep, like a real trunk.
-  add(new THREE.CapsuleGeometry(0.175, 0.34, 8, 24), [0, 0.38, 0], 'torso',
-    { scale: [1, 1, 0.6], radius: 0.175 });
-  add(new THREE.CapsuleGeometry(0.16, 0.1, 8, 20), [0, 0.09, 0], 'pelvis',
-    { scale: [1, 1, 0.68], radius: 0.16 });
+  // ---- head, jaw, neck -------------------------------------------------
+  const head = new THREE.SphereGeometry(0.108, 28, 22);
+  head.scale(0.92, 1.12, 1);
+  add(head, [0, 0.75, 0.005], 'head', { radius: 0.11 });
+  add(limb(0.165, [0.053, 0.057, 0.063]), [0, 0.640, -0.005], 'neck', { radius: 0.058 });
+
+  // ---- torso: deltoid flare -> waist -> hips ----------------------------
+  add(sweep([
+    { y: 0.09, rx: 0.150, rz: 0.098 },
+    { y: 0.16, rx: 0.143, rz: 0.094 },
+    { y: 0.24, rx: 0.139, rz: 0.092 },  // waist
+    { y: 0.32, rx: 0.152, rz: 0.099 },
+    { y: 0.40, rx: 0.170, rz: 0.107 },
+    { y: 0.48, rx: 0.186, rz: 0.112 },  // chest
+    { y: 0.545, rx: 0.192, rz: 0.108 },
+    { y: 0.585, rx: 0.170, rz: 0.096 },
+    { y: 0.605, rx: 0.120, rz: 0.078 },
+  ]), [0, 0, 0], 'torso', { radius: 0.17 });
+
+  add(sweep([
+    { y: -0.055, rx: 0.128, rz: 0.092 },
+    { y: 0.00, rx: 0.152, rz: 0.104 },
+    { y: 0.05, rx: 0.158, rz: 0.106 },
+    { y: 0.095, rx: 0.150, rz: 0.098 },
+  ]), [0, 0, 0], 'pelvis', { radius: 0.155 });
 
   for (const side of ['right', 'left']) {
     const s = side === 'left' ? 1 : -1; // patient's left is +x
-    add(new THREE.SphereGeometry(0.075, 18, 14), [s * 0.185, 0.55, 0], 'shoulder', { side, radius: 0.075 });
-    add(new THREE.CapsuleGeometry(0.056, 0.2, 8, 16), [s * 0.225, 0.4, 0], 'upper arm',
-      { side, rotZ: -s * 0.16, radius: 0.056 });
-    add(new THREE.CapsuleGeometry(0.048, 0.2, 8, 16), [s * 0.275, 0.16, 0], 'forearm',
-      { side, rotZ: -s * 0.1, radius: 0.048 });
-    add(new THREE.CapsuleGeometry(0.042, 0.07, 6, 14), [s * 0.3, -0.01, 0], 'hand',
-      { side, scale: [1, 1, 0.55], radius: 0.042 });
 
-    add(new THREE.CapsuleGeometry(0.088, 0.24, 8, 18), [s * 0.095, -0.16, 0], 'thigh',
-      { side, radius: 0.088 });
-    add(new THREE.SphereGeometry(0.072, 16, 12), [s * 0.098, -0.34, 0], 'knee', { side, radius: 0.072 });
-    add(new THREE.CapsuleGeometry(0.062, 0.26, 8, 16), [s * 0.1, -0.52, 0], 'lower leg',
-      { side, radius: 0.062 });
-    add(new THREE.CapsuleGeometry(0.045, 0.1, 6, 14), [s * 0.1, -0.76, 0.03], 'foot',
-      { side, rotX: Math.PI / 2, scale: [1, 1, 0.7], radius: 0.045 });
+    add(new THREE.SphereGeometry(0.072, 20, 16), [s * 0.176, 0.535, 0], 'shoulder', { side, radius: 0.072 });
+
+    // deltoid bulge at the top, tapering into the elbow
+    add(limb(0.310, [0.044, 0.050, 0.057, 0.060, 0.056, 0.050, 0.044]),
+      [s * 0.212, 0.398, 0], 'upper arm', { side, rotZ: -s * 0.13, radius: 0.058 });
+    // forearm: full near the elbow, narrow at the wrist
+    add(limb(0.290, [0.032, 0.038, 0.045, 0.047, 0.044, 0.040]),
+      [s * 0.258, 0.170, 0], 'forearm', { side, rotZ: -s * 0.08, radius: 0.047 });
+    add(limb(0.150, [0.032, 0.041, 0.044, 0.038], 0.42),
+      [s * 0.282, 0.018, 0], 'hand', { side, radius: 0.042 });
+
+    // thigh thickest proximally
+    add(limb(0.365, [0.066, 0.078, 0.088, 0.092, 0.088, 0.078]),
+      [s * 0.092, -0.135, 0], 'thigh', { side, rotZ: -s * 0.02, radius: 0.09 });
+    add(new THREE.SphereGeometry(0.068, 18, 14), [s * 0.098, -0.325, 0.006], 'knee', { side, radius: 0.068 });
+    // calf belly high, narrow ankle
+    add(limb(0.385, [0.038, 0.046, 0.058, 0.066, 0.060, 0.048]),
+      [s * 0.100, -0.487, 0], 'lower leg', { side, radius: 0.066 });
+
+    const foot = limb(0.20, [0.030, 0.044, 0.048, 0.040, 0.028], 0.62);
+    add(foot, [s * 0.100, -0.695, 0.045], 'foot',
+      { side, rotX: Math.PI / 2.05, scale: [1, 1, 0.75], radius: 0.046 });
   }
 
   return group;
