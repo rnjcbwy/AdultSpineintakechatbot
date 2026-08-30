@@ -18,6 +18,7 @@ const CHROME = {
   // Step labels (shown in the header)
   'Demographics': { es: 'Datos demográficos', zh: '基本信息' },
   'Chief Complaint': { es: 'Motivo de consulta', zh: '主诉' },
+  'Pain Map': { es: 'Mapa del dolor', zh: '疼痛图' },
   'Symptom Details': { es: 'Detalles de los síntomas', zh: '症状详情' },
   'Prior Treatments': { es: 'Tratamientos previos', zh: '既往治疗' },
   'Records & Documents': { es: 'Registros y documentos', zh: '记录与文件' },
@@ -44,6 +45,7 @@ import Welcome from './steps/Welcome';
 import BeforeWeBegin from './steps/BeforeWeBegin';
 import Demographics from './steps/Demographics';
 import ChiefComplaint from './steps/ChiefComplaint';
+import PainMap from './steps/PainMap';
 import SymptomDetails from './steps/SymptomDetails';
 import PriorTreatments from './steps/PriorTreatments';
 import RecordsUpload from './steps/RecordsUpload';
@@ -64,6 +66,7 @@ const STEP_COMPONENTS = [
   BeforeWeBegin,
   Demographics,
   ChiefComplaint,
+  PainMap,
   SymptomDetails,
   PriorTreatments,
   RecordsUpload,
