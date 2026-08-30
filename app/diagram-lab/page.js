@@ -9,6 +9,13 @@ import { useState } from 'react';
 import BodyDiagram from '../../components/BodyDiagram';
 import { SYMPTOM_TYPES, EMPTY_PAIN_MAP } from '../../lib/bodyMap';
 import { evaluatePainMap, SEVERITY_STYLE } from '../../lib/painMapTriggers';
+import dynamic from 'next/dynamic';
+
+// WebGL must not run during SSR.
+const Body3D = dynamic(() => import('../../components/lab/Body3D'), {
+  ssr: false,
+  loading: () => <p className="text-sm text-gray-400">Loading 3D model…</p>,
+});
 
 export default function DiagramLab() {
   return (
@@ -25,6 +32,10 @@ export default function DiagramLab() {
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
         <Demo n={1} title="Trigger engine" pitch="The highest-value item, and it needs no new drawing. Mark the body and watch what it sets off — red flags, form branching, surgeon-only pattern hints, and auto-filled answers.">
           <TriggerDemo />
+        </Demo>
+
+        <Demo n={'3D'} title="Rotatable 3D body" pitch="Drag to spin, tap to mark — no mode toggle. The real argument for 3D is not novelty: it reaches the LATERAL surfaces where L5 and C6 actually live, which a front-and-back pair of 2D figures cannot show. Each tap resolves to anatomy from the hit point's local coordinates.">
+          <Body3D />
         </Demo>
 
         <Demo n={2} title="Spine level selector" pitch="Patient taps where on the spine it hurts. The same component, clinician-side, sets the levels for the auth packet — eviCore explicitly requires CPT plus disc level(s). Also doubles as the injection-site map.">

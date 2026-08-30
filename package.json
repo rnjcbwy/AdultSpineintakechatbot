@@ -17,6 +17,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "three": "^0.185.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

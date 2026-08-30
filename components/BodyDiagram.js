@@ -63,24 +63,44 @@ function Figure({ view }) {
    */
   const leg = (key, cx, dir) => (
     <g key={key}>
-      <rect x={cx - 18} y={296} width={36} height={120} rx={18} />
-      <ellipse cx={cx} cy={418} rx={19} ry={17} />
-      <rect x={cx - 16} y={410} width={32} height={116} rx={16} />
+      {/* thigh: broad at the hip, tapering toward the knee */}
+      <path
+        d={`M${cx - 20},300 C${cx - 22},338 ${cx - 19},376 ${cx - 16},406
+            L${cx + 16},406 C${cx + 19},376 ${cx + 22},338 ${cx + 20},300 Z`}
+      />
+      <ellipse cx={cx} cy={414} rx={17} ry={14} />
+      {/* calf belly high, tapering to a narrow ankle — the shape patients
+          use to place a lateral-calf stripe */}
+      <path
+        d={`M${cx - 16},408 C${cx - 20},436 ${cx - 19},470 ${cx - 13},498
+            L${cx - 8},522 L${cx + 8},522 L${cx + 13},498
+            C${cx + 19},470 ${cx + 20},436 ${cx + 16},408 Z`}
+      />
       {view === 'anterior' ? (
         <>
-          {/* dorsum of the foot, seen from above */}
-          <ellipse cx={cx} cy={532} rx={18} ry={16} />
+          {/* dorsum, widening from the ankle out to the toes */}
+          <path
+            d={`M${cx - 8},518 C${cx - 13},530 ${cx - 15},540 ${cx - 14},547
+                L${cx + 14},547 C${cx + 15},540 ${cx + 13},530 ${cx + 8},518 Z`}
+          />
+          {/* five toes, great toe on the MEDIAL side, decreasing outward */}
           {[0, 1, 2, 3, 4].map((i) => (
             <circle
               key={i}
-              cx={cx + dir * (11 - i * 5.5)}
-              cy={546 - Math.abs(i - 0.4) * 1.6}
-              r={i === 0 ? 5.2 : 3.6 - i * 0.25}
+              cx={cx + dir * (11 - i * 5.7)}
+              cy={551 + i * 1.1}
+              r={5.4 - i * 0.62}
             />
           ))}
         </>
       ) : (
-        <ellipse cx={cx} cy={536} rx={17} ry={19} />
+        <>
+          {/* heel, with the achilles narrowing above it */}
+          <path
+            d={`M${cx - 8},512 C${cx - 13},528 ${cx - 14},542 ${cx - 9},551
+                L${cx + 9},551 C${cx + 14},542 ${cx + 13},528 ${cx + 8},512 Z`}
+          />
+        </>
       )}
     </g>
   );
