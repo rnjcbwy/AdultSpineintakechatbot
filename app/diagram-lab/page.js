@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import BodyDiagram from '../../components/BodyDiagram';
+import FourView from '../../components/lab/FourView';
 import { SYMPTOM_TYPES, EMPTY_PAIN_MAP } from '../../lib/bodyMap';
 import { evaluatePainMap, SEVERITY_STYLE } from '../../lib/painMapTriggers';
 import dynamic from 'next/dynamic';
@@ -32,6 +33,10 @@ export default function DiagramLab() {
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
         <Demo n={1} title="Trigger engine" pitch="The highest-value item, and it needs no new drawing. Mark the body and watch what it sets off — red flags, form branching, surgeon-only pattern hints, and auto-filled answers.">
           <TriggerDemo />
+        </Demo>
+
+        <Demo n={'4V'} title="Four flat views — front, back, left, right" pitch="The recommended path. Front and back alone cannot show the lateral calf or lateral forearm, which is exactly where L5 and C6 run, so a patient tracing a real dermatomal stripe had nowhere to draw the middle of it. Two more flat figures close that gap with no WebGL, no download, and no rotating.">
+          <FourView />
         </Demo>
 
         <Demo n={'3D'} title="Rotatable 3D body" pitch="Drag to spin, tap to mark — no mode toggle. The real argument for 3D is not novelty: it reaches the LATERAL surfaces where L5 and C6 actually live, which a front-and-back pair of 2D figures cannot show. Each tap resolves to anatomy from the hit point's local coordinates.">

@@ -14,7 +14,83 @@ const OUTLINE = '#8C9BAA';
  * A clean, diagrammatic silhouette reads better on a clinical form than an
  * attempted realistic outline, and stays predictable at any size.
  */
+/**
+ * Side profile. Both lateral views face the same way so a single zone set
+ * serves both — the view name supplies which side of the body it is.
+ * The arm hangs slightly forward on purpose: overlapping the trunk would make
+ * a tap on the outer arm ambiguous with a tap on the chest wall.
+ */
+function LateralFigure({ view }) {
+  const parts = (
+    <>
+      {/* head with a brow / nose profile so the facing direction is obvious */}
+      <ellipse cx={124} cy={44} rx={25} ry={29} />
+      <path d="M146,38 C154,42 156,48 150,52 C146,55 142,54 140,50 Z" />
+      <rect x={112} y={64} width={26} height={46} rx={11} />
+
+      {/* trunk: thoracic kyphosis, lumbar lordosis, buttock behind */}
+      <path
+        d="M110,112 C104,148 106,186 110,214
+           C115,238 105,262 103,286
+           C101,308 109,324 122,326
+           L148,326 C159,320 162,300 158,280
+           C154,250 152,220 152,192
+           C152,160 154,132 149,114
+           C140,104 119,104 110,112 Z"
+      />
+
+      {/* arm, hanging just anterior to the trunk */}
+      <ellipse cx={148} cy={120} rx={20} ry={20} />
+      <rect x={150} y={112} width={30} height={112} rx={15} />
+      <rect x={154} y={214} width={26} height={102} rx={13} />
+      <ellipse cx={168} cy={330} rx={14} ry={21} />
+
+      {/* leg: lateral thigh, calf belly posteriorly, ankle, foot pointing forward */}
+      <path
+        d={`M106,318 C102,350 104,378 108,404
+            L146,404 C148,376 150,348 148,318 Z`}
+      />
+      <ellipse cx={127} cy={414} rx={19} ry={16} />
+      <path
+        d={`M110,410 C100,440 100,474 110,500
+            L114,524 L140,524 L142,498
+            C146,472 146,440 144,410 Z`}
+      />
+      {/* foot: heel behind, dorsum sloping forward to the toes */}
+      <path
+        d={`M112,520 C102,530 98,542 102,550
+            L172,550 C180,548 180,538 172,534
+            C158,530 148,526 140,518 Z`}
+      />
+    </>
+  );
+
+  // Facing the patient's LEFT side, their nose points to the viewer's left, so
+  // that figure is mirrored. Pointer input is mirrored to match (see toNorm),
+  // which lets a single canonical zone set serve both lateral views.
+  const mirror = view === 'left';
+
+  return (
+    <g>
+      <g transform={mirror ? `translate(${W},0) scale(-1,1)` : undefined}>
+        <g fill={OUTLINE} stroke={OUTLINE} strokeWidth={3} strokeLinejoin="round">{parts}</g>
+        <g fill={SKIN} stroke="none">{parts}</g>
+        <g stroke={OUTLINE} strokeWidth={1.3} fill="none" opacity={0.5}>
+          {/* iliac crest and knee guide, to orient the patient */}
+          <path d="M108,286 C120,282 136,284 150,290" />
+          <circle cx={127} cy={414} r={9} />
+        </g>
+      </g>
+      <text x={mirror ? 14 : W - 14} y={26} textAnchor={mirror ? 'start' : 'end'}
+        fontSize={13} fill="#8C9BAA">
+        {mirror ? '◀ front' : 'front ▶'}
+      </text>
+    </g>
+  );
+}
+
 function Figure({ view }) {
+  if (view === 'left' || view === 'right') return <LateralFigure view={view} />;
   /**
    * One arm, drawn vertically then rotated about the shoulder so it hangs
    * abducted. Abduction matters: it separates the limb from the trunk and
@@ -221,11 +297,16 @@ export default function BodyDiagram({
   const marks = data?.marks || [];
   const paths = data?.paths || [];
 
-  /** Pointer position in normalized 0..1 viewBox coordinates. */
+  /**
+   * Pointer position in normalized 0..1 viewBox coordinates.
+   * The left-lateral figure is drawn mirrored, so its input is mirrored back
+   * before storage — marks and zone lookups then share one coordinate space.
+   */
   const toNorm = (e) => {
     const rect = svgRef.current.getBoundingClientRect();
+    const raw = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
     return {
-      x: Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)),
+      x: view === 'left' ? 1 - raw : raw,
       y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)),
     };
   };
@@ -280,8 +361,11 @@ export default function BodyDiagram({
   const removeMark = (id) => commit({ marks: marks.filter((m) => m.id !== id) });
   const removePath = (id) => commit({ paths: paths.filter((p) => p.id !== id) });
 
-  const px = (p) => ({ x: p.x * W, y: p.y * H });
-  const toPolyline = (pts) => pts.map((p) => `${(p.x * W).toFixed(1)},${(p.y * H).toFixed(1)}`).join(' ');
+  // Stored coordinates are canonical; the mirrored figure needs them flipped
+  // back at draw time so glyphs land where the patient tapped.
+  const sx = (x) => (view === 'left' ? 1 - x : x) * W;
+  const px = (p) => ({ x: sx(p.x), y: p.y * H });
+  const toPolyline = (pts) => pts.map((p) => `${sx(p.x).toFixed(1)},${(p.y * H).toFixed(1)}`).join(' ');
 
   return (
     <div className="flex-1 min-w-0">
