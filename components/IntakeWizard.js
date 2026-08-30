@@ -20,6 +20,7 @@ const CHROME = {
   'Chief Complaint': { es: 'Motivo de consulta', zh: '主诉' },
   'Symptom Details': { es: 'Detalles de los síntomas', zh: '症状详情' },
   'Prior Treatments': { es: 'Tratamientos previos', zh: '既往治疗' },
+  'Records & Documents': { es: 'Registros y documentos', zh: '记录与文件' },
   'Additional Details': { es: 'Detalles adicionales', zh: '补充信息' },
   'Past Medical History': { es: 'Antecedentes médicos', zh: '既往病史' },
   'Past Surgical History': { es: 'Antecedentes quirúrgicos', zh: '既往手术史' },
@@ -45,6 +46,7 @@ import Demographics from './steps/Demographics';
 import ChiefComplaint from './steps/ChiefComplaint';
 import SymptomDetails from './steps/SymptomDetails';
 import PriorTreatments from './steps/PriorTreatments';
+import RecordsUpload from './steps/RecordsUpload';
 import AdditionalConcerns from './steps/AdditionalConcerns';
 import PastMedicalHistory from './steps/PastMedicalHistory';
 import PastSurgicalHistory from './steps/PastSurgicalHistory';
@@ -64,6 +66,7 @@ const STEP_COMPONENTS = [
   ChiefComplaint,
   SymptomDetails,
   PriorTreatments,
+  RecordsUpload,
   AdditionalConcerns,
   PastMedicalHistory,
   PastSurgicalHistory,
