@@ -9,3 +9,8 @@ next-env.d.ts
 
 .vercel
 .claude/settings.local.json
+
+# Raw payer guideline extractions (source-of-truth archive, kept local).
+# Some payers restrict reproduction of their guideline text; only the
+# normalized, quote-stripped lib/payers/rules.json is committed.
+lib/payers/sources/

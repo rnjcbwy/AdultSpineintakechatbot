@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:rules": "node scripts/build-payer-rules.js",
+    "test:outline": "node scripts/test-outline.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",
