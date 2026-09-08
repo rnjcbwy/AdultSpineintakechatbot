@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { VIEW_BOX, FIGURE_SRC, LATERAL_DX, ZONES, getType, zoneAt } from '../lib/bodyMap';
+import { VIEW_BOX, FIGURE_SRC, LATERAL_DX, ZONES, SYMPTOM_TYPES, getType, zoneAt } from '../lib/bodyMap';
 
 const W = VIEW_BOX.width;
 const H = VIEW_BOX.height;
@@ -159,8 +159,8 @@ function ZoneOverlay({ view }) {
 }
 
 /** Marker glyph. Shape AND colour differ so it survives a mono printout. */
-export function MarkerGlyph({ type, x = 0, y = 0, scale = 1 }) {
-  const t = getType(type);
+export function MarkerGlyph({ type, x = 0, y = 0, scale = 1, types = SYMPTOM_TYPES }) {
+  const t = getType(type, types);
   const s = 6.5 * scale;
   const stroke = { stroke: '#FFFFFF', strokeWidth: 1.4 };
   switch (t.shape) {
@@ -183,6 +183,41 @@ export function MarkerGlyph({ type, x = 0, y = 0, scale = 1 }) {
       return (
         <path
           d={starPath(x, y, s * 1.35, s * 0.5, 4)}
+          fill={t.color}
+          {...stroke}
+        />
+      );
+    case 'triangle':
+      return (
+        <path
+          d={`M${x},${y - s * 1.2} L${x + s * 1.1},${y + s * 0.85} L${x - s * 1.1},${y + s * 0.85} Z`}
+          fill={t.color}
+          {...stroke}
+        />
+      );
+    case 'cross':
+      return (
+        <path
+          d={`M${x - s * 1.2},${y - s * 0.42} h${s * 0.78} v-${s * 0.78} h${s * 0.84} v${s * 0.78}
+              h${s * 0.78} v${s * 0.84} h-${s * 0.78} v${s * 0.78} h-${s * 0.84} v-${s * 0.78}
+              h-${s * 0.78} Z`}
+          fill={t.color}
+          {...stroke}
+        />
+      );
+    case 'hexagon':
+      return (
+        <path
+          d={starPath(x, y, s * 1.15, s * 1.15, 3)}
+          fill={t.color}
+          {...stroke}
+        />
+      );
+    case 'droplet':
+      return (
+        <path
+          d={`M${x},${y - s * 1.3} C${x + s * 1.15},${y - s * 0.1} ${x + s * 0.85},${y + s * 1.15} ${x},${y + s * 1.15}
+              C${x - s * 0.85},${y + s * 1.15} ${x - s * 1.15},${y - s * 0.1} ${x},${y - s * 1.3} Z`}
           fill={t.color}
           {...stroke}
         />
@@ -217,6 +252,7 @@ export default function BodyDiagram({
   onChange,
   label,
   showZones = false,
+  types = SYMPTOM_TYPES,
 }) {
   const svgRef = useRef(null);
   const [draft, setDraft] = useState(null);
@@ -347,7 +383,7 @@ export default function BodyDiagram({
             <polyline
               points={toPolyline(p.points)}
               fill="none"
-              stroke={getType(p.type).color}
+              stroke={getType(p.type, types).color}
               strokeWidth={5}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -363,7 +399,7 @@ export default function BodyDiagram({
                 <path
                   d={`M${b.x},${b.y} L${b.x - L * Math.cos(ang - 0.42)},${b.y - L * Math.sin(ang - 0.42)}
                       L${b.x - L * Math.cos(ang + 0.42)},${b.y - L * Math.sin(ang + 0.42)} Z`}
-                  fill={getType(p.type).color}
+                  fill={getType(p.type, types).color}
                 />
               );
             })()}
@@ -375,7 +411,7 @@ export default function BodyDiagram({
           <polyline
             points={toPolyline(draft)}
             fill="none"
-            stroke={getType(activeType).color}
+            stroke={getType(activeType, types).color}
             strokeWidth={5}
             strokeLinecap="round"
             opacity={0.55}
@@ -391,7 +427,7 @@ export default function BodyDiagram({
               onPointerDown={(e) => { if (mode === 'erase') { e.stopPropagation(); removeMark(m.id); } }}
               style={{ cursor: mode === 'erase' ? 'pointer' : 'inherit' }}
             >
-              <MarkerGlyph type={m.type} x={x} y={y} />
+              <MarkerGlyph type={m.type} x={x} y={y} types={types} />
             </g>
           );
         })}

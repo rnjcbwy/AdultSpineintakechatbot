@@ -5,7 +5,10 @@ import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import BodyDiagram, { MarkerGlyph } from '../BodyDiagram';
-import { SYMPTOM_TYPES, EMPTY_PAIN_MAP, countMarks, summarizePainMap } from '../../lib/bodyMap';
+import {
+  SYMPTOM_TYPES, EMPTY_PAIN_MAP, countMarks, summarizePainMap,
+  CUSTOM_MARKER_STYLES, MAX_CUSTOM_TYPES, allTypes, customTypes,
+} from '../../lib/bodyMap';
 
 const LOCAL = {
   'Where Are Your Symptoms?': { es: '¿Dónde están sus síntomas?', zh: '您的症状在哪里？' },
@@ -59,6 +62,25 @@ const LOCAL = {
   'Numbness': { es: 'Entumecimiento', zh: '麻木' },
   'Pins and needles': { es: 'Hormigueo', zh: '针刺感' },
   'Weakness': { es: 'Debilidad', zh: '无力' },
+
+  // Custom symptoms
+  'Something else? Add your own': { es: '¿Algo más? Agregue el suyo', zh: '还有其他感觉？自行添加' },
+  'If none of these describe what you feel, name it yourself and pick a marker. You can add up to 4.': {
+    es: 'Si ninguno describe lo que siente, nómbrelo usted mismo y elija un marcador. Puede agregar hasta 4.',
+    zh: '如果以上都无法描述您的感觉，请自行命名并选择一个标记。最多可添加4个。',
+  },
+  'Name the feeling': { es: 'Nombre la sensación', zh: '为这种感觉命名' },
+  'e.g., Itching, Cramping, Coldness, Pulling': {
+    es: 'p. ej., Picazón, Calambres, Frío, Tirantez',
+    zh: '例如：瘙痒、抽筋、发凉、牵拉感',
+  },
+  'Add': { es: 'Agregar', zh: '添加' },
+  'Remove': { es: 'Quitar', zh: '移除' },
+  'Pick a marker': { es: 'Elija un marcador', zh: '选择标记' },
+  'You have added the maximum of 4 of your own symptoms.': {
+    es: 'Ha agregado el máximo de 4 síntomas propios.',
+    zh: '您已添加最多4个自定义症状。',
+  },
 };
 
 export default function PainMap({ onNext, onBack }) {
@@ -70,10 +92,63 @@ export default function PainMap({ onNext, onBack }) {
   const [activeType, setActiveType] = useState('ache');
   const [mode, setMode] = useState('mark');
 
+  // The patient's own symptom names, and the marker each one uses.
+  const custom = customTypes(painMap);
+  const types = allTypes(painMap);
+  const [newLabel, setNewLabel] = useState('');
+  const [newStyle, setNewStyle] = useState(0);
+
+  const takenStyles = new Set(custom.map((c) => c.style));
+  const freeStyle = CUSTOM_MARKER_STYLES.findIndex((st) => !takenStyles.has(st.style));
+
+  const addCustom = () => {
+    const label = newLabel.trim();
+    if (!label || custom.length >= MAX_CUSTOM_TYPES) return;
+    const style = CUSTOM_MARKER_STYLES[newStyle] || CUSTOM_MARKER_STYLES[freeStyle] || CUSTOM_MARKER_STYLES[0];
+    const entry = {
+      id: `custom_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`,
+      label,
+      custom: true,
+      style: style.style,
+      shape: style.shape,
+      color: style.color,
+    };
+    setNested('painMap.customTypes', [...custom, entry]);
+    setNewLabel('');
+    setActiveType(entry.id);
+    // Move the picker to the next unused marker so two symptoms cannot
+    // silently share a glyph.
+    const next = CUSTOM_MARKER_STYLES.findIndex(
+      (st) => st.style !== style.style && !takenStyles.has(st.style)
+    );
+    setNewStyle(next === -1 ? 0 : next);
+  };
+
+  /**
+   * Removing a symptom also removes what was drawn with it. Leaving the marks
+   * behind would put unlabelled glyphs on the diagram that resolve to the
+   * wrong symptom in the note.
+   */
+  const removeCustom = (id) => {
+    const next = { ...painMap, customTypes: custom.filter((c) => c.id !== id) };
+    for (const v of ['anterior', 'posterior', 'left', 'right']) {
+      if (!next[v]) continue;
+      next[v] = {
+        marks: (next[v].marks || []).filter((m) => m.type !== id),
+        paths: (next[v].paths || []).filter((pth) => pth.type !== id),
+      };
+    }
+    setNested('painMap', next);
+    if (activeType === id) setActiveType('ache');
+  };
+
   const total = countMarks(painMap);
 
   const updateView = (view, next) => setNested(`painMap.${view}`, next);
-  const clearAll = () => setNested('painMap', JSON.parse(JSON.stringify(EMPTY_PAIN_MAP)));
+  // Clears the drawing but keeps the symptoms the patient named — having to
+  // retype them to redo one mark would be its own small punishment.
+  const clearAll = () =>
+    setNested('painMap', { ...JSON.parse(JSON.stringify(EMPTY_PAIN_MAP)), customTypes: custom });
 
   const MODES = [
     { id: 'mark', label: 'Mark a spot', hint: 'Tap anywhere on the body to place a mark.' },
@@ -113,6 +188,115 @@ export default function PainMap({ onNext, onBack }) {
               </button>
             );
           })}
+
+          {custom.map((c) => {
+            const on = activeType === c.id;
+            return (
+              <span
+                key={c.id}
+                className={`flex items-center gap-2 pl-2 pr-1.5 py-2 rounded-full border text-sm font-medium transition-all ${
+                  on ? 'border-navy-600 bg-navy-50 text-navy-700 shadow-sm' : 'border-gray-200 bg-white text-gray-600'
+                }`}
+              >
+                <button
+                  onClick={() => setActiveType(c.id)}
+                  aria-pressed={on}
+                  className="flex items-center gap-2"
+                >
+                  <svg viewBox="0 0 20 20" className="w-5 h-5 flex-shrink-0" aria-hidden="true">
+                    <MarkerGlyph type={c.id} x={10} y={10} scale={0.95} types={types} />
+                  </svg>
+                  {c.label}
+                </button>
+                <button
+                  onClick={() => removeCustom(c.id)}
+                  aria-label={`${t('Remove')} ${c.label}`}
+                  className="w-5 h-5 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors leading-none"
+                >
+                  ×
+                </button>
+              </span>
+            );
+          })}
+        </div>
+
+        {/* Name your own. The six built-ins cover most spine complaints but
+            not itching, cramping or coldness, and forcing those into "aching"
+            loses the word the patient chose. */}
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <p className="text-sm font-medium text-gray-600 mb-1">{t('Something else? Add your own')}</p>
+          <p className="text-xs text-gray-400 mb-2.5">
+            {t('If none of these describe what you feel, name it yourself and pick a marker. You can add up to 4.')}
+          </p>
+
+          {custom.length >= MAX_CUSTOM_TYPES ? (
+            <p className="text-xs text-gray-400 italic">
+              {t('You have added the maximum of 4 of your own symptoms.')}
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs text-gray-500 mb-1" htmlFor="custom-symptom">
+                  {t('Name the feeling')}
+                </label>
+                <input
+                  id="custom-symptom"
+                  type="text"
+                  value={newLabel}
+                  maxLength={28}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom(); } }}
+                  placeholder={t('e.g., Itching, Cramping, Coldness, Pulling')}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <span className="block text-xs text-gray-500 mb-1">{t('Pick a marker')}</span>
+                <div className="flex gap-1.5">
+                  {CUSTOM_MARKER_STYLES.map((st, i) => {
+                    const taken = takenStyles.has(st.style);
+                    const on = newStyle === i && !taken;
+                    return (
+                      <button
+                        key={st.style}
+                        onClick={() => !taken && setNewStyle(i)}
+                        disabled={taken}
+                        aria-pressed={on}
+                        aria-label={st.style}
+                        className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all ${
+                          taken
+                            ? 'border-gray-100 opacity-25 cursor-not-allowed'
+                            : on
+                            ? 'border-navy-600 bg-navy-50 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                      >
+                        <svg viewBox="0 0 20 20" className="w-5 h-5" aria-hidden="true">
+                          <MarkerGlyph
+                            type="__preview"
+                            x={10}
+                            y={10}
+                            scale={0.95}
+                            types={[{ id: '__preview', label: st.style, shape: st.shape, color: st.color }]}
+                          />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                onClick={addCustom}
+                disabled={!newLabel.trim()}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-navy-600 text-white
+                           disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {t('Add')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -150,6 +334,7 @@ export default function PainMap({ onNext, onBack }) {
             activeType={activeType}
             mode={mode}
             onChange={(next) => updateView('anterior', next)}
+            types={types}
           />
           <BodyDiagram
             view="posterior"
@@ -158,6 +343,7 @@ export default function PainMap({ onNext, onBack }) {
             activeType={activeType}
             mode={mode}
             onChange={(next) => updateView('posterior', next)}
+            types={types}
           />
         </div>
 

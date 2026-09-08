@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { SYMPTOM_REGIONS } from '../../lib/constants';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { ROS_SECTIONS, countReviewedSystems } from '../../lib/rosSystems';
+import PainMapSummary from '../../components/PainMapFigure';
+import { countMarks } from '../../lib/bodyMap';
 
 const STORAGE_KEY = 'spine-intake-data';
 
@@ -338,6 +340,14 @@ function StructuredTab({ data }) {
           ))
         )}
       </DataSection>
+
+      {/* The drawing, before the systems review. A surgeon reads the picture
+          first; the prose summary underneath it is the searchable version. */}
+      {countMarks(data.painMap) > 0 && (
+        <DataSection title="Body Diagram (drawn by the patient)">
+          <PainMapSummary painMap={data.painMap} />
+        </DataSection>
+      )}
 
       {/* ROS. Grouped under the formal system names rather than the
           patient-facing headings, and reporting how many systems were actually

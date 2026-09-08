@@ -108,9 +108,20 @@ export default function IntakeWizard() {
     }
   };
 
+  /**
+   * Which steps the timeline will let the patient jump to.
+   *
+   * Anything at or behind the current step, plus anything already completed —
+   * so a patient who jumps back from the review to fix step 3 can jump
+   * straight forward again instead of clicking through everything in between.
+   * Steps never reached stay closed: later questions branch off earlier
+   * answers, so arriving at one cold would ask the wrong things.
+   */
+  const canGoToStep = (step) =>
+    step <= currentStep || data.completedSteps.includes(step);
+
   const goToStep = (step) => {
-    // Allow going back to completed steps or current step
-    if (step <= currentStep || data.completedSteps.includes(step)) {
+    if (canGoToStep(step)) {
       setStep(step);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -150,7 +161,14 @@ export default function IntakeWizard() {
                 {t('Save & Exit')}
               </button>
             </div>
-            <ProgressBar current={currentStep} total={INTAKE_STEPS.length - 1} steps={INTAKE_STEPS} />
+            <ProgressBar
+              current={currentStep}
+              total={INTAKE_STEPS.length - 1}
+              steps={INTAKE_STEPS}
+              onGoToStep={goToStep}
+              canGoToStep={canGoToStep}
+              t={t}
+            />
           </div>
         </header>
       )}

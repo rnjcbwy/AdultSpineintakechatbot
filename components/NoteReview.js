@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useIntake } from '../lib/store';
 import { useLang, makeT, COMMON } from '../lib/i18n';
+import { fingerprintAnswers } from '../lib/noteFingerprint';
 
 const LOCAL = {
   'Please read this and tell us if anything is wrong': {
@@ -23,6 +24,15 @@ const LOCAL = {
   },
   'Your corrections': { es: 'Sus correcciones', zh: '您的更正' },
   'Remove': { es: 'Quitar', zh: '移除' },
+  'Rewrite the note': { es: 'Reescribir la nota', zh: '重写病历' },
+  'Rewrite the note with my changes': {
+    es: 'Reescribir la nota con mis cambios',
+    zh: '根据我的修改重写病历',
+  },
+  'You have changed your answers since this note was written, so it is now out of date. Rewrite it so your surgeon reads the current version.': {
+    es: 'Ha cambiado sus respuestas desde que se escribió esta nota, por lo que está desactualizada. Reescríbala para que su cirujano lea la versión actual.',
+    zh: '自本病历生成后您修改了答案，因此它已过时。请重写，以便您的外科医生看到最新版本。',
+  },
   'Rewrite the note with my corrections': {
     es: 'Reescribir la nota con mis correcciones',
     zh: '根据我的更正重写病历',
@@ -64,7 +74,7 @@ const LOCAL = {
  * kept after the rewrite too: the clinician should be able to see which parts
  * of the history the patient personally challenged.
  */
-export default function NoteReview({ narrative, onRewritten, onGoToStep }) {
+export default function NoteReview({ narrative, onRewritten, onGoToStep, stale = false }) {
   const { data, setNested } = useIntake();
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
@@ -118,7 +128,9 @@ export default function NoteReview({ narrative, onRewritten, onGoToStep }) {
       if (result.error || !result.summary) {
         setStatus('error');
       } else {
-        onRewritten(result.summary);
+        // Hand back the fingerprint of the data actually sent, so the new note
+        // is stamped with its real source rather than whatever arrives later.
+        onRewritten(result.summary, fingerprintAnswers(data));
         setStatus('ok');
       }
     } catch {
@@ -219,38 +231,62 @@ export default function NoteReview({ narrative, onRewritten, onGoToStep }) {
 
       {/* Actions */}
       <div className="mt-5 pt-4 border-t border-gray-100">
-        {corrections.length > 0 ? (
-          <>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
-              {t('Your corrections')} ({corrections.length})
+        {/* An edit made after the note was written leaves a note that reads as
+            current but is not. Say so plainly and put the fix next to it. */}
+        {stale && (
+          <div className="flex items-start gap-3 p-3 mb-3 rounded-xl bg-amber-50 border border-amber-300">
+            <span className="text-lg leading-none mt-0.5" aria-hidden="true">⚠️</span>
+            <p className="text-sm text-amber-800 leading-relaxed">
+              {t('You have changed your answers since this note was written, so it is now out of date. Rewrite it so your surgeon reads the current version.')}
             </p>
-            <button
-              onClick={rewrite}
-              disabled={busy}
-              className="btn-primary w-full sm:w-auto disabled:opacity-60"
-            >
-              {busy ? t('Rewriting…') : t('Rewrite the note with my corrections')}
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setConfirmed(true)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                confirmed
-                  ? 'bg-green-50 border-green-300 text-green-700'
-                  : 'bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:text-green-700'
-              }`}
-            >
-              {confirmed ? '✓ ' : ''}{t('Everything here looks right')}
-            </button>
-            {confirmed && (
-              <span className="text-xs text-gray-400">
-                {t('Thank you — you can still make changes below if you spot something later.')}
-              </span>
-            )}
           </div>
         )}
+
+        {corrections.length > 0 && (
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+            {t('Your corrections')} ({corrections.length})
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={rewrite}
+            disabled={busy}
+            className={`${
+              corrections.length || stale
+                ? 'btn-primary'
+                : 'px-4 py-2 rounded-xl text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:border-navy-300 hover:text-navy-600 transition-colors'
+            } disabled:opacity-60`}
+          >
+            {busy
+              ? t('Rewriting…')
+              : corrections.length
+              ? t('Rewrite the note with my corrections')
+              : stale
+              ? t('Rewrite the note with my changes')
+              : t('Rewrite the note')}
+          </button>
+
+          {!corrections.length && !stale && (
+            <>
+              <button
+                onClick={() => setConfirmed(true)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                  confirmed
+                    ? 'bg-green-50 border-green-300 text-green-700'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-green-300 hover:text-green-700'
+                }`}
+              >
+                {confirmed ? '✓ ' : ''}{t('Everything here looks right')}
+              </button>
+              {confirmed && (
+                <span className="text-xs text-gray-400">
+                  {t('Thank you — you can still make changes below if you spot something later.')}
+                </span>
+              )}
+            </>
+          )}
+        </div>
 
         {status === 'ok' && (
           <p className="mt-2 text-sm text-green-600">{t('The note has been rewritten with your corrections.')}</p>

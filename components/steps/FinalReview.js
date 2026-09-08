@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import NoteReview from '../NoteReview';
+import PainMapSummary from '../PainMapFigure';
+import { countMarks } from '../../lib/bodyMap';
+import { fingerprintAnswers, isNoteStale } from '../../lib/noteFingerprint';
 import { INTAKE_STEPS, SYMPTOM_REGIONS } from '../../lib/constants';
 import { detectRedFlags } from '../../lib/redFlags';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
@@ -90,6 +93,7 @@ const LOCAL = {
   'Submitted at': { es: 'Enviado el', zh: '提交时间' },
   'Important Reminders': { es: 'Recordatorios importantes', zh: '重要提醒' },
   'Your Clinical Summary': { es: 'Su resumen clínico', zh: '您的临床摘要' },
+  'Body diagram you drew': { es: 'Diagrama corporal que dibujó', zh: '您绘制的身体图示' },
   'Clinical Summary (Preview)': { es: 'Resumen clínico (vista previa)', zh: '临床摘要（预览）' },
   'Copied!': { es: '¡Copiado!', zh: '已复制！' },
   'Copy Note': { es: 'Copiar nota', zh: '复制病历' },
@@ -139,6 +143,9 @@ export default function FinalReview({ onBack, onGoToStep }) {
           narrative: result.summary,
           generatedAt: new Date().toISOString(),
           redFlags: flags,
+          // Record WHICH answers this note was written from, so a later edit
+          // can be detected and the note flagged as out of date.
+          sourceFingerprint: fingerprintAnswers(data),
         });
         setSubmitted();
         setIsSubmittedLocal(true);
@@ -509,6 +516,18 @@ function SubmittedView({ data, onGoToStep }) {
             )}
           </button>
         </div>
+        {/* The drawing itself, above the prose. The narrative describes it in
+            words because that is what an EMR text field can hold, but the
+            shape of a stripe down one calf is the part read in two seconds. */}
+        {countMarks(data.painMap) > 0 && (
+          <div className="mb-5 pb-5 border-b border-gray-100">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+              {t('Body diagram you drew')}
+            </p>
+            <PainMapSummary painMap={data.painMap} />
+          </div>
+        )}
+
         {/* The note is generated prose, so it can misread an answer. The
             patient is the only one who can catch that before the visit — and
             making them redo the form to fix one sentence would mean nobody
@@ -516,11 +535,13 @@ function SubmittedView({ data, onGoToStep }) {
         <NoteReview
           narrative={summary.narrative}
           onGoToStep={onGoToStep}
-          onRewritten={(text) =>
+          stale={isNoteStale(data, summary)}
+          onRewritten={(text, fingerprint) =>
             setSummary({
               ...summary,
               narrative: text,
               revisedAt: new Date().toISOString(),
+              sourceFingerprint: fingerprint,
             })
           }
         />
