@@ -10,9 +10,14 @@
  * real artwork rather than guessed.
  *
  * Flags:
- *   --single      the image holds ONE view; do not split
- *   --threshold N black/white cutoff, 0-255 (default 180). Raise it if thin
- *                 lines drop out, lower it if scanner grey turns into blobs.
+ *   --single       the image holds ONE view; do not split
+ *   --threshold=N  black/white cutoff, 0-255 (default 180). Raise it if thin
+ *                  lines drop out, lower it if scanner grey turns into blobs.
+ *   --crop-top=N    drop N pixels off the top before tracing. These forms carry
+ *                  a printed title ("Mark your Pain Point") that would
+ *                  otherwise be traced into the artwork as paths.
+ *   --crop-bottom=N likewise for a footer.
+ *   --autocrop     trim uniform whitespace around the drawing afterwards.
  */
 
 const fs = require('fs');
@@ -23,11 +28,19 @@ const { Jimp } = require('jimp');
 const args = process.argv.slice(2);
 const src = args.find((a) => !a.startsWith('--'));
 const single = args.includes('--single');
-const thrArg = args.find((a) => a.startsWith('--threshold'));
-const threshold = thrArg ? Number(thrArg.split('=')[1] ?? 180) : 180;
+const autocrop = args.includes('--autocrop');
+const num = (flag, dflt) => {
+  const a = args.find((x) => x.startsWith(`--${flag}=`));
+  return a ? Number(a.split('=')[1]) : dflt;
+};
+const threshold = num('threshold', 180);
+const cropTop = num('crop-top', 0);
+const cropBottom = num('crop-bottom', 0);
 
 if (!src) {
-  console.error('Usage: node scripts/trace-figure.js <image> [--single] [--threshold=180]');
+  console.error(
+    'Usage: node scripts/trace-figure.js <image> [--single] [--threshold=180] [--crop-top=N] [--crop-bottom=N] [--autocrop]'
+  );
   process.exit(1);
 }
 
@@ -59,9 +72,22 @@ function dimsOf(svg) {
 
 (async () => {
   const img = await Jimp.read(src);
-  const { width, height } = img.bitmap;
-  console.log(`Source: ${src}  ${width}x${height}`);
+  console.log(`Source: ${src}  ${img.bitmap.width}x${img.bitmap.height}`);
 
+  // Strip printed headers/footers BEFORE tracing, or the title text becomes
+  // part of the artwork as vector paths.
+  if (cropTop || cropBottom) {
+    const h = img.bitmap.height - cropTop - cropBottom;
+    if (h <= 0) throw new Error('crop-top + crop-bottom removes the whole image');
+    img.crop({ x: 0, y: cropTop, w: img.bitmap.width, h });
+    console.log(`  cropped ${cropTop}px top / ${cropBottom}px bottom -> ${img.bitmap.width}x${img.bitmap.height}`);
+  }
+  if (autocrop) {
+    img.autocrop();
+    console.log(`  autocropped whitespace -> ${img.bitmap.width}x${img.bitmap.height}`);
+  }
+
+  const { width, height } = img.bitmap;
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
   const halves = single
