@@ -5,8 +5,49 @@ import { useIntake } from '../../lib/store';
 import { INJECTION_TYPES } from '../../lib/constants';
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
+import SuggestedAnswers, { useAdoptExample } from '../ui/SuggestedAnswers';
 
 const LOCAL = {
+  // Records / upload notice
+  'You will be asked to upload documentation later': {
+    es: 'Más adelante le pediremos que suba documentación',
+    zh: '稍后我们会请您上传相关记录',
+  },
+  'Further along in this form there is a Records & Documents step where you can upload physical therapy notes, injection reports, EMG results, and imaging reports. Insurance companies require written proof of the treatments you have already tried before they will approve surgery, so anything you can gather now will speed up your approval. You can still finish this form without them.': {
+    es: 'Más adelante en este formulario hay una sección de Registros y Documentos donde puede subir notas de fisioterapia, informes de inyecciones, resultados de EMG e informes de imágenes. Las aseguradoras exigen prueba escrita de los tratamientos que ya ha probado antes de aprobar una cirugía, así que todo lo que pueda reunir ahora acelerará su aprobación. Puede terminar este formulario sin ellos.',
+    zh: '在本表格的后面有一个"记录与文件"步骤，您可以在那里上传物理治疗记录、注射报告、肌电图结果和影像报告。保险公司在批准手术前需要您已尝试过的治疗的书面证明，因此现在收集的任何资料都会加快审批速度。没有这些资料您也可以完成本表格。',
+  },
+  'PT visit notes or a discharge summary: upload them at the Records step, or bring them to your visit.': {
+    es: 'Notas de fisioterapia o resumen de alta: súbalos en la sección de Registros, o tráigalos a su cita.',
+    zh: '物理治疗就诊记录或出院小结：请在"记录"步骤上传，或就诊时带来。',
+  },
+  'Injection records or procedure notes: upload them at the Records step, or bring them to your visit.': {
+    es: 'Registros de inyecciones o notas del procedimiento: súbalos en la sección de Registros, o tráigalos a su cita.',
+    zh: '注射记录或操作记录：请在"记录"步骤上传，或就诊时带来。',
+  },
+  'Your EMG / nerve study report: upload it at the Records step, or bring a copy to your visit.': {
+    es: 'Su informe de EMG / estudio nervioso: súbalo en la sección de Registros, o traiga una copia a su cita.',
+    zh: '您的肌电图／神经传导检查报告：请在"记录"步骤上传，或就诊时带一份副本。',
+  },
+
+  // Suggested answers
+  '6 weeks': { es: '6 semanas', zh: '6周' },
+  '3 months': { es: '3 meses', zh: '3个月' },
+  '6 months': { es: '6 meses', zh: '6个月' },
+  'More than a year': { es: 'Más de un año', zh: '一年以上' },
+  '1x per week': { es: '1 vez por semana', zh: '每周1次' },
+  '2x per week': { es: '2 veces por semana', zh: '每周2次' },
+  '3x per week': { es: '3 veces por semana', zh: '每周3次' },
+  'None': { es: 'Ninguno', zh: '无' },
+  'Printed handout': { es: 'Hoja impresa', zh: '纸质讲义' },
+  'YouTube': { es: 'YouTube', zh: 'YouTube' },
+  'Phone app': { es: 'Aplicación de teléfono', zh: '手机应用' },
+  'Daily': { es: 'Diariamente', zh: '每天' },
+  'A few times a month': { es: 'Algunas veces al mes', zh: '每月几次' },
+  'Core strengthening': { es: 'Fortalecimiento del core', zh: '核心力量训练' },
+  'Stretching': { es: 'Estiramientos', zh: '拉伸' },
+  'Walking program': { es: 'Programa de caminata', zh: '步行计划' },
+
   // Title + subtitle
   'Prior Treatments': { es: 'Tratamientos previos', zh: '既往治疗' },
   "What treatments have you already tried for your spine symptoms? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.": {
@@ -82,15 +123,15 @@ const LOCAL = {
   'What imaging studies have you had for your spine?': { es: '¿Qué estudios de imagen se ha hecho de la columna?', zh: '您为脊柱做过哪些影像检查？' },
 
   // Records notes
-  'If you have PT visit notes or a discharge summary, please bring them to your visit.': {
+  'PT visit notes or a discharge summary: upload them at the Records step, or bring them to your visit.': {
     es: 'Si tiene notas de las visitas de fisioterapia o un resumen de alta, tráigalos a su cita.',
     zh: '如果您有物理治疗就诊记录或出院小结，请带到就诊时。',
   },
-  'If you have injection records or procedure notes, please bring them to your visit.': {
+  'Injection records or procedure notes: upload them at the Records step, or bring them to your visit.': {
     es: 'Si tiene registros de inyecciones o notas del procedimiento, tráigalos a su cita.',
     zh: '如果您有注射记录或操作记录，请带到就诊时。',
   },
-  'Please bring a copy of your EMG/nerve study report to your visit.': {
+  'Your EMG / nerve study report: upload it at the Records step, or bring a copy to your visit.': {
     es: 'Por favor, traiga una copia del informe de su EMG/estudio nervioso a su cita.',
     zh: '请携带一份您的肌电图／神经检查报告到就诊时。',
   },
@@ -157,6 +198,22 @@ export default function PriorTreatments({ onNext, onBack }) {
         </p>
       </div>
 
+      {/* Set the expectation before the questions, not after. Insurers
+          approve spine surgery on documented conservative care, so the notes
+          matter as much as the answers — and a patient who knows that at the
+          start of the section can start looking for them today. */}
+      <div className="flex items-start gap-3 p-4 mb-4 rounded-xl bg-teal-50 border border-teal-200">
+        <span className="text-lg leading-none mt-0.5" aria-hidden="true">📎</span>
+        <div>
+          <p className="text-sm font-semibold text-teal-800 mb-1">
+            {t('You will be asked to upload documentation later')}
+          </p>
+          <p className="text-sm text-teal-700 leading-relaxed">
+            {t('Further along in this form there is a Records & Documents step where you can upload physical therapy notes, injection reports, EMG results, and imaging reports. Insurance companies require written proof of the treatments you have already tried before they will approve surgery, so anything you can gather now will speed up your approval. You can still finish this form without them.')}
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <div className="card space-y-6">
           <TreatmentToggle label={t('Physical therapy')} tried={tx.physicalTherapy?.tried} onToggle={(v) => updateTx('physicalTherapy.tried', v)}>
@@ -166,12 +223,14 @@ export default function PriorTreatments({ onNext, onBack }) {
               <TextField label={t('Who referred or performed it?')} value={tx.physicalTherapy?.provider}
                 onChange={(v) => updateTx('physicalTherapy.provider', v)} placeholder={t('e.g., Dr. Smith / therapist name')} />
               <TextField label={t('When / for how long?')} value={tx.physicalTherapy?.duration}
-                onChange={(v) => updateTx('physicalTherapy.duration', v)} placeholder={t('e.g., 3 months in 2024')} />
+                onChange={(v) => updateTx('physicalTherapy.duration', v)} placeholder={t('e.g., 3 months in 2024')}
+                suggestions={PT_DURATIONS} />
               <TextField label={t('How often?')} value={tx.physicalTherapy?.frequency}
-                onChange={(v) => updateTx('physicalTherapy.frequency', v)} placeholder={t('e.g., 2x per week')} />
+                onChange={(v) => updateTx('physicalTherapy.frequency', v)} placeholder={t('e.g., 2x per week')}
+                suggestions={VISIT_FREQUENCIES} />
               <HelpedSelect value={tx.physicalTherapy?.helped} onChange={(v) => updateTx('physicalTherapy.helped', v)} includeWorse />
             </div>
-            <RecordsNote text={t('If you have PT visit notes or a discharge summary, please bring them to your visit.')} />
+            <RecordsNote text={t('PT visit notes or a discharge summary: upload them at the Records step, or bring them to your visit.')} />
           </TreatmentToggle>
 
           <TreatmentToggle label={t('Home exercise program')} tried={tx.homeExercise?.tried} onToggle={(v) => updateTx('homeExercise.tried', v)}>
@@ -187,14 +246,18 @@ export default function PriorTreatments({ onNext, onBack }) {
                 </select>
               </div>
               <TextField label={t('What app or service? (if any)')} value={tx.homeExercise?.appService}
-                onChange={(v) => updateTx('homeExercise.appService', v)} placeholder={t('e.g., Sword Health, YouTube, none')} />
+                onChange={(v) => updateTx('homeExercise.appService', v)} placeholder={t('e.g., Sword Health, YouTube, none')}
+                suggestions={HEP_SOURCES} />
               <TextField label={t('For how long?')} value={tx.homeExercise?.duration}
-                onChange={(v) => updateTx('homeExercise.duration', v)} placeholder={t('e.g., 2 months')} />
+                onChange={(v) => updateTx('homeExercise.duration', v)} placeholder={t('e.g., 2 months')}
+                suggestions={PT_DURATIONS} />
               <TextField label={t('How frequent?')} value={tx.homeExercise?.frequency}
-                onChange={(v) => updateTx('homeExercise.frequency', v)} placeholder={t('e.g., Daily, 3x per week')} />
+                onChange={(v) => updateTx('homeExercise.frequency', v)} placeholder={t('e.g., Daily, 3x per week')}
+                suggestions={HEP_FREQUENCIES} />
               <div className="sm:col-span-2">
                 <TextField label={t('What did you work on?')} value={tx.homeExercise?.details}
-                  onChange={(v) => updateTx('homeExercise.details', v)} placeholder={t('e.g., Core strengthening, stretching, walking program')} />
+                  onChange={(v) => updateTx('homeExercise.details', v)} placeholder={t('e.g., Core strengthening, stretching, walking program')}
+                  suggestions={HEP_FOCUS} />
               </div>
             </div>
           </TreatmentToggle>
@@ -282,7 +345,7 @@ export default function PriorTreatments({ onNext, onBack }) {
             <button onClick={addInjection} disabled={!newInjection.type} className="btn-secondary text-sm mt-3">
               {t('+ Add Injection')}
             </button>
-            <RecordsNote text={t('If you have injection records or procedure notes, please bring them to your visit.')} />
+            <RecordsNote text={t('Injection records or procedure notes: upload them at the Records step, or bring them to your visit.')} />
           </div>
 
           {/* Prior Imaging */}
@@ -319,7 +382,7 @@ export default function PriorTreatments({ onNext, onBack }) {
               <TextField label={t('Results (if known)')} value={tx.priorEMG?.results}
                 onChange={(v) => updateTx('priorEMG.results', v)} placeholder={t('What did it show?')} />
             </div>
-            <RecordsNote text={t('Please bring a copy of your EMG/nerve study report to your visit.')} />
+            <RecordsNote text={t('Your EMG / nerve study report: upload it at the Records step, or bring a copy to your visit.')} />
           </TreatmentToggle>
         </div>
       </div>
@@ -330,11 +393,36 @@ export default function PriorTreatments({ onNext, onBack }) {
 }
 
 
-function TextField({ label, value, onChange, placeholder }) {
+/**
+ * A text field that will answer itself.
+ *
+ * `suggestions` are the answers most patients actually give, one tap each.
+ * Double-tapping the empty field adopts the greyed-out example instead — that
+ * is where people's instinct sends them when they see ghost text they agree
+ * with. Both paths leave the value completely editable afterwards.
+ */
+// The answers patients actually give. Kept short deliberately: a long row of
+// chips is slower to read than typing, and the point is to save time.
+const PT_DURATIONS = ['6 weeks', '3 months', '6 months', 'More than a year'];
+const VISIT_FREQUENCIES = ['1x per week', '2x per week', '3x per week'];
+const HEP_SOURCES = ['None', 'Printed handout', 'YouTube', 'Phone app'];
+const HEP_FREQUENCIES = ['Daily', '3x per week', 'A few times a month'];
+const HEP_FOCUS = ['Core strengthening', 'Stretching', 'Walking program'];
+
+function TextField({ label, value, onChange, placeholder, suggestions }) {
+  const adopt = useAdoptExample(value, placeholder, onChange);
   return (
     <div>
       <label className="form-label text-sm">{label}</label>
-      <input type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <input
+        type="text"
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        title={!value ? placeholder : undefined}
+        {...adopt}
+      />
+      <SuggestedAnswers suggestions={suggestions} value={value} onPick={onChange} />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useIntake } from '../../lib/store';
+import NoteReview from '../NoteReview';
 import { INTAKE_STEPS, SYMPTOM_REGIONS } from '../../lib/constants';
 import { detectRedFlags } from '../../lib/redFlags';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
@@ -88,6 +89,7 @@ const LOCAL = {
   },
   'Submitted at': { es: 'Enviado el', zh: '提交时间' },
   'Important Reminders': { es: 'Recordatorios importantes', zh: '重要提醒' },
+  'Your Clinical Summary': { es: 'Su resumen clínico', zh: '您的临床摘要' },
   'Clinical Summary (Preview)': { es: 'Resumen clínico (vista previa)', zh: '临床摘要（预览）' },
   'Copied!': { es: '¡Copiado!', zh: '已复制！' },
   'Copy Note': { es: 'Copiar nota', zh: '复制病历' },
@@ -152,7 +154,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
   const currentFlags = detectRedFlags(data);
 
   if (isSubmitted && data.generatedSummary) {
-    return <SubmittedView data={data} />;
+    return <SubmittedView data={data} onGoToStep={onGoToStep} />;
   }
 
   return (
@@ -421,8 +423,8 @@ function getPromsReviewItems(proms, t = (x) => x) {
 }
 
 
-function SubmittedView({ data }) {
-  const { resetIntake } = useIntake();
+function SubmittedView({ data, onGoToStep }) {
+  const { resetIntake, setSummary } = useIntake();
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const [copied, setCopied] = useState(false);
@@ -484,7 +486,7 @@ function SubmittedView({ data }) {
       {/* Generated summary preview */}
       <div className="card text-left mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-navy-600">{t('Clinical Summary (Preview)')}</h3>
+          <h3 className="text-lg font-semibold text-navy-600">{t('Your Clinical Summary')}</h3>
           <button
             onClick={copyToClipboard}
             className="btn-secondary text-sm flex items-center gap-2"
@@ -507,11 +509,21 @@ function SubmittedView({ data }) {
             )}
           </button>
         </div>
-        <div className="prose prose-sm max-w-none">
-          <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans leading-relaxed bg-gray-50 p-4 rounded-xl">
-            {summary.narrative}
-          </pre>
-        </div>
+        {/* The note is generated prose, so it can misread an answer. The
+            patient is the only one who can catch that before the visit — and
+            making them redo the form to fix one sentence would mean nobody
+            ever does. */}
+        <NoteReview
+          narrative={summary.narrative}
+          onGoToStep={onGoToStep}
+          onRewritten={(text) =>
+            setSummary({
+              ...summary,
+              narrative: text,
+              revisedAt: new Date().toISOString(),
+            })
+          }
+        />
       </div>
 
       <div className="flex justify-center gap-4 flex-wrap">

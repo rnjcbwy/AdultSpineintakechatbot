@@ -227,16 +227,43 @@ export default function BodyDiagram({
 
   /**
    * Pointer position in normalized 0..1 viewBox coordinates.
+   *
+   * This goes through the SVG's own screen matrix rather than dividing by the
+   * element's bounding box. The two are NOT equivalent: the figure is capped at
+   * 70vh, so on most screens the element is wider than the drawing it contains,
+   * and preserveAspectRatio centres the artwork inside it. Measuring against
+   * the element box therefore lands every mark to the right of the actual tap —
+   * the offset grows with the width of the empty margin. getScreenCTM knows
+   * where the viewBox truly sits, so the mark lands under the cursor at any
+   * size or aspect ratio.
+   *
    * The left-lateral figure is drawn mirrored, so its input is mirrored back
    * before storage — marks and zone lookups then share one coordinate space.
    */
   const toNorm = (e) => {
-    const rect = svgRef.current.getBoundingClientRect();
-    const raw = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    return {
-      x: view === 'left' ? 1 - raw : raw,
-      y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)),
-    };
+    const svg = svgRef.current;
+    const clamp = (v) => Math.min(1, Math.max(0, v));
+    let nx;
+    let ny;
+
+    const ctm = svg.getScreenCTM?.();
+    if (ctm) {
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const local = pt.matrixTransform(ctm.inverse());
+      nx = local.x / W;
+      ny = local.y / H;
+    } else {
+      // Only reached if the SVG is not rendered (jsdom, print). Keeps the
+      // handler total rather than throwing.
+      const rect = svg.getBoundingClientRect();
+      nx = (e.clientX - rect.left) / rect.width;
+      ny = (e.clientY - rect.top) / rect.height;
+    }
+
+    const raw = clamp(nx);
+    return { x: view === 'left' ? 1 - raw : raw, y: clamp(ny) };
   };
 
   const commit = (next) => onChange({ marks, paths, ...next });

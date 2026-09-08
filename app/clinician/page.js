@@ -3,8 +3,14 @@
 import { useState, useEffect } from 'react';
 import { SYMPTOM_REGIONS } from '../../lib/constants';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
+import { ROS_SECTIONS, countReviewedSystems } from '../../lib/rosSystems';
 
 const STORAGE_KEY = 'spine-intake-data';
+
+/** Turn a patient-facing question into a finding phrase for the chart. */
+function stripQuestion(label) {
+  return label.replace(/\?$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+}
 
 /**
  * Clinician-facing dashboard page.
@@ -333,16 +339,42 @@ function StructuredTab({ data }) {
         )}
       </DataSection>
 
-      {/* ROS */}
-      <DataSection title="Review of Systems">
-        {Object.entries(data.reviewOfSystems || {}).map(([section, questions]) => {
-          if (section === 'additionalNotes' || typeof questions !== 'object') return null;
-          const positives = Object.entries(questions).filter(([, v]) => v === 'yes');
-          if (positives.length === 0) return null;
-          return positives.map(([q]) => (
-            <DataRow key={`${section}-${q}`} label={formatLabel(q)} value="POSITIVE" className="text-amber-600 font-medium" />
-          ));
+      {/* ROS. Grouped under the formal system names rather than the
+          patient-facing headings, and reporting how many systems were actually
+          completed — a documented review is expected to cover at least ten. */}
+      <DataSection
+        title={`Review of Systems (${countReviewedSystems(data.reviewOfSystems)} of ${ROS_SECTIONS.length} systems reviewed)`}
+      >
+        {ROS_SECTIONS.map((section) => {
+          const answers = data.reviewOfSystems?.[section.id] || {};
+          const positives = section.questions.filter((q) => answers[q.id] === 'yes');
+          const answered = section.questions.filter((q) => !!answers[q.id]);
+          if (!answered.length) {
+            return (
+              <DataRow
+                key={section.id}
+                label={section.system}
+                value="not reviewed"
+                className="text-gray-400 italic"
+              />
+            );
+          }
+          return (
+            <DataRow
+              key={section.id}
+              label={section.system}
+              value={
+                positives.length
+                  ? positives.map((q) => stripQuestion(q.label)).join('; ')
+                  : 'negative'
+              }
+              className={positives.length ? 'text-amber-600 font-medium' : 'text-gray-600'}
+            />
+          );
         })}
+        {data.reviewOfSystems?.additionalNotes && (
+          <DataRow label="Patient comments" value={data.reviewOfSystems.additionalNotes} />
+        )}
       </DataSection>
 
       {/* PROMs */}
