@@ -88,7 +88,16 @@ function Demo({ n, title, pitch, children }) {
 function TriggerDemo() {
   const [map, setMap] = useState(EMPTY_PAIN_MAP);
   const [type, setType] = useState('ache');
+  // Zone bounds are fitted to measurements of the traced artwork, but a fit
+  // still has to be looked at: guessing them is what once turned a mark on the
+  // flank into "left elbow". The overlay plus the running list of resolved
+  // labels below makes every box checkable without reading any code.
+  const [showZones, setShowZones] = useState(false);
   const fired = evaluatePainMap(map);
+
+  const resolved = ['anterior', 'posterior'].flatMap((v) =>
+    (map[v]?.marks || []).map((m) => ({ view: v, zone: m.zone, id: m.id }))
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -104,11 +113,33 @@ function TriggerDemo() {
         <div className="flex gap-3">
           {['anterior', 'posterior'].map((v) => (
             <BodyDiagram key={v} view={v} label={v === 'anterior' ? 'Front' : 'Back'}
-              data={map[v]} activeType={type} mode="mark"
+              data={map[v]} activeType={type} mode="mark" showZones={showZones}
               onChange={(next) => setMap((m) => ({ ...m, [v]: next }))} />
           ))}
         </div>
-        <button onClick={() => setMap(EMPTY_PAIN_MAP)} className="text-xs text-gray-400 hover:text-red-500 mt-2">Clear</button>
+        <div className="flex items-center gap-3 mt-2 flex-wrap">
+          <button onClick={() => setMap(EMPTY_PAIN_MAP)} className="text-xs text-gray-400 hover:text-red-500">Clear</button>
+          <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer select-none">
+            <input type="checkbox" checked={showZones} onChange={(e) => setShowZones(e.target.checked)} />
+            Show zone boxes
+          </label>
+        </div>
+        {resolved.length > 0 && (
+          <div className="mt-3 border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-1">
+              What each mark resolved to
+            </p>
+            <ul className="text-xs text-gray-700 space-y-0.5 max-h-32 overflow-y-auto">
+              {resolved.map((r) => (
+                <li key={r.id}>
+                  <span className="text-gray-400">{r.view === 'anterior' ? 'front' : 'back'}</span>
+                  {' \u2192 '}
+                  <span className="font-medium">{r.zone}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div>

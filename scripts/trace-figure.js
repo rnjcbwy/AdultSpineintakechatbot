@@ -82,11 +82,6 @@ function dimsOf(svg) {
     img.crop({ x: 0, y: cropTop, w: img.bitmap.width, h });
     console.log(`  cropped ${cropTop}px top / ${cropBottom}px bottom -> ${img.bitmap.width}x${img.bitmap.height}`);
   }
-  if (autocrop) {
-    img.autocrop();
-    console.log(`  autocropped whitespace -> ${img.bitmap.width}x${img.bitmap.height}`);
-  }
-
   const { width, height } = img.bitmap;
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
@@ -100,6 +95,13 @@ function dimsOf(svg) {
   const manifest = { source: path.basename(src), threshold, traced: [] };
 
   for (const { name, img: part } of halves) {
+    // Autocrop AFTER splitting. Trimming the whole sheet first would move the
+    // midpoint the split relies on, and each figure should fill its own
+    // viewBox anyway so the two render at a matching scale.
+    if (autocrop) {
+      part.autocrop();
+      console.log(`  ${name}: autocropped -> ${part.bitmap.width}x${part.bitmap.height}`);
+    }
     const buf = await part.getBuffer('image/png');
     const svg = await trace(buf, name);
     const file = path.join(OUT_DIR, `${name}.svg`);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { VIEW_BOX, getType, zoneAt } from '../lib/bodyMap';
+import { VIEW_BOX, FIGURE_SRC, LATERAL_DX, ZONES, getType, zoneAt } from '../lib/bodyMap';
 
 const W = VIEW_BOX.width;
 const H = VIEW_BOX.height;
@@ -9,11 +9,6 @@ const H = VIEW_BOX.height;
 const SKIN = '#F3EFE9';
 const OUTLINE = '#8C9BAA';
 
-/**
- * Human figure built from simple primitives rather than one hand-tuned path.
- * A clean, diagrammatic silhouette reads better on a clinical form than an
- * attempted realistic outline, and stays predictable at any size.
- */
 /**
  * Side profile. Both lateral views face the same way so a single zone set
  * serves both — the view name supplies which side of the body it is.
@@ -76,9 +71,12 @@ function LateralFigure({ view }) {
     </g>
   );
 
+  // Drawn for a 260-wide box; LATERAL_DX centres that space in the wider one
+  // the traced front and back views need. The zone boxes carry the same shift.
   return (
     <g>
       <g transform={mirror ? `translate(${W},0) scale(-1,1)` : undefined}>
+       <g transform={`translate(${LATERAL_DX},0)`}>
         <g fill={OUTLINE} stroke={OUTLINE} strokeWidth={3} strokeLinejoin="round">{parts}</g>
         <g fill={SKIN} stroke="none">{parts}</g>
         <g stroke={OUTLINE} strokeWidth={1.3} fill="none" opacity={0.5}>
@@ -87,6 +85,7 @@ function LateralFigure({ view }) {
           <circle cx={127} cy={414} r={9} />
         </g>
         {arm}
+       </g>
       </g>
       <text x={mirror ? 14 : W - 14} y={26} textAnchor={mirror ? 'start' : 'end'}
         fontSize={13} fill="#8C9BAA">
@@ -96,144 +95,65 @@ function LateralFigure({ view }) {
   );
 }
 
+/**
+ * The figure for one view.
+ *
+ * Anterior and posterior are the supplied line drawing, traced to SVG and put
+ * on this viewBox by scripts/normalize-figures.js. It is referenced rather
+ * than inlined: the two paths are ~45KB each, and nothing here needs to
+ * hit-test them — zoneAt() resolves a tap by coordinate, not by geometry.
+ * The lateral views have no artwork and are still drawn in code.
+ */
 function Figure({ view }) {
   if (view === 'left' || view === 'right') return <LateralFigure view={view} />;
-  /**
-   * One arm, drawn vertically then rotated about the shoulder so it hangs
-   * abducted. Abduction matters: it separates the limb from the trunk and
-   * gives the patient room to draw a stripe down the medial or lateral
-   * surface, which is what distinguishes C6 from C8 (or L4 from L5).
-   * Fingers are individually drawn so a patient can shade just the thumb
-   * side or just the little-finger side.
-   */
-  const arm = (key, pivotX, dir) => {
-    const cx = pivotX;
-    // Finger x-offsets from the palm centre; the middle finger is longest.
-    const fingers = [
-      { dx: -15, len: 40 },
-      { dx: -7, len: 46 },
-      { dx: 1, len: 43 },
-      { dx: 9, len: 36 },
-    ];
-    return (
-      <g key={key} transform={`rotate(${15 * dir}, ${pivotX}, 116)`}>
-        <ellipse cx={cx} cy={116} rx={22} ry={22} />
-        <rect x={cx - 16} y={104} width={32} height={118} rx={16} />
-        <rect x={cx - 14} y={214} width={28} height={104} rx={14} />
-        {/* palm */}
-        <rect x={cx - 16} y={310} width={32} height={40} rx={12} />
-        {/* fingers */}
-        {fingers.map((f, i) => (
-          <rect key={i} x={cx + f.dx * dir - 3.5} y={344} width={7} height={f.len} rx={3.5} />
-        ))}
-        {/* thumb, laterally placed as in anatomical position */}
-        <rect
-          x={cx - 20 * dir - 4.5}
-          y={316}
-          width={9}
-          height={30}
-          rx={4.5}
-          transform={`rotate(${28 * dir}, ${cx - 20 * dir}, 320)`}
-        />
-      </g>
-    );
-  };
-
-  /**
-   * One leg. `dir` is +1 for the viewer-right leg, -1 for viewer-left, and
-   * places the great toe on the MEDIAL side (toward the midline) in the
-   * anterior view. The posterior view shows a heel instead of toes.
-   */
-  const leg = (key, cx, dir) => (
-    <g key={key}>
-      {/* thigh: broad at the hip, tapering toward the knee */}
-      <path
-        d={`M${cx - 20},300 C${cx - 22},338 ${cx - 19},376 ${cx - 16},406
-            L${cx + 16},406 C${cx + 19},376 ${cx + 22},338 ${cx + 20},300 Z`}
-      />
-      <ellipse cx={cx} cy={414} rx={17} ry={14} />
-      {/* calf belly high, tapering to a narrow ankle — the shape patients
-          use to place a lateral-calf stripe */}
-      <path
-        d={`M${cx - 16},408 C${cx - 20},436 ${cx - 19},470 ${cx - 13},498
-            L${cx - 8},522 L${cx + 8},522 L${cx + 13},498
-            C${cx + 19},470 ${cx + 20},436 ${cx + 16},408 Z`}
-      />
-      {view === 'anterior' ? (
-        <>
-          {/* dorsum, widening from the ankle out to the toes */}
-          <path
-            d={`M${cx - 8},518 C${cx - 13},530 ${cx - 15},540 ${cx - 14},547
-                L${cx + 14},547 C${cx + 15},540 ${cx + 13},530 ${cx + 8},518 Z`}
-          />
-          {/* five toes, great toe on the MEDIAL side, decreasing outward */}
-          {[0, 1, 2, 3, 4].map((i) => (
-            <circle
-              key={i}
-              cx={cx + dir * (11 - i * 5.7)}
-              cy={551 + i * 1.1}
-              r={5.4 - i * 0.62}
-            />
-          ))}
-        </>
-      ) : (
-        <>
-          {/* heel, with the achilles narrowing above it */}
-          <path
-            d={`M${cx - 8},512 C${cx - 13},528 ${cx - 14},542 ${cx - 9},551
-                L${cx + 9},551 C${cx + 14},542 ${cx + 13},528 ${cx + 8},512 Z`}
-          />
-        </>
-      )}
-    </g>
-  );
-
-  // Geometry is declared once and painted twice: a dilated stroke pass builds
-  // a single merged outline, then a fill pass covers the interior seams.
-  const parts = (
-    <>
-      <ellipse cx={130} cy={42} rx={25} ry={30} />
-      <rect x={118} y={62} width={24} height={46} rx={11} />
-      <path
-        d="M86,118 C86,106 96,100 108,98 L152,98 C164,100 174,106 174,118
-           L168,208 L162,258 L170,306 C171,314 164,320 154,320
-           L106,320 C96,320 89,314 90,306 L98,258 L92,208 Z"
-      />
-      {arm('l', 88, 1)}
-      {arm('r', 172, -1)}
-      {leg('l', 106, 1)}
-      {leg('r', 154, -1)}
-    </>
-  );
-
   return (
-    <g>
-      <g fill={OUTLINE} stroke={OUTLINE} strokeWidth={3} strokeLinejoin="round">{parts}</g>
-      <g fill={SKIN} stroke="none">{parts}</g>
+    <image
+      href={FIGURE_SRC[view]}
+      x={0}
+      y={0}
+      width={W}
+      height={H}
+      style={{ pointerEvents: 'none' }}
+    />
+  );
+}
 
-      {/* View-specific detail so the two figures are never confused, plus
-          light midline/joint guides that help a patient place a dermatomal
-          stripe on the correct surface. */}
-      {view === 'posterior' ? (
-        <g stroke={OUTLINE} strokeWidth={1.3} fill="none" opacity={0.7}>
-          <line x1={130} y1={104} x2={130} y2={300} strokeDasharray="5 4" />
-          <path d="M110,126 C102,142 102,162 110,178" />
-          <path d="M150,126 C158,142 158,162 150,178" />
-          <line x1={130} y1={304} x2={130} y2={334} />
-          {/* popliteal creases */}
-          <path d="M93,414 C100,419 112,419 119,414" />
-          <path d="M141,414 C148,419 160,419 167,414" />
-        </g>
-      ) : (
-        <g stroke={OUTLINE} strokeWidth={1.3} fill="none" opacity={0.55}>
-          <path d="M108,110 C118,105 126,105 130,108" />
-          <path d="M152,110 C142,105 134,105 130,108" />
-          <circle cx={130} cy={244} r={2.4} fill={OUTLINE} stroke="none" />
-          {/* patellae */}
-          <circle cx={106} cy={418} r={9} />
-          <circle cx={154} cy={418} r={9} />
-        </g>
-      )}
+/**
+ * Debug overlay: every zone box, drawn over the figure.
+ *
+ * Zone bounds used to be guessed, which is how a mark on the flank once came
+ * back as "left elbow". They are now fitted to measurements of the traced
+ * artwork — and this makes that fit checkable by eye instead of by trusting it.
+ */
+function ZoneOverlay({ view }) {
+  const zones = ZONES[view] || [];
+  return (
+    <g style={{ pointerEvents: 'none' }}>
+      {zones.map((z, i) => {
+        const [x0, y0, x1, y1] = z.box;
+        const hue = (i * 47) % 360;
+        return (
+          <g key={`${z.name}-${i}`}>
+            <rect
+              x={x0}
+              y={y0}
+              width={x1 - x0}
+              height={y1 - y0}
+              fill={`hsl(${hue} 80% 55% / 0.10)`}
+              stroke={`hsl(${hue} 75% 42%)`}
+              strokeWidth={0.7}
+            />
+            <text
+              x={x0 + 1.5}
+              y={y0 + 7}
+              fontSize={5}
+              fill={`hsl(${hue} 75% 32%)`}
+            >
+              {z.name}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
@@ -296,6 +216,7 @@ export default function BodyDiagram({
   mode,
   onChange,
   label,
+  showZones = false,
 }) {
   const svgRef = useRef(null);
   const [draft, setDraft] = useState(null);
@@ -391,6 +312,7 @@ export default function BodyDiagram({
         onPointerLeave={handleUp}
       >
         <Figure view={view} />
+        {showZones && <ZoneOverlay view={view} />}
 
         {/* radiation traces */}
         {paths.map((p) => (

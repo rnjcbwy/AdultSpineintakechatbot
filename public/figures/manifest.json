@@ -1,0 +1,20 @@
+{
+  "source": "pain-map.png",
+  "threshold": 170,
+  "traced": [
+    {
+      "name": "front",
+      "file": "public/figures/front.svg",
+      "width": 344,
+      "height": 698,
+      "paths": 1
+    },
+    {
+      "name": "back",
+      "file": "public/figures/back.svg",
+      "width": 320,
+      "height": 712,
+      "paths": 1
+    }
+  ]
+}
