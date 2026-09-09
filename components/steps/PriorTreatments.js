@@ -8,6 +8,20 @@ import { useLang, makeT, COMMON } from '../../lib/i18n';
 import SuggestedAnswers, { useAdoptExample } from '../ui/SuggestedAnswers';
 
 const LOCAL = {
+  'The more detail you can give, the better — if you know your therapist\'s full name and phone number, or the clinic address, please add it. But do not worry if you cannot remember everything. Partial answers are genuinely useful, and you can leave anything blank.': {
+    es: 'Cuanto más detalle pueda dar, mejor: si sabe el nombre completo y el teléfono de su terapeuta, o la dirección de la clínica, agréguelos. Pero no se preocupe si no recuerda todo. Las respuestas parciales son realmente útiles, y puede dejar cualquier campo en blanco.',
+    zh: '您提供的细节越多越好——如果您知道治疗师的全名和电话号码，或诊所地址，请填写。但如果记不全也不用担心。部分答案同样非常有用，任何一项都可以留空。',
+  },
+
+  // Suggested answers added below
+  'Lumbar support belt': { es: 'Faja lumbar', zh: '腰部支撑带' },
+  'Soft cervical collar': { es: 'Collarín cervical blando', zh: '软颈托' },
+  'Rigid back brace': { es: 'Corsé rígido', zh: '硬性背部支具' },
+  'No relief': { es: 'Sin alivio', zh: '没有缓解' },
+  'A few days': { es: 'Unos pocos días', zh: '几天' },
+  'About 2 weeks': { es: 'Unas 2 semanas', zh: '大约2周' },
+  'A few months': { es: 'Unos meses', zh: '几个月' },
+
   // Records / upload notice
   'You will be asked to upload documentation later': {
     es: 'Más adelante le pediremos que suba documentación',
@@ -198,6 +212,13 @@ export default function PriorTreatments({ onNext, onBack }) {
         </p>
       </div>
 
+      {/* Detail here is what insurers weigh, but a patient who feels
+          interrogated abandons the form. Ask for everything, forgive anything
+          missing, and show what "detailed" looks like in the examples. */}
+      <p className="text-sm text-gray-500 leading-relaxed mb-4">
+        {t('The more detail you can give, the better — if you know your therapist\'s full name and phone number, or the clinic address, please add it. But do not worry if you cannot remember everything. Partial answers are genuinely useful, and you can leave anything blank.')}
+      </p>
+
       {/* Set the expectation before the questions, not after. Insurers
           approve spine surgery on documented conservative care, so the notes
           matter as much as the answers — and a patient who knows that at the
@@ -219,11 +240,11 @@ export default function PriorTreatments({ onNext, onBack }) {
           <TreatmentToggle label={t('Physical therapy')} tried={tx.physicalTherapy?.tried} onToggle={(v) => updateTx('physicalTherapy.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <TextField label={t('Where? (clinic name & city)')} value={tx.physicalTherapy?.facility}
-                onChange={(v) => updateTx('physicalTherapy.facility', v)} placeholder={t('e.g., ProCare PT, Denver')} />
+                onChange={(v) => updateTx('physicalTherapy.facility', v)} placeholder={t('e.g., ProCare Physical Therapy, Denver — (303) 555-0142')} />
               <TextField label={t('Who referred or performed it?')} value={tx.physicalTherapy?.provider}
-                onChange={(v) => updateTx('physicalTherapy.provider', v)} placeholder={t('e.g., Dr. Smith / therapist name')} />
+                onChange={(v) => updateTx('physicalTherapy.provider', v)} placeholder={t('e.g., Sarah Mills, PT — (303) 555-0142')} />
               <TextField label={t('When / for how long?')} value={tx.physicalTherapy?.duration}
-                onChange={(v) => updateTx('physicalTherapy.duration', v)} placeholder={t('e.g., 3 months in 2024')}
+                onChange={(v) => updateTx('physicalTherapy.duration', v)} placeholder={t('e.g., 3 months, spring 2024')}
                 suggestions={PT_DURATIONS} />
               <TextField label={t('How often?')} value={tx.physicalTherapy?.frequency}
                 onChange={(v) => updateTx('physicalTherapy.frequency', v)} placeholder={t('e.g., 2x per week')}
@@ -264,33 +285,30 @@ export default function PriorTreatments({ onNext, onBack }) {
 
           <TreatmentToggle label={t('Chiropractic care')} tried={tx.chiropracticCare?.tried} onToggle={(v) => updateTx('chiropracticCare.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="form-label text-sm">{t('Duration')}</label>
-                <input type="text" value={tx.chiropracticCare?.duration || ''}
-                  onChange={(e) => updateTx('chiropracticCare.duration', e.target.value)} placeholder={t('How long did you go?')} />
-              </div>
+              <TextField label={t('When / for how long?')} value={tx.chiropracticCare?.duration}
+                onChange={(v) => updateTx('chiropracticCare.duration', v)}
+                placeholder={t('e.g., 2x per week for 2 months, early 2024')}
+                suggestions={PT_DURATIONS} />
               <HelpedSelect value={tx.chiropracticCare?.helped} onChange={(v) => updateTx('chiropracticCare.helped', v)} />
             </div>
           </TreatmentToggle>
 
           <TreatmentToggle label={t('Acupuncture')} tried={tx.acupuncture?.tried} onToggle={(v) => updateTx('acupuncture.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="form-label text-sm">{t('Duration')}</label>
-                <input type="text" value={tx.acupuncture?.duration || ''}
-                  onChange={(e) => updateTx('acupuncture.duration', e.target.value)} placeholder={t('How long?')} />
-              </div>
+              <TextField label={t('When / for how long?')} value={tx.acupuncture?.duration}
+                onChange={(v) => updateTx('acupuncture.duration', v)}
+                placeholder={t('e.g., weekly for 6 weeks, summer 2024')}
+                suggestions={PT_DURATIONS} />
               <HelpedSelect value={tx.acupuncture?.helped} onChange={(v) => updateTx('acupuncture.helped', v)} />
             </div>
           </TreatmentToggle>
 
           <TreatmentToggle label={t('Back brace or cervical collar')} tried={tx.braces?.tried} onToggle={(v) => updateTx('braces.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="form-label text-sm">{t('Type')}</label>
-                <input type="text" value={tx.braces?.type || ''}
-                  onChange={(e) => updateTx('braces.type', e.target.value)} placeholder={t('What kind?')} />
-              </div>
+              <TextField label={t('What kind, and for how long?')} value={tx.braces?.type}
+                onChange={(v) => updateTx('braces.type', v)}
+                placeholder={t('e.g., Lumbar support belt, worn daily for 3 months')}
+                suggestions={BRACE_TYPES} />
               <HelpedSelect value={tx.braces?.helped} onChange={(v) => updateTx('braces.helped', v)} />
             </div>
           </TreatmentToggle>
@@ -324,16 +342,22 @@ export default function PriorTreatments({ onNext, onBack }) {
                 <option value="">{t('Injection type...')}</option>
                 {INJECTION_TYPES.map((it) => (<option key={it} value={it}>{t(it)}</option>))}
               </select>
-              <input type="text" value={newInjection.location}
-                onChange={(e) => setNewInjection((p) => ({ ...p, location: e.target.value }))} placeholder={t('Where? (e.g., L4-L5, left side)')} />
-              <input type="text" value={newInjection.provider}
-                onChange={(e) => setNewInjection((p) => ({ ...p, provider: e.target.value }))} placeholder={t('Who did it? (doctor / clinic)')} />
-              <input type="text" value={newInjection.when}
-                onChange={(e) => setNewInjection((p) => ({ ...p, when: e.target.value }))} placeholder={t('When? (e.g., June 2024)')} />
-              <input type="text" value={newInjection.count}
-                onChange={(e) => setNewInjection((p) => ({ ...p, count: e.target.value }))} placeholder={t('How many? (e.g., 3)')} />
-              <input type="text" value={newInjection.reliefDuration}
-                onChange={(e) => setNewInjection((p) => ({ ...p, reliefDuration: e.target.value }))} placeholder={t('How long did relief last? (e.g., 2 weeks)')} />
+              <TextField value={newInjection.location}
+                onChange={(v) => setNewInjection((p) => ({ ...p, location: v }))}
+                placeholder={t('Where? (e.g., L4-L5, left side)')} />
+              <TextField value={newInjection.provider}
+                onChange={(v) => setNewInjection((p) => ({ ...p, provider: v }))}
+                placeholder={t('Who did it? (e.g., Dr. Alan Reyes, Front Range Pain — (303) 555-0199)')} />
+              <TextField value={newInjection.when}
+                onChange={(v) => setNewInjection((p) => ({ ...p, when: v }))}
+                placeholder={t('When? (e.g., June 2024)')} />
+              <TextField value={newInjection.count}
+                onChange={(v) => setNewInjection((p) => ({ ...p, count: v }))}
+                placeholder={t('How many? (e.g., 3)')} suggestions={INJECTION_COUNTS} />
+              <TextField value={newInjection.reliefDuration}
+                onChange={(v) => setNewInjection((p) => ({ ...p, reliefDuration: v }))}
+                placeholder={t('How long did relief last? (e.g., 2 weeks)')}
+                suggestions={RELIEF_DURATIONS} />
               <select value={newInjection.helped} onChange={(e) => setNewInjection((p) => ({ ...p, helped: e.target.value }))} className="sm:col-span-2">
                 <option value="">{t('Did it help?')}</option>
                 <option value="Helped a lot">{t('Helped a lot')}</option>
@@ -376,11 +400,11 @@ export default function PriorTreatments({ onNext, onBack }) {
               <TextField label={t('When?')} value={tx.priorEMG?.when}
                 onChange={(v) => updateTx('priorEMG.when', v)} placeholder={t('e.g., March 2024')} />
               <TextField label={t('Where? (facility & city)')} value={tx.priorEMG?.facility}
-                onChange={(v) => updateTx('priorEMG.facility', v)} placeholder={t('e.g., Denver Neuro Clinic')} />
+                onChange={(v) => updateTx('priorEMG.facility', v)} placeholder={t('e.g., Denver Neurology, 1400 Elm St — (303) 555-0177')} />
               <TextField label={t('Who did it?')} value={tx.priorEMG?.provider}
-                onChange={(v) => updateTx('priorEMG.provider', v)} placeholder={t('Physician / provider name')} />
+                onChange={(v) => updateTx('priorEMG.provider', v)} placeholder={t('e.g., Dr. Alan Reyes — (303) 555-0177')} />
               <TextField label={t('Results (if known)')} value={tx.priorEMG?.results}
-                onChange={(v) => updateTx('priorEMG.results', v)} placeholder={t('What did it show?')} />
+                onChange={(v) => updateTx('priorEMG.results', v)} placeholder={t('e.g., Mild nerve irritation on the right at L5')} />
             </div>
             <RecordsNote text={t('Your EMG / nerve study report: upload it at the Records step, or bring a copy to your visit.')} />
           </TreatmentToggle>
@@ -408,12 +432,15 @@ const VISIT_FREQUENCIES = ['1x per week', '2x per week', '3x per week'];
 const HEP_SOURCES = ['None', 'Printed handout', 'YouTube', 'Phone app'];
 const HEP_FREQUENCIES = ['Daily', '3x per week', 'A few times a month'];
 const HEP_FOCUS = ['Core strengthening', 'Stretching', 'Walking program'];
+const BRACE_TYPES = ['Lumbar support belt', 'Soft cervical collar', 'Rigid back brace'];
+const INJECTION_COUNTS = ['1', '2', '3'];
+const RELIEF_DURATIONS = ['No relief', 'A few days', 'About 2 weeks', 'A few months'];
 
 function TextField({ label, value, onChange, placeholder, suggestions }) {
   const adopt = useAdoptExample(value, placeholder, onChange);
   return (
     <div>
-      <label className="form-label text-sm">{label}</label>
+      {label && <label className="form-label text-sm">{label}</label>}
       <input
         type="text"
         value={value || ''}
@@ -422,10 +449,18 @@ function TextField({ label, value, onChange, placeholder, suggestions }) {
         title={!value ? placeholder : undefined}
         {...adopt}
       />
-      <SuggestedAnswers suggestions={suggestions} value={value} onPick={onChange} />
+      {/* The example itself is the first chip, so the greyed-out text a patient
+          is already reading is one tap away from being their answer. */}
+      <SuggestedAnswers
+        example={placeholder}
+        suggestions={suggestions}
+        value={value}
+        onPick={onChange}
+      />
     </div>
   );
 }
+
 
 function RecordsNote({ text }) {
   return (

@@ -3,9 +3,7 @@
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
-  'Tap to use': { es: 'Toque para usar', zh: '点击使用' },
-  'Common answers': { es: 'Respuestas comunes', zh: '常见答案' },
-  'Use this example': { es: 'Usar este ejemplo', zh: '使用此示例' },
+  'Tap to fill, then edit': { es: 'Toque para rellenar y luego edite', zh: '点击填入，然后修改' },
 };
 
 /**
@@ -23,16 +21,28 @@ const LOCAL = {
  * composing one. Chips disappear once the field has content so they never
  * compete with something the patient actually wrote.
  */
-export default function SuggestedAnswers({ suggestions = [], value, onPick, className = '' }) {
+export default function SuggestedAnswers({ example, suggestions = [], value, onPick, className = '' }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
 
-  if (!suggestions.length || (value && value.trim())) return null;
+  // The greyed-out example is offered as the first chip. It is the answer the
+  // patient is already reading, and it was previously reachable only by
+  // double-tapping the field — an affordance nobody discovers. As a chip it is
+  // one visible tap, and still fully editable afterwards.
+  const exampleText = example ? stripExamplePrefix(example) : '';
+  const chips = [];
+  if (exampleText) chips.push(exampleText);
+  for (const s of suggestions) {
+    const label = typeof s === 'string' ? s : s.label;
+    if (label && label !== exampleText) chips.push(s);
+  }
+
+  if (!chips.length || (value && value.trim())) return null;
 
   return (
     <div className={`flex flex-wrap items-center gap-1.5 mt-1.5 ${className}`}>
-      <span className="text-[11px] text-gray-400 mr-0.5">{t('Tap to use')}:</span>
-      {suggestions.map((s) => {
+      <span className="text-[11px] text-gray-400 mr-0.5">{t('Tap to fill, then edit')}:</span>
+      {chips.map((s) => {
         const label = typeof s === 'string' ? s : s.label;
         const fill = typeof s === 'string' ? s : s.value ?? s.label;
         return (
@@ -77,7 +87,11 @@ export function useAdoptExample(value, example, onChange) {
  */
 export function stripExamplePrefix(text) {
   if (!text) return '';
-  const parenthesised = /\(\s*(?:e\.g\.|for example|ex\.)[,:]?\s*([^)]*)\)/i.exec(text);
+  // Greedy to the LAST closing bracket, not the first. Examples that model the
+  // detail we want contain their own brackets — a phone number, "(303) 555-0142"
+  // — and stopping at the first ")" hands the patient a truncated number that
+  // looks deliberate.
+  const parenthesised = /\(\s*(?:e\.g\.|for example|ex\.)[,:]?\s*(.*)\)\s*$/i.exec(text);
   if (parenthesised) return parenthesised[1].trim();
   return text
     .replace(/^\s*(?:e\.g\.|eg\.|for example|example|ex\.)[,:]?\s*/i, '')
