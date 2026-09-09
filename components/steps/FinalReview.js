@@ -202,7 +202,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
           step={1}
           onEdit={() => onGoToStep(1)}
           items={[
-            { label: 'Name', value: `${data.demographics.firstName} ${data.demographics.lastName}` },
+            { label: 'Name', value: `${data.demographics?.firstName || ''} ${data.demographics?.lastName || ''}`.trim() },
             { label: 'DOB', value: data.demographics.dob },
             { label: 'Sex', value: data.demographics.sex },
             { label: 'Phone', value: data.demographics.phone },

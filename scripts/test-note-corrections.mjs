@@ -10,9 +10,18 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 
+// prompts.js pulls in the pain-map and PROM summarisers, and those pull in the
+// questionnaire definitions, so the whole chain is copied with its imports
+// rewritten. Node's ESM loader needs real extensions; the app's bundler does not.
 const COPIES = [
   ['lib/bodyMap.js', 'lib/__bm.test.mjs', (t) => t],
-  ['lib/prompts.js', 'lib/__pr.test.mjs', (t) => t.replace("from './bodyMap'", "from './__bm.test.mjs'")],
+  ['lib/questionnaires.js', 'lib/__q.test.mjs', (t) => t],
+  ['lib/promSummary.js', 'lib/__ps.test.mjs',
+    (t) => t.replace("from './questionnaires'", "from './__q.test.mjs'")],
+  ['lib/prompts.js', 'lib/__pr.test.mjs',
+    (t) => t
+      .replace("from './bodyMap'", "from './__bm.test.mjs'")
+      .replace("from './promSummary'", "from './__ps.test.mjs'")],
 ];
 for (const [src, dst, tr] of COPIES) {
   fs.writeFileSync(path.resolve(dst), tr(fs.readFileSync(path.resolve(src), 'utf8')));

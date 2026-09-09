@@ -5,6 +5,8 @@ import { SYMPTOM_REGIONS } from '../../lib/constants';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { ROS_SECTIONS, countReviewedSystems } from '../../lib/rosSystems';
 import PainMapSummary from '../../components/PainMapFigure';
+import { promDetail } from '../../lib/promSummary';
+import { defaultIntakeData } from '../../lib/store';
 import { countMarks } from '../../lib/bodyMap';
 
 const STORAGE_KEY = 'spine-intake-data';
@@ -26,7 +28,17 @@ export default function ClinicianDashboard() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setData(JSON.parse(saved));
+      if (saved) {
+        // Merge over the default shape rather than using the saved object as
+        // it stands. This screen reads deep into every section
+        // (demographics.lastName, chiefComplaint.mainReason, ...), and a saved
+        // intake can be missing any of them — a draft saved early, or a shape
+        // that predates a section being added. Reading straight through throws,
+        // and React replaces the whole dashboard with a blank error page, so a
+        // missing middle name costs the surgeon the entire note.
+        const parsed = JSON.parse(saved);
+        setData({ ...defaultIntakeData, ...parsed });
+      }
     } catch {}
   }, []);
 
@@ -43,7 +55,7 @@ export default function ClinicianDashboard() {
   }
 
   const summary = data.generatedSummary;
-  const d = data.demographics;
+  const d = data.demographics || {};
   const redFlags = data.redFlags || [];
 
   const copyNote = async () => {
@@ -491,77 +503,77 @@ const PROM_FULL_NAMES = {
 };
 
 function PromsSection({ proms }) {
+  // Resolve the stored answer codes back into the sentences the patient chose.
+  // The scores alone were all that ever left this screen, so the functional
+  // history inside these questionnaires — how far they walk, whether they can
+  // dress themselves — was collected and then never shown to anyone.
+  const detail = promDetail(proms);
+  const byId = Object.fromEntries(detail.map((d) => [d.id, d]));
+
   return (
     <DataSection title="Patient-Reported Outcome Measures (PROMs)">
       {Object.entries(proms).map(([id, entry]) => {
         const name = PROM_LABELS[id] || id;
         const fullName = PROM_FULL_NAMES[id] || '';
-        if (!entry.score) {
+        const d = byId[id];
+
+        if (!entry.score && !d) {
           return <DataRow key={id} label={name} value="Not completed" />;
         }
-        if (id === 'odi' || id === 'ndi') {
-          return (
-            <div key={id} className="py-2">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-sm font-semibold text-navy-600">{name}</span>
-                <span className="text-xs text-gray-400">{fullName}</span>
-              </div>
-              <div className="flex items-center gap-4 ml-4">
-                <span className="text-lg font-bold text-navy-600">{entry.score.percentage}%</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getScoreBadge(entry.score.interpretation)}`}>
-                  {entry.score.interpretation}
-                </span>
-                <span className="text-xs text-gray-400">({entry.score.sectionsAnswered} sections answered)</span>
-              </div>
+
+        return (
+          <div key={id} className="py-2">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="text-sm font-semibold text-navy-600">{name}</span>
+              <span className="text-xs text-gray-400">{fullName}</span>
             </div>
-          );
-        }
-        if (id === 'mjoa') {
-          return (
-            <div key={id} className="py-2">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-sm font-semibold text-navy-600">{name}</span>
-                <span className="text-xs text-gray-400">{fullName}</span>
-              </div>
-              <div className="flex items-center gap-4 ml-4">
-                <span className="text-lg font-bold text-navy-600">{entry.score.totalScore}/{entry.score.maxScore}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getScoreBadge(entry.score.interpretation)}`}>
-                  {entry.score.interpretation}
-                </span>
-              </div>
-            </div>
-          );
-        }
-        if (id === 'srs22r') {
-          return (
-            <div key={id} className="py-2">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-sm font-semibold text-navy-600">{name}</span>
-                <span className="text-xs text-gray-400">{fullName}</span>
-              </div>
-              <div className="ml-4">
-                {entry.score.totalScore && (
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg font-bold text-navy-600">{entry.score.totalScore}</span>
-                    <span className="text-xs text-gray-400">/ 5.0 overall mean</span>
-                  </div>
+
+            {d?.headline && (
+              <div className="flex items-center gap-3 ml-4 mb-1 flex-wrap">
+                <span className="text-lg font-bold text-navy-600">{d.headline.split(' — ')[0]}</span>
+                {d.score?.interpretation && (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getScoreBadge(d.score.interpretation)}`}>
+                    {d.score.interpretation}
+                  </span>
                 )}
-                <div className="flex gap-2 flex-wrap">
-                  {Object.values(entry.score.domainScores || {}).map((d) => (
-                    <span key={d.name} className="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600">
-                      {d.name}: <strong>{d.score}</strong>
-                    </span>
-                  ))}
-                </div>
               </div>
-            </div>
-          );
-        }
-        return <DataRow key={id} label={name} value="Completed" />;
+            )}
+
+            {/* SRS-22r is scored by domain; its items mean little alone. */}
+            {d?.domainScores && (
+              <div className="flex gap-2 flex-wrap ml-4 mb-1">
+                {Object.values(d.domainScores).map((dom) => (
+                  <span key={dom.name} className="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600">
+                    {dom.name}: <strong>{dom.score}</strong>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {d?.items?.length > 0 && (
+              <div className="ml-4 mt-1.5 border-l-2 border-gray-100 pl-3 space-y-0.5">
+                {d.itemsAreFindings && (
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 mb-1">
+                    Myelopathy history — read the items, not just the score
+                  </p>
+                )}
+                {d.items.map((item) => (
+                  <div key={item.id} className="flex gap-2 text-xs leading-relaxed">
+                    <span className="text-gray-400 flex-shrink-0 w-40">{item.title}</span>
+                    <span className={item.worst ? 'text-amber-700 font-medium' : 'text-gray-600'}>
+                      {item.answer}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
       })}
     </DataSection>
   );
 }
+
 
 function getScoreBadge(interpretation) {
   if (interpretation?.includes('Minimal') || interpretation?.includes('No ')) return 'bg-green-100 text-green-700';
