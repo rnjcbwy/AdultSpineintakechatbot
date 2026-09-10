@@ -17,3 +17,6 @@ lib/payers/sources/
 
 # Local patient file cabinet (filesystem storage adapter). Never commit.
 .data/
+
+# Scratch copies made by scripts/export-spec.mjs (removed after each run).
+.spec-tmp/
