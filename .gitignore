@@ -20,3 +20,6 @@ lib/payers/sources/
 
 # Scratch copies made by scripts/export-spec.mjs (removed after each run).
 .spec-tmp/
+
+# Scratch copies made by scripts/build-intake-pdf.mjs (removed after each run).
+.pdf-tmp/
