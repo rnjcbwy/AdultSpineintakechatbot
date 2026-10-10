@@ -22,7 +22,7 @@ Patient browser ──HTTPS──► Amplify Hosting (Next.js SSR, compute role)
 | --- | --- | --- |
 | Web app (`app/`, SSR + API routes) | **Amplify Hosting** (WEB_COMPUTE) | HIPAA-eligible, TLS by default, Git-based deploys like Vercel, custom domain later |
 | Answers, transcript PDF, attached records | **S3** + **KMS** customer key | Durable the instant the patient submits; encrypted at rest; TLS-only; versioned |
-| Pre-visit note + HPI interview assistant | **Amazon Bedrock**, Claude (Opus 4.6 for the note, Sonnet 4.6 for chat) | Under the AWS BAA already; no new agreement, no API key, request never leaves AWS |
+| Pre-visit note + HPI interview assistant | **Amazon Bedrock**, Claude Sonnet 4.6 (note and chat; the only Claude enabled on the account today) | Under the AWS BAA already; no new agreement, no API key, request never leaves AWS |
 | Note / PDF / hand-off | **Lambda** worker + **EventBridge** 15-min retry sweep | The note takes longer than a web request may; retries survive a Practice Hub outage |
 | Audit of the account | **CloudTrail** (multi-region, validated) | HIPAA audit controls; also covers Practice Hub |
 | Credentials | IAM roles only (Amplify SSR compute role, Lambda role) | No long-lived keys anywhere |
