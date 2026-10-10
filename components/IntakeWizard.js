@@ -1,7 +1,8 @@
 'use client';
 
 import { useIntake } from '../lib/store';
-import { useLang, makeT } from '../lib/i18n';
+import { useEffect } from 'react';
+import { useLang, makeT, tx, isRtl } from '../lib/i18n';
 import { INTAKE_STEPS } from '../lib/constants';
 
 const CHROME = {
@@ -86,7 +87,14 @@ export default function IntakeWizard() {
   const { data, setStep, completeStep } = useIntake();
   const lang = useLang();
   const t = makeT(CHROME, lang);
-  const stepOf = STEP_OF[lang] || STEP_OF.en;
+  const stepOf = STEP_OF[lang] || ((c, n) => tx(lang, 'Step {c} of {n}').replace('{c}', c).replace('{n}', n));
+
+  // Right-to-left languages flip the page; the lang attribute helps screen
+  // readers and font fallback for every language.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isRtl(lang) ? 'rtl' : 'ltr';
+  }, [lang]);
   const currentStep = data.currentStep;
   const StepComponent = STEP_COMPONENTS[currentStep];
   const stepId = INTAKE_STEPS[currentStep]?.id;

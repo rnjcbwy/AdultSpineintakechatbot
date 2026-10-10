@@ -1,7 +1,7 @@
 'use client';
 
-import { useIntake } from '../../lib/store';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
+import { translateDeep, useLang } from '../../lib/i18n';
 
 const T = {
   en: {
@@ -101,9 +101,10 @@ const PROD = {
 };
 
 export default function BeforeWeBegin({ onNext, onBack }) {
-  const { data } = useIntake();
-  const base = T[data.language] || T.en;
-  const t = IS_PRODUCTION_TIER ? { ...base, ...(PROD[data.language] || PROD.en) } : base;
+  const lang = useLang();
+  const base = T[lang] || translateDeep(T.en, lang);
+  const prod = PROD[lang] || translateDeep(PROD.en, lang);
+  const t = IS_PRODUCTION_TIER ? { ...base, ...prod } : base;
 
   return (
     <div className="animate-fade-in min-h-[75vh] flex items-center justify-center px-4 py-8">

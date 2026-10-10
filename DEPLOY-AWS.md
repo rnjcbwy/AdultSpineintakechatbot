@@ -145,6 +145,20 @@ listed host — ECS Fargate behind an ALB, or Amplify Hosting like this app —
 keeping everything else as is. Until then, the intake's hand-off lands PHI on
 an App Runner service.
 
+## Languages
+
+The patient can choose English, Spanish, Chinese, Portuguese, Russian, Polish,
+Arabic, Hebrew, Korean, Japanese, Hindi or Nepali on the welcome page. Spanish
+and Chinese are written inline next to each English string; the other nine
+live in `lib/translations/<code>.json` and are loaded on demand. Arabic and
+Hebrew flip the layout right-to-left. After adding or changing English strings
+in the UI, run `node scripts/translate-ui.mjs` (Claude on Bedrock; only
+missing strings are translated, existing ones are never overwritten; edit the
+JSON by hand to correct a translation). The generated note is always English
+regardless of the language the patient wrote in. Known limit: the transcript
+PDF prints free-text answers written in non-Latin scripts as a marker and
+points to the structured record, because its fonts cover Latin only.
+
 ## Local development
 
 Nothing AWS-side is required: without `SPINE_SUBMISSIONS_BUCKET` submissions

@@ -9,10 +9,10 @@ import { fingerprintAnswers, isNoteStale } from '../../lib/noteFingerprint';
 import { INTAKE_STEPS, SYMPTOM_REGIONS } from '../../lib/constants';
 import { detectRedFlags } from '../../lib/redFlags';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
-import { useLang, makeT, COMMON } from '../../lib/i18n';
+import { useLang, makeT, COMMON, tx } from '../../lib/i18n';
 import { submitIntake, pollStatus, fetchStatus, finalizeSubmission } from '../../lib/submitClient';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
-import { CONSENT_ITEMS, consentText, consentComplete } from '../../lib/consent';
+import { CONSENT_ITEMS, consentTextVia, consentComplete } from '../../lib/consent';
 
 // Patient-facing UI strings for this component (display-only translation).
 const LOCAL = {
@@ -496,7 +496,7 @@ function ConsentCard({ t, lang, consent, setNested }) {
               onChange={(e) => set(item.key, e.target.checked)}
               className="mt-1 w-5 h-5 flex-shrink-0"
             />
-            <span className="text-sm text-gray-700 leading-relaxed">{consentText(item, lang)}</span>
+            <span className="text-sm text-gray-700 leading-relaxed">{consentTextVia(item, lang, tx)}</span>
           </label>
         ))}
       </div>

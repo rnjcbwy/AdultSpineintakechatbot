@@ -3,11 +3,7 @@
 import { useIntake } from '../../lib/store';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'es', label: 'Español' },
-  { code: 'zh', label: '中文' },
-];
+import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
 
 const T = {
   en: {
@@ -111,8 +107,10 @@ function SpineLogo() {
 export default function Welcome({ onNext }) {
   const { data, resetIntake, setLanguage } = useIntake();
   const hasExisting = data.lastUpdated && data.demographics?.firstName;
-  const lang = data.language || 'en';
-  const t = T[lang] || T.en;
+  const lang = useLang();
+  // Spanish and Chinese are written out below; the other languages come from
+  // the loaded table, string by string, falling back to English.
+  const t = T[lang] || translateDeep(T.en, lang);
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
@@ -133,7 +131,7 @@ export default function Welcome({ onNext }) {
         </h2>
 
         {/* Language selector */}
-        <div className="flex items-center justify-center gap-2 mb-6" role="group" aria-label="Select language">
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-6" role="group" aria-label="Select language">
           {LANGUAGES.map((l) => {
             const active = lang === l.code;
             return (
@@ -142,7 +140,7 @@ export default function Welcome({ onNext }) {
                 onClick={() => setLanguage(l.code)}
                 aria-pressed={active}
                 className={
-                  'px-5 py-2 rounded-full text-sm font-medium border transition-all duration-150 ' +
+                  'px-4 py-2 rounded-full text-sm font-medium border whitespace-nowrap transition-all duration-150 ' +
                   (active
                     ? 'bg-navy-600 text-white border-navy-600 shadow-sm'
                     : 'bg-white text-navy-600 border-navy-200 hover:border-teal-300 hover:bg-teal-50')
