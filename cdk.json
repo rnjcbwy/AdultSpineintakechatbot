@@ -4,7 +4,7 @@
     "practiceHubUrl": "https://2hvqdj2xag.us-east-1.awsapprunner.com",
     "practiceHubSecretName": "practicehub/INTAKE_API_KEY",
     "practiceHubKmsKeyArn": "arn:aws:kms:us-east-1:933164653563:key/b14343e1-5a51-404e-b3d5-c1aaa46d982c",
-    "allowedOrigins": ["http://localhost:3000"],
+    "allowedOrigins": ["https://feature-adult-spine-intake-app.d1i6bgjzjkpt0h.amplifyapp.com", "http://localhost:3000"],
     "noteModelId": "us.anthropic.claude-sonnet-4-6",
     "chatModelId": "us.anthropic.claude-sonnet-4-6",
     "createCloudTrail": true,
