@@ -1,6 +1,7 @@
 'use client';
 
 import { useIntake } from '../../lib/store';
+import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -29,6 +30,8 @@ const T = {
     startNew: 'Start New Form',
     resetConfirm: 'This will start a new form and clear your previous answers. Continue?',
     hipaa: '🚧 This is a prototype — not HIPAA compliant',
+    bannerProd: 'Your answers go securely to the office of Dr. Aaron Wey at Holy Name Medical Center. They are stored on HIPAA-eligible AWS services and reviewed by the office before your visit.',
+    hipaaProd: 'Secure patient intake',
   },
   es: {
     subtitle: 'Admisión de Nuevo Paciente',
@@ -50,6 +53,8 @@ const T = {
     startNew: 'Comenzar Nuevo Formulario',
     resetConfirm: 'Esto iniciará un formulario nuevo y borrará sus respuestas anteriores. ¿Continuar?',
     hipaa: '🚧 Esto es un prototipo — no cumple con HIPAA',
+    bannerProd: 'Sus respuestas se envían de forma segura al consultorio del Dr. Aaron Wey en Holy Name Medical Center. Se guardan en servicios de AWS aptos para HIPAA y el consultorio las revisa antes de su cita.',
+    hipaaProd: 'Admisión segura del paciente',
   },
   zh: {
     subtitle: '新患者登记',
@@ -71,6 +76,8 @@ const T = {
     startNew: '开始新表格',
     resetConfirm: '这将开始一个新表格并清除您之前的答案。是否继续？',
     hipaa: '🚧 这是一个原型 — 不符合 HIPAA 标准',
+    bannerProd: '您的回答将安全地发送至 Holy Name Medical Center 的 Aaron Wey 医生办公室，保存在符合 HIPAA 要求的 AWS 服务上，并在您就诊前由办公室审阅。',
+    hipaaProd: '安全的患者登记',
   },
 };
 
@@ -147,10 +154,16 @@ export default function Welcome({ onNext }) {
           })}
         </div>
 
-        {/* Prototype banner */}
-        <div className="bg-amber-100 border-2 border-amber-500 rounded-xl px-4 py-3 mb-3 text-sm font-semibold text-amber-800 leading-snug">
-          {t.banner}
-        </div>
+        {/* Prototype warning, or the privacy notice on the real deployment */}
+        {IS_PRODUCTION_TIER ? (
+          <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 mb-3 text-sm text-teal-900 leading-snug">
+            {t.bannerProd}
+          </div>
+        ) : (
+          <div className="bg-amber-100 border-2 border-amber-500 rounded-xl px-4 py-3 mb-3 text-sm font-semibold text-amber-800 leading-snug">
+            {t.banner}
+          </div>
+        )}
 
         {/* Under-18 redirect */}
         <p className="text-sm text-gray-600 mb-6">
@@ -213,7 +226,7 @@ export default function Welcome({ onNext }) {
         </div>
 
         <p className="mt-8 text-sm font-medium text-amber-600">
-          {t.hipaa}
+          {IS_PRODUCTION_TIER ? t.hipaaProd : t.hipaa}
         </p>
       </div>
     </div>

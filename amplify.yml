@@ -1,0 +1,26 @@
+# Amplify Hosting build for the Next.js app (WEB_COMPUTE / SSR).
+#
+# Amplify exposes app environment variables at BUILD time only. Server code
+# runs later, in the SSR compute, and reads process.env from .env.production,
+# so the variables it needs are copied into that file before `next build`.
+# No secrets are among them: the Practice Hub key is read from Secrets
+# Manager at runtime with the compute role's credentials.
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm use 20 || true
+        - npm ci --no-audit --no-fund
+    build:
+      commands:
+        - env | grep -E '^(DEPLOYMENT_TIER|NEXT_PUBLIC_DEPLOYMENT_TIER|LLM_PROVIDER|BEDROCK_REGION|BEDROCK_NOTE_MODEL_ID|BEDROCK_CHAT_MODEL_ID|SPINE_SUBMISSIONS_BUCKET|SPINE_KMS_KEY_ARN|INTAKE_WORKER_FUNCTION|PRACTICEHUB_URL|PRACTICEHUB_API_KEY_SECRET_ID)=' >> .env.production
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

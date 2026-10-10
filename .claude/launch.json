@@ -2,10 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
+      "name": "intake",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "practice-hub-test",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-practice-hub-test.mjs"],
+      "port": 3101
     }
   ]
 }

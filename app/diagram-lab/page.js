@@ -11,6 +11,8 @@ import FourView from '../../components/lab/FourView';
 import { SYMPTOM_TYPES, EMPTY_PAIN_MAP } from '../../lib/bodyMap';
 import { evaluatePainMap, SEVERITY_STYLE } from '../../lib/painMapTriggers';
 import dynamic from 'next/dynamic';
+import { notFound } from 'next/navigation';
+import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 // WebGL must not run during SSR.
 const Body3D = dynamic(() => import('../../components/lab/Body3D'), {
@@ -19,6 +21,8 @@ const Body3D = dynamic(() => import('../../components/lab/Body3D'), {
 });
 
 export default function DiagramLab() {
+  // Engineering sandbox: never served from the patient-facing deployment.
+  if (IS_PRODUCTION_TIER) notFound();
   return (
     <div className="min-h-screen bg-cream-100">
       <header className="bg-navy-600 text-white">

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useIntake } from '../lib/store';
 import { useLang, makeT, COMMON } from '../lib/i18n';
 import { fingerprintAnswers } from '../lib/noteFingerprint';
+import { requestRewrite, pollStatus } from '../lib/submitClient';
 
 const LOCAL = {
   'Please read this and tell us if anything is wrong': {
@@ -116,7 +117,29 @@ export default function NoteReview({ narrative, onRewritten, onGoToStep, stale =
   const rewrite = async () => {
     setBusy(true);
     setStatus('');
+    const sub = data.submission;
     try {
+      if (sub?.id && sub?.token) {
+        // Submitted for real: the office's worker rewrites the note, re-renders
+        // the transcript and sends the chart an update. Wait for the new note.
+        const before = data.generatedSummary?.generatedAt || null;
+        await requestRewrite(sub.id, sub.token, {
+          intakeData: { ...data, noteCorrections: corrections },
+          noteCorrections: corrections,
+        });
+        const st = await pollStatus(sub.id, sub.token, {
+          until: (x) => !!x.note && x.note.generatedAt !== before,
+          timeoutMs: 180_000,
+        });
+        if (st?.note && st.note.generatedAt !== before) {
+          onRewritten(st.note.narrative, fingerprintAnswers(data), st.note.generatedAt);
+          setStatus('ok');
+        } else {
+          setStatus('error');
+        }
+        return;
+      }
+
       const res = await fetch('/api/generate-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -1,48 +1,40 @@
 import { NextResponse } from 'next/server';
-import { NOTE_SUMMARY_SYSTEM_PROMPT, buildSummaryPrompt } from '../../../lib/prompts';
+import { generateNote } from '../../../lib/server/intakeWorker';
+import { limitOr429 } from '../../../lib/server/rateLimit';
+import { logError } from '../../../lib/server/log';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+/**
+ * Synchronous note generation.
+ *
+ * Kept for the prototype flow (no server-side submission) and for local
+ * development. In the AWS deployment the note is written by the background
+ * worker after the intake is stored, because the web tier's response window
+ * is shorter than a careful note takes; see /api/intake/submit.
+ */
 export async function POST(request) {
+  const limited = limitOr429(request, 'summary', 10, 10 * 60_000);
+  if (limited) return limited;
+
+  let body;
   try {
-    const { intakeData } = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Expected JSON body.' }, { status: 400 });
+  }
+  const { intakeData } = body || {};
+  if (!intakeData || typeof intakeData !== 'object') {
+    return NextResponse.json({ error: 'Missing intake data.' }, { status: 400 });
+  }
 
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: NOTE_SUMMARY_SYSTEM_PROMPT },
-          { role: 'user', content: buildSummaryPrompt(intakeData) },
-        ],
-        temperature: 0.3,
-        max_tokens: 4000,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error('OpenAI API error:', res.status, err);
-      return NextResponse.json(
-        { error: `OpenAI API error: ${res.status}` },
-        { status: 500 }
-      );
-    }
-
-    const data = await res.json();
-    const summary = data.choices[0].message.content;
-
-    return NextResponse.json({ summary });
-  } catch (error) {
-    console.error('Summary generation error:', error?.message || error);
-    return NextResponse.json(
-      { error: `Failed to generate summary: ${error?.message || 'Unknown error'}` },
-      { status: 500 }
-    );
+  try {
+    const note = await generateNote(intakeData);
+    return NextResponse.json({ summary: note.narrative, generatedAt: note.generatedAt, model: note.modelId });
+  } catch (err) {
+    logError('summary.failed', err);
+    return NextResponse.json({ error: 'Could not generate the summary right now. Your answers are saved; please try again in a moment.' }, { status: 502 });
   }
 }

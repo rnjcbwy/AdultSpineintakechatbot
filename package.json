@@ -12,6 +12,14 @@
     "trace:figure": "node scripts/trace-figure.js"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1149.0",
+    "@aws-sdk/client-dynamodb": "^3.1149.0",
+    "@aws-sdk/client-lambda": "^3.1149.0",
+    "@aws-sdk/client-s3": "^3.1149.0",
+    "@aws-sdk/client-secrets-manager": "^3.1149.0",
+    "@aws-sdk/lib-dynamodb": "^3.1149.0",
+    "@aws-sdk/s3-request-presigner": "^3.1149.0",
+    "aws-jwt-verify": "^5.2.1",
     "jszip": "^3.10.1",
     "next": "^14.2.0",
     "openai": "^4.52.0",
@@ -23,6 +31,10 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
+    "aws-cdk": "^2.1145.0",
+    "aws-cdk-lib": "^2.273.0",
+    "constructs": "^10.8.1",
+    "esbuild": "^0.25.12",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
     "jimp": "^1.6.1",

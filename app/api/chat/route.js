@@ -1,70 +1,51 @@
 import { NextResponse } from 'next/server';
 import { HPI_CHAT_SYSTEM_PROMPT } from '../../../lib/prompts';
+import { complete } from '../../../lib/server/llm';
+import { limitOr429 } from '../../../lib/server/rateLimit';
+import { logError } from '../../../lib/server/log';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
+const MAX_MESSAGES = 80;
+const MAX_CHARS = 4000;
+
+/**
+ * One turn of the guided HPI interview. The model runs on Amazon Bedrock
+ * under the AWS BAA (see lib/server/llm.js); nothing about the exchange is
+ * logged beyond token counts.
+ */
 export async function POST(request) {
+  const limited = limitOr429(request, 'chat', 60, 60_000);
+  if (limited) return limited;
+
+  let body;
   try {
-    const { messages, context } = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Expected JSON body.' }, { status: 400 });
+  }
+  const { messages, context } = body || {};
+  if (!Array.isArray(messages) || messages.length > MAX_MESSAGES) {
+    return NextResponse.json({ error: 'Invalid conversation.' }, { status: 400 });
+  }
 
-    // Build the message array for OpenAI
-    const chatMessages = [
-      { role: 'system', content: HPI_CHAT_SYSTEM_PROMPT },
-    ];
+  const turns = [];
+  if (context) {
+    turns.push({ role: 'user', content: `[SYSTEM CONTEXT - Patient data already collected]\n${String(context).slice(0, 20_000)}` });
+    turns.push({ role: 'assistant', content: "I have the patient's information. I'll now ask targeted follow-up questions to complete the history." });
+  }
+  for (const m of messages) {
+    if (!m || typeof m.content !== 'string') continue;
+    turns.push({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content.slice(0, MAX_CHARS) });
+  }
 
-    // Add patient context as the first user message if provided
-    if (context) {
-      chatMessages.push({
-        role: 'user',
-        content: `[SYSTEM CONTEXT - Patient data already collected]\n${context}`,
-      });
-      chatMessages.push({
-        role: 'assistant',
-        content: "I have the patient's information. I'll now ask targeted follow-up questions to complete the history.",
-      });
-    }
-
-    // Add conversation history
-    for (const msg of messages) {
-      chatMessages.push({
-        role: msg.role,
-        content: msg.content,
-      });
-    }
-
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: chatMessages,
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error('OpenAI API error:', res.status, err);
-      return NextResponse.json(
-        { error: `OpenAI API error: ${res.status}` },
-        { status: 500 }
-      );
-    }
-
-    const data = await res.json();
-    const reply = data.choices[0].message.content;
-
-    return NextResponse.json({ reply });
-  } catch (error) {
-    console.error('Chat API error:', error?.message || error);
-    return NextResponse.json(
-      { error: `Failed to get response: ${error?.message || 'Unknown error'}` },
-      { status: 500 }
-    );
+  try {
+    const r = await complete({ purpose: 'chat', system: HPI_CHAT_SYSTEM_PROMPT, messages: turns, maxTokens: 500, temperature: 0.7 });
+    return NextResponse.json({ reply: r.text });
+  } catch (err) {
+    logError('chat.failed', err);
+    return NextResponse.json({ error: 'The interview assistant is unavailable right now. You can continue with the form and come back to this step.' }, { status: 502 });
   }
 }

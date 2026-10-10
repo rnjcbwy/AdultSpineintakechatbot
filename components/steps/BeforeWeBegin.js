@@ -1,6 +1,7 @@
 'use client';
 
 import { useIntake } from '../../lib/store';
+import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 const T = {
   en: {
@@ -57,9 +58,52 @@ function renderBold(text) {
   );
 }
 
+
+/**
+ * What the consent page says on the real deployment. The prototype wording
+ * above warns people OFF entering real information; this does the opposite,
+ * and says plainly where the information goes.
+ */
+const PROD = {
+  en: {
+    warning: 'Please answer as accurately as you can. This form gathers information for your visit; it is not medical advice and nobody reads it in real time.',
+    intro: 'This form helps Dr. Wey and his team prepare for your appointment.',
+    points: [
+      'Your answers go only to the office of Dr. Aaron Wey at Holy Name Medical Center, where staff review them before your visit',
+      'An assistant will help gather your history through conversation — it **cannot provide medical advice**',
+      'If you have an emergency, **call 911** — do not wait for a reply through this form',
+      'You can stop and come back later; your progress is saved on this device until you submit',
+    ],
+    ack: 'By continuing, you confirm that the information you enter is about you (or a patient you are authorized to represent) and is accurate to the best of your knowledge.',
+  },
+  es: {
+    warning: 'Responda con la mayor precisión posible. Este formulario recopila información para su cita; no es consejo médico y nadie lo lee en tiempo real.',
+    intro: 'Este formulario ayuda al Dr. Wey y a su equipo a prepararse para su cita.',
+    points: [
+      'Sus respuestas van únicamente al consultorio del Dr. Aaron Wey en Holy Name Medical Center, donde el personal las revisa antes de su visita',
+      'Un asistente le ayudará a recopilar su historial mediante una conversación — **no puede dar consejos médicos**',
+      'Si tiene una emergencia, **llame al 911** — no espere una respuesta a través de este formulario',
+      'Puede detenerse y volver más tarde; su progreso se guarda en este dispositivo hasta que lo envíe',
+    ],
+    ack: 'Al continuar, usted confirma que la información que ingresa es sobre usted (o sobre un paciente que está autorizado a representar) y es precisa según su leal saber y entender.',
+  },
+  zh: {
+    warning: '请尽可能准确地回答。本表格用于为您的就诊收集信息；它不是医疗建议，也不会有人实时阅读。',
+    intro: '本表格帮助 Wey 医生及其团队为您的就诊做准备。',
+    points: [
+      '您的回答只会发送至 Holy Name Medical Center 的 Aaron Wey 医生办公室，工作人员会在您就诊前审阅',
+      '一位助手将通过对话帮助收集您的病史——它**不能提供医疗建议**',
+      '如遇紧急情况，请**拨打 911**——不要等待通过本表格得到回复',
+      '您可以中途停止并稍后返回；在提交之前，您的进度会保存在本设备上',
+    ],
+    ack: '继续即表示您确认所输入的信息是关于您本人（或您有权代表的患者）的，并且在您所知范围内准确无误。',
+  },
+};
+
 export default function BeforeWeBegin({ onNext, onBack }) {
   const { data } = useIntake();
-  const t = T[data.language] || T.en;
+  const base = T[data.language] || T.en;
+  const t = IS_PRODUCTION_TIER ? { ...base, ...(PROD[data.language] || PROD.en) } : base;
 
   return (
     <div className="animate-fade-in min-h-[75vh] flex items-center justify-center px-4 py-8">
@@ -77,11 +121,11 @@ export default function BeforeWeBegin({ onNext, onBack }) {
         </h1>
 
         {/* Warning box */}
-        <div className="flex items-start gap-3 text-left bg-amber-100 border-2 border-amber-400 rounded-xl px-4 py-3 mb-6">
-          <svg className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+        <div className={`flex items-start gap-3 text-left rounded-xl px-4 py-3 mb-6 ${IS_PRODUCTION_TIER ? 'bg-teal-50 border border-teal-200' : 'bg-amber-100 border-2 border-amber-400'}`}>
+          <svg className={`w-5 h-5 flex-shrink-0 mt-0.5 ${IS_PRODUCTION_TIER ? 'text-teal-600' : 'text-amber-600'}`} fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
-          <p className="text-sm font-semibold text-amber-800 leading-snug">{t.warning}</p>
+          <p className={`text-sm font-semibold leading-snug ${IS_PRODUCTION_TIER ? 'text-teal-900' : 'text-amber-800'}`}>{t.warning}</p>
         </div>
 
         <p className="text-gray-600 text-left mb-6 leading-relaxed">{t.intro}</p>

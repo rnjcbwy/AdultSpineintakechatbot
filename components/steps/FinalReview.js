@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIntake } from '../../lib/store';
 import NoteReview from '../NoteReview';
 import PainMapSummary from '../PainMapFigure';
@@ -10,6 +10,8 @@ import { INTAKE_STEPS, SYMPTOM_REGIONS } from '../../lib/constants';
 import { detectRedFlags } from '../../lib/redFlags';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
+import { submitIntake, pollStatus, fetchStatus } from '../../lib/submitClient';
+import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 // Patient-facing UI strings for this component (display-only translation).
 const LOCAL = {
@@ -82,6 +84,18 @@ const LOCAL = {
     zh: '无法生成摘要。您的数据已保存。请重试。',
   },
   'Generating Summary...': { es: 'Generando resumen...', zh: '正在生成摘要...' },
+  'Saving your answers…': { es: 'Guardando sus respuestas…', zh: '正在保存您的回答……' },
+  'Uploading your records ({done} of {total})…': { es: 'Subiendo sus registros ({done} de {total})…', zh: '正在上传您的记录（第 {done} 个，共 {total} 个）……' },
+  'Writing your summary…': { es: 'Redactando su resumen…', zh: '正在撰写您的摘要……' },
+  'Your form has been received. Your summary is still being prepared — this page will update by itself.': {
+    es: 'Su formulario ha sido recibido. Su resumen todavía se está preparando; esta página se actualizará sola.',
+    zh: '您的表格已收到。您的摘要仍在准备中——本页面会自动更新。',
+  },
+  'The office has received your form.': { es: 'El consultorio ha recibido su formulario.', zh: '诊所已收到您的表格。' },
+  'Could not submit the form. Your answers are saved on this device — please try again in a moment.': {
+    es: 'No se pudo enviar el formulario. Sus respuestas están guardadas en este dispositivo; inténtelo de nuevo en un momento.',
+    zh: '无法提交表格。您的回答已保存在本设备上，请稍后重试。',
+  },
   'Submit Intake Form': { es: 'Enviar formulario de admisión', zh: '提交入院表' },
 
   // Submitted view
@@ -110,43 +124,80 @@ const LOCAL = {
 };
 
 export default function FinalReview({ onBack, onGoToStep }) {
-  const { data, setSubmitted, setSummary, setRedFlags } = useIntake();
+  const { data, setSubmitted, setSummary, setRedFlags, setNested } = useIntake();
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitted, setIsSubmittedLocal] = useState(!!data.submittedAt);
   const [showSummary, setShowSummary] = useState(false);
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState('');
 
+  /**
+   * Submit for real: store the answers server-side, upload the attached
+   * records, then wait for the office's worker to write the note. The
+   * answers are safe as soon as the first call returns, so a closed tab or a
+   * slow model never loses the patient's work.
+   */
   const handleSubmit = async () => {
     setIsGenerating(true);
     setError('');
+    const flags = detectRedFlags(data);
+    setRedFlags(flags);
+    const fingerprint = fingerprintAnswers(data);
 
     try {
-      // Detect red flags
-      const flags = detectRedFlags(data);
-      setRedFlags(flags);
+      let sub = data.submission;
+      if (!sub?.id) {
+        setProgress(t('Saving your answers…'));
+        const r = await submitIntake(data, {
+          onProgress: (p) => {
+            if (p.phase === 'uploading') {
+              setProgress(t('Uploading your records ({done} of {total})…').replace('{done}', String(Math.min(p.done + 1, p.total))).replace('{total}', String(p.total)));
+            } else setProgress(t('Writing your summary…'));
+          },
+        });
+        sub = { id: r.id, token: r.token, submittedAt: new Date().toISOString(), uploaded: r.uploaded, skipped: r.skipped };
+        setNested('submission', sub);
+      }
+      setProgress(t('Writing your summary…'));
+      const st = await pollStatus(sub.id, sub.token, {
+        until: (x) => !!x.note || (x.error && x.error.step === 'note'),
+        timeoutMs: 180_000,
+      });
+      if (st?.note) {
+        setSummary({ narrative: st.note.narrative, generatedAt: st.note.generatedAt, redFlags: flags, sourceFingerprint: fingerprint, pending: false });
+      } else {
+        // Received, note still on its way: the submitted view keeps polling.
+        setSummary({ narrative: '', generatedAt: null, redFlags: flags, sourceFingerprint: fingerprint, pending: true });
+      }
+      setSubmitted();
+      setIsSubmittedLocal(true);
+      setIsGenerating(false);
+      setProgress('');
+      return;
+    } catch (err) {
+      if (IS_PRODUCTION_TIER) {
+        setError(err?.message || t('Could not submit the form. Your answers are saved on this device — please try again in a moment.'));
+        setIsGenerating(false);
+        setProgress('');
+        return;
+      }
+      // Prototype hosting without a writable store (the Vercel demo): fall
+      // back to generating the note directly, as before.
+    }
 
-      // Generate clinical summary
+    try {
       const res = await fetch('/api/generate-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ intakeData: data }),
       });
-
       const result = await res.json();
-
-      if (result.error) {
-        setError(result.error);
+      if (result.error || !result.summary) {
+        setError(result.error || t('Failed to generate summary. Your data has been saved. Please try again.'));
       } else {
-        setSummary({
-          narrative: result.summary,
-          generatedAt: new Date().toISOString(),
-          redFlags: flags,
-          // Record WHICH answers this note was written from, so a later edit
-          // can be detected and the note flagged as out of date.
-          sourceFingerprint: fingerprintAnswers(data),
-        });
+        setSummary({ narrative: result.summary, generatedAt: new Date().toISOString(), redFlags: flags, sourceFingerprint: fingerprint });
         setSubmitted();
         setIsSubmittedLocal(true);
       }
@@ -154,6 +205,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
       setError(t('Failed to generate summary. Your data has been saved. Please try again.'));
     } finally {
       setIsGenerating(false);
+      setProgress('');
     }
   };
 
@@ -373,7 +425,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              {t('Generating Summary...')}
+              {progress || t('Generating Summary...')}
             </>
           ) : (
             t('Submit Intake Form')
@@ -435,7 +487,34 @@ function SubmittedView({ data, onGoToStep }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const [copied, setCopied] = useState(false);
+  const [delivered, setDelivered] = useState(false);
   const summary = data.generatedSummary;
+  const sub = data.submission;
+
+  // The note is written in the background after the answers are stored. If
+  // it was not ready when the patient submitted, keep asking until it is.
+  useEffect(() => {
+    if (!sub?.id || !sub?.token) return undefined;
+    let live = true;
+    let timer = null;
+    const tick = async () => {
+      try {
+        const st = await fetchStatus(sub.id, sub.token);
+        if (!live) return;
+        if (st.delivered) setDelivered(true);
+        if (summary?.pending && st.note) {
+          setSummary({ ...summary, narrative: st.note.narrative, generatedAt: st.note.generatedAt, pending: false });
+          return;
+        }
+        if (summary?.pending || !st.delivered) timer = setTimeout(tick, 5000);
+      } catch {
+        if (live) timer = setTimeout(tick, 8000);
+      }
+    };
+    tick();
+    return () => { live = false; if (timer) clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sub?.id, summary?.pending]);
 
   const handleReset = () => {
     if (confirm(t('This will clear all data and start a new patient intake form. Are you sure?'))) {
@@ -476,6 +555,7 @@ function SubmittedView({ data, onGoToStep }) {
         {data.submittedAt && (
           <p className="text-xs text-gray-400 mt-2">
             {t('Submitted at')} {new Date(data.submittedAt).toLocaleString()}
+            {delivered && <> · {t('The office has received your form.')}</>}
           </p>
         )}
       </div>
@@ -494,6 +574,7 @@ function SubmittedView({ data, onGoToStep }) {
       <div className="card text-left mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-navy-600">{t('Your Clinical Summary')}</h3>
+          {!summary.pending && (
           <button
             onClick={copyToClipboard}
             className="btn-secondary text-sm flex items-center gap-2"
@@ -515,6 +596,7 @@ function SubmittedView({ data, onGoToStep }) {
               </>
             )}
           </button>
+          )}
         </div>
         {/* The drawing itself, above the prose. The narrative describes it in
             words because that is what an EMR text field can hold, but the
@@ -532,22 +614,36 @@ function SubmittedView({ data, onGoToStep }) {
             patient is the only one who can catch that before the visit — and
             making them redo the form to fix one sentence would mean nobody
             ever does. */}
+        {summary.pending ? (
+          <div className="flex items-start gap-3 p-4 bg-teal-50 border border-teal-100 rounded-xl">
+            <svg className="animate-spin w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <p className="text-sm text-teal-800 leading-relaxed">
+              {t('Your form has been received. Your summary is still being prepared — this page will update by itself.')}
+            </p>
+          </div>
+        ) : (
         <NoteReview
           narrative={summary.narrative}
           onGoToStep={onGoToStep}
           stale={isNoteStale(data, summary)}
-          onRewritten={(text, fingerprint) =>
+          onRewritten={(text, fingerprint, generatedAt) =>
             setSummary({
               ...summary,
               narrative: text,
               revisedAt: new Date().toISOString(),
+              generatedAt: generatedAt || summary.generatedAt,
               sourceFingerprint: fingerprint,
             })
           }
         />
+        )}
       </div>
 
       <div className="flex justify-center gap-4 flex-wrap">
+        {!IS_PRODUCTION_TIER && (
         <a
           href="/clinician"
           target="_blank"
@@ -558,6 +654,7 @@ function SubmittedView({ data, onGoToStep }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
         </a>
+        )}
         <button
           onClick={handleReset}
           className="btn-secondary flex items-center gap-2"
@@ -569,9 +666,11 @@ function SubmittedView({ data, onGoToStep }) {
         </button>
       </div>
 
-      <p className="text-xs text-gray-400 mt-8">
-        {t('The clinician dashboard provides a full structured summary for your care team.')}
-      </p>
+      {!IS_PRODUCTION_TIER && (
+        <p className="text-xs text-gray-400 mt-8">
+          {t('The clinician dashboard provides a full structured summary for your care team.')}
+        </p>
+      )}
     </div>
   );
 }
