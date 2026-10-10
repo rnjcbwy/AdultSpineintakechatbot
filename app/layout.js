@@ -1,5 +1,5 @@
 import './globals.css';
-import { IS_PRODUCTION_TIER, PRACTICE } from '../lib/deploymentTier';
+import { IS_PRODUCTION_TIER } from '../lib/deploymentTier';
 
 export const metadata = {
   title: 'Spine Surgery Intake | Patient History Form',
@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
         <footer className="py-6 text-center">
           <p className="text-xs text-gray-400">
             {IS_PRODUCTION_TIER
-              ? `${PRACTICE.surgeon} · ${PRACTICE.credential}`
+              ? 'Your answers are reviewed before your visit.'
               : '🚧 Prototype for demonstration purposes only — not a medical device and not HIPAA compliant. Do not enter real patient information.'}
           </p>
         </footer>

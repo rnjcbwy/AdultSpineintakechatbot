@@ -7,13 +7,14 @@ import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
 
 const T = {
   en: {
-    subtitle: 'New Patient Intake',
+    title: 'New Patient Intake',
+    subtitle: 'A few organized sections before your visit.',
     banner:
       '⚠️ PROTOTYPE / DEMONSTRATION ONLY — Please do not enter real patient information. Use fictional names and details for testing purposes.',
     under18Prefix: 'Patient under 18 years old? ',
     under18Link: 'Please use our pediatric intake form',
     description:
-      'Welcome! This intake form helps us learn about you before your appointment. The process takes about 15–25 minutes and includes:',
+      'This takes about 15–25 minutes and covers:',
     steps: [
       'Basic demographic information',
       'A guided conversation about your symptoms',
@@ -26,17 +27,17 @@ const T = {
     startNew: 'Start New Form',
     resetConfirm: 'This will start a new form and clear your previous answers. Continue?',
     hipaa: '🚧 This is a prototype — not HIPAA compliant',
-    bannerProd: 'Your answers go directly to Dr. Wey and his team, who review them before your visit.',
-    hipaaProd: 'New patient intake for Aaron Wey, MD',
+    bannerProd: 'Your answers are sent securely to the care team and reviewed before your visit.',
   },
   es: {
-    subtitle: 'Admisión de Nuevo Paciente',
+    title: 'Admisión de nuevo paciente',
+    subtitle: 'Unas secciones organizadas antes de su cita.',
     banner:
       '⚠️ SOLO PROTOTIPO / DEMOSTRACIÓN — Por favor, no ingrese información real de pacientes. Use nombres y datos ficticios con fines de prueba.',
     under18Prefix: '¿Paciente menor de 18 años? ',
     under18Link: 'Por favor, use nuestro formulario de admisión pediátrica',
     description:
-      '¡Bienvenido! Este formulario nos ayuda a conocerlo antes de su cita. El proceso toma entre 15 y 25 minutos e incluye:',
+      'Toma entre 15 y 25 minutos y abarca:',
     steps: [
       'Información demográfica básica',
       'Una conversación guiada sobre sus síntomas',
@@ -49,17 +50,17 @@ const T = {
     startNew: 'Comenzar Nuevo Formulario',
     resetConfirm: 'Esto iniciará un formulario nuevo y borrará sus respuestas anteriores. ¿Continuar?',
     hipaa: '🚧 Esto es un prototipo — no cumple con HIPAA',
-    bannerProd: 'Sus respuestas van directamente al Dr. Wey y a su equipo, que las revisan antes de su cita.',
-    hipaaProd: 'Admisión de nuevos pacientes del Dr. Aaron Wey',
+    bannerProd: 'Sus respuestas se envían de forma segura al equipo de atención y se revisan antes de su cita.',
   },
   zh: {
-    subtitle: '新患者登记',
+    title: '新患者登记',
+    subtitle: '就诊前的几个有条理的步骤。',
     banner:
       '⚠️ 仅供原型/演示 — 请勿输入真实患者信息。请使用虚构的姓名和信息进行测试。',
     under18Prefix: '患者未满 18 岁？',
     under18Link: '请使用我们的儿科登记表',
     description:
-      '欢迎！此登记表可帮助我们在您就诊前了解您的情况。整个过程大约需要 15–25 分钟，包括：',
+      '大约需要 15–25 分钟，包括：',
     steps: [
       '基本人口统计信息',
       '关于症状的引导式对话',
@@ -72,37 +73,9 @@ const T = {
     startNew: '开始新表格',
     resetConfirm: '这将开始一个新表格并清除您之前的答案。是否继续？',
     hipaa: '🚧 这是一个原型 — 不符合 HIPAA 标准',
-    bannerProd: '您的回答将直接发送给 Wey 医生及其团队，他们会在您就诊前进行审阅。',
-    hipaaProd: 'Aaron Wey 医生的新患者登记',
+    bannerProd: '您的回答将安全地发送给医疗团队，并在您就诊前审阅。',
   },
 };
-
-function SpineLogo() {
-  const vertebrae = [10, 25, 40, 55, 70, 85, 100];
-  return (
-    <svg viewBox="0 0 100 120" className="spine-logo mx-auto" aria-label="Spine logo">
-      <defs>
-        <linearGradient id="spineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#2A5A8C" />
-          <stop offset="100%" stopColor="#1A3A5C" />
-        </linearGradient>
-      </defs>
-      {vertebrae.map((y, i) => (
-        <rect
-          key={y}
-          x="30"
-          y={y}
-          width="40"
-          height="12"
-          rx="6"
-          fill="url(#spineGrad)"
-          className="vertebra"
-          style={{ animationDelay: `${i * 0.1}s` }}
-        />
-      ))}
-    </svg>
-  );
-}
 
 export default function Welcome({ onNext }) {
   const { data, resetIntake, setLanguage } = useIntake();
@@ -113,22 +86,21 @@ export default function Welcome({ onNext }) {
   const t = T[lang] || translateDeep(T.en, lang);
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
-      <div className="max-w-[600px] w-full mx-auto text-center animate-fade-in">
-        {/* Animated spine logo */}
-        <div className="mb-8">
-          <SpineLogo />
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
+      <div className="max-w-[560px] w-full mx-auto text-center animate-fade-in">
+        {/* No name, no logo: the page is the form, nothing more. */}
+        <div className="mx-auto mb-7 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-navy-100 shadow-sm" aria-hidden="true">
+          <svg className="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z" />
+          </svg>
         </div>
 
-        <h1 className="font-serif text-[1.75rem] md:text-[2.5rem] leading-tight font-semibold text-[#123559] mb-1">
-          Aaron Wey, MD, FAAOS, FACS
+        <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">
+          {t.title}
         </h1>
-        <p className="text-[1.1rem] font-medium text-[#0E8482] tracking-[0.02em] mb-2">
-          Adult and Pediatric Spine Surgeon
-        </p>
-        <h2 className="text-[1.25rem] font-normal text-[#6B7280] mb-6">
+        <p className="text-base md:text-lg text-gray-500 mb-7">
           {t.subtitle}
-        </h2>
+        </p>
 
         {/* Language selector */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-6" role="group" aria-label="Select language">
@@ -142,8 +114,8 @@ export default function Welcome({ onNext }) {
                 className={
                   'px-4 py-2 rounded-full text-sm font-medium border whitespace-nowrap transition-all duration-150 ' +
                   (active
-                    ? 'bg-navy-600 text-white border-navy-600 shadow-sm'
-                    : 'bg-white text-navy-600 border-navy-200 hover:border-teal-300 hover:bg-teal-50')
+                    ? 'bg-navy-600 text-white border-navy-600'
+                    : 'bg-white text-gray-600 border-navy-100 hover:border-teal-300 hover:text-navy-600')
                 }
               >
                 {l.label}
@@ -153,11 +125,7 @@ export default function Welcome({ onNext }) {
         </div>
 
         {/* Prototype warning, or the privacy notice on the real deployment */}
-        {IS_PRODUCTION_TIER ? (
-          <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 mb-3 text-sm text-teal-900 leading-snug">
-            {t.bannerProd}
-          </div>
-        ) : (
+        {IS_PRODUCTION_TIER ? null : (
           <div className="bg-amber-100 border-2 border-amber-500 rounded-xl px-4 py-3 mb-3 text-sm font-semibold text-amber-800 leading-snug">
             {t.banner}
           </div>
@@ -175,14 +143,14 @@ export default function Welcome({ onNext }) {
           .
         </p>
 
-        <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-6">
+        <p className="text-sm font-medium uppercase tracking-[0.12em] text-gray-400 mb-3">
           {t.description}
         </p>
 
-        <ul className="bg-white rounded-2xl shadow-sm p-6 mb-8 text-left divide-y divide-cream-200">
+        <ul className="bg-white rounded-2xl border border-navy-100 p-2 mb-8 text-left">
           {t.steps.map((label, i) => (
-            <li key={i} className="flex items-center gap-4 py-3 text-gray-600">
-              <span className="flex items-center justify-center w-7 h-7 flex-shrink-0 bg-navy-600 text-white rounded-full text-sm font-semibold">
+            <li key={i} className="flex items-center gap-4 px-4 py-3 text-gray-700 rounded-xl">
+              <span className="flex items-center justify-center w-7 h-7 flex-shrink-0 bg-navy-50 text-navy-600 rounded-full text-xs font-semibold tabular-nums">
                 {i + 1}
               </span>
               <span>{label}</span>
@@ -223,9 +191,9 @@ export default function Welcome({ onNext }) {
           </button>
         </div>
 
-        <p className={`mt-8 text-sm font-medium ${IS_PRODUCTION_TIER ? 'text-gray-400' : 'text-amber-600'}`}>
-          {IS_PRODUCTION_TIER ? t.hipaaProd : t.hipaa}
-        </p>
+        {!IS_PRODUCTION_TIER && (
+          <p className="mt-8 text-sm font-medium text-amber-600">{t.hipaa}</p>
+        )}
       </div>
     </div>
   );

@@ -11,6 +11,11 @@ const LOCAL = {
     es: 'Por favor lea esto y díganos si algo está incorrecto',
     zh: '请阅读以下内容，并告诉我们是否有不准确之处',
   },
+  'Here is a summary of what you shared': { es: 'Este es un resumen de lo que compartió', zh: '这是您所分享内容的摘要' },
+  'It was written from your answers, so it may have misunderstood something. If anything is not right, tap it and tell us; your words take priority.': {
+    es: 'Se redactó a partir de sus respuestas, por lo que puede haber malinterpretado algo. Si algo no está bien, tóquelo y díganos; sus palabras tienen prioridad.',
+    zh: '它是根据您的回答生成的，因此可能有误解之处。如果有任何不准确的地方，请点击并告诉我们；以您的说法为准。',
+  },
   'This is the note your surgeon will read before your visit. It was written from your answers, so it may have misunderstood something. Correct anything that is not right — your corrections take priority over everything else.': {
     es: 'Esta es la nota que su cirujano leerá antes de su cita. Fue redactada a partir de sus respuestas, por lo que puede haber malinterpretado algo. Corrija todo lo que no esté bien: sus correcciones tienen prioridad sobre todo lo demás.',
     zh: '这是您的外科医生在就诊前会阅读的病历记录。它是根据您的回答生成的，因此可能有误解之处。请更正任何不准确的内容——您的更正优先于其他所有信息。',
@@ -167,10 +172,10 @@ export default function NoteReview({ narrative, onRewritten, onGoToStep, stale =
     <div className="text-left">
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-navy-600 mb-1">
-          {t('Please read this and tell us if anything is wrong')}
+          {t('Here is a summary of what you shared')}
         </h3>
         <p className="text-sm text-gray-500 leading-relaxed">
-          {t('This is the note your surgeon will read before your visit. It was written from your answers, so it may have misunderstood something. Correct anything that is not right — your corrections take priority over everything else.')}
+          {t('It was written from your answers, so it may have misunderstood something. If anything is not right, tap it and tell us; your words take priority.')}
         </p>
       </div>
 

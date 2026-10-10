@@ -120,6 +120,17 @@ const LOCAL = {
   'Submit Intake Form': { es: 'Enviar formulario de admisión', zh: '提交入院表' },
 
   // Submitted view
+  'Thank you so much for completing this.': { es: 'Muchas gracias por completar este formulario.', zh: '非常感谢您完成这份表格。' },
+  'We know it took real time and care. Everything you shared is saved, and you are all set for now.': {
+    es: 'Sabemos que le tomó tiempo y dedicación. Todo lo que compartió está guardado y, por ahora, no necesita hacer nada más.',
+    zh: '我们知道这需要您花费时间和心力。您分享的一切都已保存，目前您无需再做任何事情。',
+  },
+  'What you told us': { es: 'Lo que nos contó', zh: '您告诉我们的内容' },
+  'We are putting together a summary of what you shared. This usually takes about a minute; this page will update on its own.': {
+    es: 'Estamos preparando un resumen de lo que compartió. Suele tardar alrededor de un minuto; esta página se actualizará sola.',
+    zh: '我们正在整理您所分享内容的摘要。通常需要大约一分钟，本页面会自动更新。',
+  },
+  'Start a new form': { es: 'Comenzar un formulario nuevo', zh: '开始新的表格' },
   'Thank You!': { es: '¡Gracias!', zh: '谢谢！' },
   "Your intake form has been submitted successfully. Your surgeon's team will review your information before your visit.": {
     es: 'Su formulario de admisión se ha enviado correctamente. El equipo de su cirujano revisará su información antes de su visita.',
@@ -590,7 +601,7 @@ function SubmittedView({ data, onGoToStep }) {
       try {
         const st = await fetchStatus(sub.id, sub.token);
         if (!live) return;
-        if (st.delivered) setDelivered(true);
+        if (st.delivered) setDelivered(true); // kept for polling cadence; not shown to the patient
         if (summary?.pending && st.note) {
           setSummary({ ...summary, narrative: st.note.narrative, generatedAt: st.note.generatedAt, pending: false });
           return;
@@ -637,14 +648,13 @@ function SubmittedView({ data, onGoToStep }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-navy-600 mb-2">{t('Thank You!')}</h2>
-        <p className="text-gray-500">
-          {t("Your intake form has been submitted successfully. Your surgeon's team will review your information before your visit.")}
+        <h2 className="font-serif text-[1.9rem] md:text-[2.3rem] font-semibold text-navy-600 mb-3 leading-tight">{t('Thank you so much for completing this.')}</h2>
+        <p className="text-base md:text-lg text-gray-500 max-w-md mx-auto">
+          {t('We know it took real time and care. Everything you shared is saved, and you are all set for now.')}
         </p>
         {data.submittedAt && (
-          <p className="text-xs text-gray-400 mt-2">
-            {t('Submitted at')} {new Date(data.submittedAt).toLocaleString()}
-            {delivered && <> · {t('The office has received your form.')}</>}
+          <p className="text-xs text-gray-400 mt-3">
+            {new Date(data.submittedAt).toLocaleString()}
           </p>
         )}
       </div>
@@ -662,8 +672,8 @@ function SubmittedView({ data, onGoToStep }) {
       {/* Generated summary preview */}
       <div className="card text-left mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-navy-600">{t('Your Clinical Summary')}</h3>
-          {!summary.pending && (
+          <h3 className="text-lg font-semibold text-navy-600">{t('What you told us')}</h3>
+          {!summary.pending && !IS_PRODUCTION_TIER && (
           <button
             onClick={copyToClipboard}
             className="btn-secondary text-sm flex items-center gap-2"
@@ -710,7 +720,7 @@ function SubmittedView({ data, onGoToStep }) {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
             <p className="text-sm text-teal-800 leading-relaxed">
-              {t('Your form has been received. Your summary is still being prepared — this page will update by itself.')}
+              {t('We are putting together a summary of what you shared. This usually takes about a minute; this page will update on its own.')}
             </p>
           </div>
         ) : (
@@ -746,12 +756,12 @@ function SubmittedView({ data, onGoToStep }) {
         )}
         <button
           onClick={handleReset}
-          className="btn-secondary flex items-center gap-2"
+          className="text-sm text-gray-400 hover:text-gray-600 flex items-center gap-2 py-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          {t('Start New Intake')}
+          {t('Start a new form')}
         </button>
       </div>
 
