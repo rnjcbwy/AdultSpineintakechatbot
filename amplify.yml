@@ -13,7 +13,7 @@ frontend:
     preBuild:
       commands:
         - nvm use 20 || true
-        - npm ci --no-audit --no-fund
+        - npm ci --include=dev --no-audit --no-fund
     build:
       commands:
         - env | grep -E '^(DEPLOYMENT_TIER|NEXT_PUBLIC_DEPLOYMENT_TIER|LLM_PROVIDER|BEDROCK_REGION|BEDROCK_NOTE_MODEL_ID|BEDROCK_CHAT_MODEL_ID|SPINE_SUBMISSIONS_BUCKET|SPINE_KMS_KEY_ARN|INTAKE_WORKER_FUNCTION|PRACTICEHUB_URL|PRACTICEHUB_API_KEY_SECRET_ID)=' >> .env.production || true

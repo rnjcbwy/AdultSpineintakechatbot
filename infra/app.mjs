@@ -195,8 +195,10 @@ class SpineIntakeStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ComputeRoleArn', { value: computeRole.roleArn });
     new cdk.CfnOutput(this, 'AmplifyEnvironment', {
       description: 'Environment variables for the Amplify app (applied by scripts/aws/amplify-configure.mjs)',
+      // NODE_ENV is left out on purpose: Next sets it, and as an Amplify
+      // variable it makes `npm ci` skip devDependencies (Tailwind) at build time.
       value: JSON.stringify({
-        ...runtimeEnv,
+        ...Object.fromEntries(Object.entries(runtimeEnv).filter(([k]) => k !== 'NODE_ENV')),
         NEXT_PUBLIC_DEPLOYMENT_TIER: 'production',
         INTAKE_WORKER_FUNCTION: worker.functionName,
       }),
