@@ -10,8 +10,9 @@ import { INTAKE_STEPS, SYMPTOM_REGIONS } from '../../lib/constants';
 import { detectRedFlags } from '../../lib/redFlags';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
-import { submitIntake, pollStatus, fetchStatus } from '../../lib/submitClient';
+import { submitIntake, pollStatus, fetchStatus, finalizeSubmission } from '../../lib/submitClient';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
+import { CONSENT_ITEMS, consentText, consentComplete } from '../../lib/consent';
 
 // Patient-facing UI strings for this component (display-only translation).
 const LOCAL = {
@@ -78,6 +79,26 @@ const LOCAL = {
     zh: '提交本表即表示您确认所提供的信息在您所知范围内准确无误。本入院表仅用于收集信息，不构成医疗建议，也不能替代直接的医疗评估。您的外科医生将审阅这些信息，并可能在就诊时提出更多问题。',
   },
 
+  // Acknowledgments
+  'Acknowledgment and signature': { es: 'Reconocimiento y firma', zh: '确认与签名' },
+  'Please read and check each statement, then type your name as your signature.': {
+    es: 'Lea y marque cada declaración y luego escriba su nombre como firma.',
+    zh: '请阅读并勾选每项声明，然后输入您的姓名作为签名。',
+  },
+  'Type your full name as your signature *': { es: 'Escriba su nombre completo como firma *', zh: '请输入您的全名作为签名 *' },
+  'Your full name': { es: 'Su nombre completo', zh: '您的全名' },
+  'If you are completing this for the patient': { es: 'Si completa este formulario por el paciente', zh: '如果您是代患者填写' },
+  'Your name': { es: 'Su nombre', zh: '您的姓名' },
+  'Relationship to the patient': { es: 'Relación con el paciente', zh: '与患者的关系' },
+  'Check every statement and type your name to enable Submit.': {
+    es: 'Marque todas las declaraciones y escriba su nombre para habilitar Enviar.',
+    zh: '勾选所有声明并输入您的姓名后即可提交。',
+  },
+  'By submitting this form you confirm the acknowledgments above. Your signature, the date and time, and your answers are kept with your record.': {
+    es: 'Al enviar este formulario confirma los reconocimientos anteriores. Su firma, la fecha y hora y sus respuestas se guardan en su expediente.',
+    zh: '提交本表格即表示您确认上述声明。您的签名、日期时间和回答将保存在您的记录中。',
+  },
+
   // Error / submit
   'Failed to generate summary. Your data has been saved. Please try again.': {
     es: 'No se pudo generar el resumen. Sus datos se han guardado. Por favor, inténtelo de nuevo.',
@@ -132,6 +153,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
   const [showSummary, setShowSummary] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
+  const consentOk = consentComplete(data.consent);
 
   /**
    * Submit for real: store the answers server-side, upload the attached
@@ -140,17 +162,22 @@ export default function FinalReview({ onBack, onGoToStep }) {
    * slow model never loses the patient's work.
    */
   const handleSubmit = async () => {
+    if (!consentOk) return;
     setIsGenerating(true);
     setError('');
     const flags = detectRedFlags(data);
     setRedFlags(flags);
     const fingerprint = fingerprintAnswers(data);
+    // The signature is dated the moment the patient submits.
+    const signedAt = data.consent?.signedAt || new Date().toISOString();
+    const signed = { ...data, consent: { ...(data.consent || {}), signedAt } };
+    setNested('consent.signedAt', signedAt);
 
     try {
       let sub = data.submission;
       if (!sub?.id) {
         setProgress(t('Saving your answers…'));
-        const r = await submitIntake(data, {
+        const r = await submitIntake(signed, {
           onProgress: (p) => {
             if (p.phase === 'uploading') {
               setProgress(t('Uploading your records ({done} of {total})…').replace('{done}', String(Math.min(p.done + 1, p.total))).replace('{total}', String(p.total)));
@@ -159,6 +186,10 @@ export default function FinalReview({ onBack, onGoToStep }) {
         });
         sub = { id: r.id, token: r.token, submittedAt: new Date().toISOString(), uploaded: r.uploaded, skipped: r.skipped };
         setNested('submission', sub);
+      } else {
+        // A previous attempt stored the answers but did not get to the end;
+        // finishing is idempotent, so just ask again.
+        await finalizeSubmission(sub.id, sub.token).catch(() => {});
       }
       setProgress(t('Writing your summary…'));
       const st = await pollStatus(sub.id, sub.token, {
@@ -177,6 +208,9 @@ export default function FinalReview({ onBack, onGoToStep }) {
       setProgress('');
       return;
     } catch (err) {
+      // Keep the id of a submission whose answers were stored, so a retry
+      // finishes it rather than filing the patient a second time.
+      if (err?.submission) setNested('submission', { ...err.submission, submittedAt: new Date().toISOString() });
       if (IS_PRODUCTION_TIER) {
         setError(err?.message || t('Could not submit the form. Your answers are saved on this device — please try again in a moment.'));
         setIsGenerating(false);
@@ -191,7 +225,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
       const res = await fetch('/api/generate-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intakeData: data }),
+        body: JSON.stringify({ intakeData: signed }),
       });
       const result = await res.json();
       if (result.error || !result.summary) {
@@ -395,10 +429,14 @@ export default function FinalReview({ onBack, onGoToStep }) {
         />
       </div>
 
-      {/* Disclaimer */}
-      <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+      {/* Acknowledgments and signature: the paper packet's signature pages, online */}
+      <ConsentCard t={t} lang={lang} consent={data.consent || {}} setNested={setNested} />
+
+      <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
         <p className="text-sm text-gray-600">
-          {t('By submitting this form, you confirm that the information provided is accurate to the best of your knowledge. This intake form is for information gathering only and does not constitute medical advice or replace a direct medical evaluation. Your surgeon will review this information and may ask additional questions during your visit.')}
+          {t('By submitting this form you confirm the acknowledgments above. Your signature, the date and time, and your answers are kept with your record.')}
+          {' '}
+          {t('This intake form is for information gathering only and does not constitute medical advice or replace a direct medical evaluation. Your surgeon will review this information and may ask additional questions during your visit.')}
         </p>
       </div>
 
@@ -416,8 +454,9 @@ export default function FinalReview({ onBack, onGoToStep }) {
         </button>
         <button
           onClick={handleSubmit}
-          disabled={isGenerating}
-          className="btn-teal text-lg px-10 py-4 flex items-center gap-3"
+          disabled={isGenerating || !consentOk}
+          title={consentOk ? undefined : t('Check every statement and type your name to enable Submit.')}
+          className="btn-teal text-lg px-10 py-4 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGenerating ? (
             <>
@@ -436,6 +475,56 @@ export default function FinalReview({ onBack, onGoToStep }) {
   );
 }
 
+
+/**
+ * The signature pages of a paper new-patient packet, as checkboxes and a typed
+ * signature. Every statement must be checked and a name typed before the form
+ * can be submitted; the server checks the same thing.
+ */
+function ConsentCard({ t, lang, consent, setNested }) {
+  const set = (key, value) => setNested(`consent.${key}`, value);
+  return (
+    <div className="card mt-6 border-teal-100">
+      <h3 className="text-base font-semibold text-navy-600 mb-1">{t('Acknowledgment and signature')}</h3>
+      <p className="text-sm text-gray-500 mb-4">{t('Please read and check each statement, then type your name as your signature.')}</p>
+      <div className="space-y-3">
+        {CONSENT_ITEMS.map((item) => (
+          <label key={item.key} className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!!consent[item.key]}
+              onChange={(e) => set(item.key, e.target.checked)}
+              className="mt-1 w-5 h-5 flex-shrink-0"
+            />
+            <span className="text-sm text-gray-700 leading-relaxed">{consentText(item, lang)}</span>
+          </label>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+        <div className="md:col-span-2">
+          <label className="form-label">{t('Type your full name as your signature *')}</label>
+          <input
+            type="text"
+            value={consent.signatureName || ''}
+            onChange={(e) => set('signatureName', e.target.value)}
+            placeholder={t('Your full name')}
+            className="font-serif text-lg"
+            autoComplete="name"
+          />
+        </div>
+        <div className="md:col-span-2 text-xs font-medium text-gray-500 mt-1">{t('If you are completing this for the patient')}</div>
+        <div>
+          <label className="form-label">{t('Your name')}</label>
+          <input type="text" value={consent.representativeName || ''} onChange={(e) => set('representativeName', e.target.value)} />
+        </div>
+        <div>
+          <label className="form-label">{t('Relationship to the patient')}</label>
+          <input type="text" value={consent.representativeRelationship || ''} onChange={(e) => set('representativeRelationship', e.target.value)} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ReviewCard({ t, title, step, onEdit, items }) {
   return (

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { detectRedFlags } from '../../../../lib/redFlags';
+import { consentComplete } from '../../../../lib/consent';
 import { limitOr429 } from '../../../../lib/server/rateLimit';
 import { logError, logEvent } from '../../../../lib/server/log';
 import {
@@ -41,6 +42,9 @@ export async function POST(request) {
   const d = intake.demographics || {};
   if (!String(d.firstName || '').trim() || !String(d.lastName || '').trim() || !/^\d{4}-\d{2}-\d{2}$/.test(String(d.dob || ''))) {
     return NextResponse.json({ error: 'Please enter your first name, last name and date of birth before submitting.' }, { status: 422 });
+  }
+  if (!consentComplete(intake.consent)) {
+    return NextResponse.json({ error: 'Please check each acknowledgment and type your name as your signature before submitting.' }, { status: 422 });
   }
 
   // Server-owned fields are never taken from the client.

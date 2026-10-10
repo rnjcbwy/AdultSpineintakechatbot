@@ -3,7 +3,7 @@
 // end-to-end submission check.
 export const SAMPLE_INTAKE = {
   language: 'en',
-  demographics: { firstName: 'Test', lastName: 'Patient', dob: '1965-04-12', age: '61', sex: 'Female', phone: '(201) 555-0100', email: 'test@example.invalid', address: '1 Sample St', city: 'Teaneck', state: 'NJ', zip: '07666', insuranceProvider: 'Sample Health Plan', memberId: 'ABC123', referringPhysician: 'Dr. Example', primaryCarePhysician: 'Dr. Primary', visitReason: 'New problem', emergencyContactName: 'Pat Patient', emergencyContactPhone: '(201) 555-0101', emergencyContactRelation: 'Spouse' },
+  demographics: { firstName: 'Test', lastName: 'Patient', dob: '1965-04-12', age: '61', sex: 'Female', phone: '(201) 555-0100', email: 'test@example.invalid', address: '1 Sample St', city: 'Teaneck', state: 'NJ', zip: '07666', country: 'United States', insuranceProvider: 'Sample Health Plan', memberId: 'ABC123', referringPhysician: 'Dr. Example', primaryCarePhysician: 'Dr. Primary', visitReason: 'New problem', emergencyContactName: 'Pat Patient', emergencyContactPhone: '(201) 555-0101', emergencyContactRelation: 'Spouse' },
   chiefComplaint: { mainReason: 'Low back pain going down the right leg', symptomRegions: ['low-back', 'right-leg', 'numbness-tingling'], duration: '8 months', primaryConcern: 'Cannot walk more than two blocks', hasPriorSpineSurgery: false },
   painMap: {
     anterior: { marks: [{ id: 'm1', type: 'ache', x: 0.5, y: 0.42, zone: 'abdomen' }], paths: [] },
@@ -37,6 +37,7 @@ export const SAMPLE_INTAKE = {
   reviewOfSystems: { constitutional: { fevers: 'no', nightSweats: 'no', unexplainedWeightLoss: 'no', fatigue: 'yes' } },
   proms: { odi: { answers: { pain_intensity: 3, personal_care: 1, lifting: 4, walking: 3, sitting: 2, standing: 4, sleeping: 2, sex_life: 1, social_life: 2, travelling: 3 } } },
   noteCorrections: [{ id: 'c1', excerpt: 'The patient reports the injection provided no relief.', comment: 'The injection helped a lot for three weeks.' }],
+  consent: { accurate: true, financial: true, privacy: true, contact: true, signatureName: 'Test Patient', signedAt: new Date().toISOString(), representativeName: '', representativeRelationship: '' },
   documents: [{ id: 'doc_1', category: 'pt_notes', name: 'PT discharge summary.pdf', type: 'application/pdf', size: 240000 }],
 };
 

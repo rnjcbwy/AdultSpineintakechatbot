@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
         <footer className="py-6 text-center">
           <p className="text-xs text-gray-400">
             {IS_PRODUCTION_TIER
-              ? `Secure patient intake · Office of ${PRACTICE.surgeon} · ${PRACTICE.institution}`
+              ? `${PRACTICE.surgeon} · ${PRACTICE.credential}`
               : '🚧 Prototype for demonstration purposes only — not a medical device and not HIPAA compliant. Do not enter real patient information.'}
           </p>
         </footer>

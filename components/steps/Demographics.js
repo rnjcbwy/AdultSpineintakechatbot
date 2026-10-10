@@ -2,11 +2,21 @@
 
 import { useIntake } from '../../lib/store';
 import { US_STATES, VISIT_REASONS } from '../../lib/constants';
+
+// Offered as suggestions only; any country can be typed.
+const COUNTRY_SUGGESTIONS = ['United States', 'Canada', 'Mexico', 'United Kingdom', 'Ireland', 'Spain', 'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Argentina', 'Colombia', 'Dominican Republic', 'Puerto Rico', 'India', 'China', 'Taiwan', 'Hong Kong', 'Singapore', 'Philippines', 'South Korea', 'Japan', 'Australia', 'Israel', 'United Arab Emirates', 'Saudi Arabia', 'Nigeria', 'South Africa'];
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
   'Patient Information': { es: 'Información del paciente', zh: '患者信息' },
+  'State / Province / Region': { es: 'Estado / Provincia / Región', zh: '州 / 省 / 地区' },
+  'Postal code': { es: 'Código postal', zh: '邮政编码' },
+  'Country': { es: 'País', zh: '国家' },
+  'Patients travel to Dr. Wey from everywhere; enter the country you live in.': {
+    es: 'Pacientes de todo el mundo acuden al Dr. Wey; indique el país donde vive.',
+    zh: '世界各地的患者都会来找 Wey 医生；请填写您居住的国家。',
+  },
   "Let's start with some basic information. Fields marked with * are required.": {
     es: 'Comencemos con información básica. Los campos marcados con * son obligatorios.',
     zh: '让我们从一些基本信息开始。标有 * 的字段为必填项。',
@@ -66,6 +76,9 @@ export default function Demographics({ onNext, onBack }) {
   const d = data.demographics;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
+
+  const isUS = !d.country || /^(us|usa|u\.s\.a?\.?|united states( of america)?)$/i.test(String(d.country).trim());
+
 
   const updateField = (field, value) => {
     setField('demographics', field, value);
@@ -194,24 +207,47 @@ export default function Demographics({ onNext, onBack }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="form-label">{t('State')}</label>
-                <select value={d.state} onChange={(e) => updateField('state', e.target.value)}>
-                  <option value="">{t('State')}</option>
-                  {US_STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <label className="form-label">{isUS ? t('State') : t('State / Province / Region')}</label>
+                {isUS ? (
+                  <select value={d.state} onChange={(e) => updateField('state', e.target.value)}>
+                    <option value="">{t('State')}</option>
+                    {US_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={d.state}
+                    onChange={(e) => updateField('state', e.target.value)}
+                    placeholder={t('State / Province / Region')}
+                  />
+                )}
               </div>
               <div>
-                <label className="form-label">{t('ZIP')}</label>
+                <label className="form-label">{isUS ? t('ZIP') : t('Postal code')}</label>
                 <input
                   type="text"
                   value={d.zip}
                   onChange={(e) => updateField('zip', e.target.value)}
-                  placeholder={t('ZIP code')}
-                  maxLength={10}
+                  placeholder={isUS ? t('ZIP code') : t('Postal code')}
+                  maxLength={12}
                 />
               </div>
+            </div>
+            <div className="md:col-span-2">
+              <label className="form-label">{t('Country')}</label>
+              <input
+                type="text"
+                list="country-suggestions"
+                value={d.country ?? 'United States'}
+                onChange={(e) => updateField('country', e.target.value)}
+                placeholder={t('Country')}
+              />
+              <datalist id="country-suggestions">
+                {COUNTRY_SUGGESTIONS.map((c) => <option key={c} value={c} />)}
+              </datalist>
+              <p className="text-xs text-gray-400 mt-1">{t('Patients travel to Dr. Wey from everywhere; enter the country you live in.')}</p>
             </div>
           </div>
         </div>

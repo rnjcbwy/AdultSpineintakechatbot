@@ -194,7 +194,7 @@ function SpineLevels() {
           return (
             <g key={lv.id} onClick={() => toggle(lv.id)} style={{ cursor: 'pointer' }}>
               <rect x={xAt(i) - w / 2} y={y} width={w} height={14} rx={4}
-                fill={on ? '#2E86AB' : '#F3EFE9'} stroke={on ? '#1C5E7A' : '#8C9BAA'} strokeWidth={1.4} />
+                fill={on ? '#0E8482' : '#F3EFE9'} stroke={on ? '#095E5C' : '#8C9BAA'} strokeWidth={1.4} />
               <text x={xAt(i) + w / 2 + 6} y={y + 11} fontSize={9}
                 fill={on ? '#0F2B46' : '#9CA3AF'} fontWeight={on ? 700 : 400}>{lv.id}</text>
             </g>
@@ -359,8 +359,8 @@ function PainTimeline() {
           </g>
         ))}
         <polyline points={pts.map((v, i) => `${xOf(i)},${yOf(v)}`).join(' ')}
-          fill="none" stroke="#2E86AB" strokeWidth="2.5" strokeLinejoin="round" />
-        {pts.map((v, i) => <circle key={i} cx={xOf(i)} cy={yOf(v)} r="4" fill="#2E86AB" />)}
+          fill="none" stroke="#0E8482" strokeWidth="2.5" strokeLinejoin="round" />
+        {pts.map((v, i) => <circle key={i} cx={xOf(i)} cy={yOf(v)} r="4" fill="#0E8482" />)}
         <text x={PAD} y={H - 4} fontSize="9" fill="#9CA3AF">12 mo ago</text>
         <text x={W - PAD - 20} y={H - 4} fontSize="9" fill="#9CA3AF">now</text>
       </svg>

@@ -30,8 +30,8 @@ const T = {
     startNew: 'Start New Form',
     resetConfirm: 'This will start a new form and clear your previous answers. Continue?',
     hipaa: '🚧 This is a prototype — not HIPAA compliant',
-    bannerProd: 'Your answers go securely to the office of Dr. Aaron Wey at Holy Name Medical Center. They are stored on HIPAA-eligible AWS services and reviewed by the office before your visit.',
-    hipaaProd: 'Secure patient intake',
+    bannerProd: 'Your answers go directly to Dr. Wey and his team, who review them before your visit.',
+    hipaaProd: 'New patient intake for Aaron Wey, MD',
   },
   es: {
     subtitle: 'Admisión de Nuevo Paciente',
@@ -53,8 +53,8 @@ const T = {
     startNew: 'Comenzar Nuevo Formulario',
     resetConfirm: 'Esto iniciará un formulario nuevo y borrará sus respuestas anteriores. ¿Continuar?',
     hipaa: '🚧 Esto es un prototipo — no cumple con HIPAA',
-    bannerProd: 'Sus respuestas se envían de forma segura al consultorio del Dr. Aaron Wey en Holy Name Medical Center. Se guardan en servicios de AWS aptos para HIPAA y el consultorio las revisa antes de su cita.',
-    hipaaProd: 'Admisión segura del paciente',
+    bannerProd: 'Sus respuestas van directamente al Dr. Wey y a su equipo, que las revisan antes de su cita.',
+    hipaaProd: 'Admisión de nuevos pacientes del Dr. Aaron Wey',
   },
   zh: {
     subtitle: '新患者登记',
@@ -76,8 +76,8 @@ const T = {
     startNew: '开始新表格',
     resetConfirm: '这将开始一个新表格并清除您之前的答案。是否继续？',
     hipaa: '🚧 这是一个原型 — 不符合 HIPAA 标准',
-    bannerProd: '您的回答将安全地发送至 Holy Name Medical Center 的 Aaron Wey 医生办公室，保存在符合 HIPAA 要求的 AWS 服务上，并在您就诊前由办公室审阅。',
-    hipaaProd: '安全的患者登记',
+    bannerProd: '您的回答将直接发送给 Wey 医生及其团队，他们会在您就诊前进行审阅。',
+    hipaaProd: 'Aaron Wey 医生的新患者登记',
   },
 };
 
@@ -122,11 +122,11 @@ export default function Welcome({ onNext }) {
           <SpineLogo />
         </div>
 
-        <h1 className="font-serif text-[1.75rem] md:text-[2.5rem] leading-tight font-semibold text-[#1A2A44] mb-1">
-          Comprehensive Spine &amp; Scoliosis Center
-        </h1>
-        <p className="text-[1.1rem] font-medium text-[#2A8A8A] tracking-[0.02em] mb-2">
+        <h1 className="font-serif text-[1.75rem] md:text-[2.5rem] leading-tight font-semibold text-[#123559] mb-1">
           Aaron Wey, MD, FAAOS, FACS
+        </h1>
+        <p className="text-[1.1rem] font-medium text-[#0E8482] tracking-[0.02em] mb-2">
+          Adult and Pediatric Spine Surgeon
         </p>
         <h2 className="text-[1.25rem] font-normal text-[#6B7280] mb-6">
           {t.subtitle}
@@ -225,7 +225,7 @@ export default function Welcome({ onNext }) {
           </button>
         </div>
 
-        <p className="mt-8 text-sm font-medium text-amber-600">
+        <p className={`mt-8 text-sm font-medium ${IS_PRODUCTION_TIER ? 'text-gray-400' : 'text-amber-600'}`}>
           {IS_PRODUCTION_TIER ? t.hipaaProd : t.hipaa}
         </p>
       </div>

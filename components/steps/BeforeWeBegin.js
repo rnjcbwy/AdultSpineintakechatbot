@@ -69,7 +69,7 @@ const PROD = {
     warning: 'Please answer as accurately as you can. This form gathers information for your visit; it is not medical advice and nobody reads it in real time.',
     intro: 'This form helps Dr. Wey and his team prepare for your appointment.',
     points: [
-      'Your answers go only to the office of Dr. Aaron Wey at Holy Name Medical Center, where staff review them before your visit',
+      'Your answers go only to Dr. Aaron Wey and his team, who review them before your visit',
       'An assistant will help gather your history through conversation — it **cannot provide medical advice**',
       'If you have an emergency, **call 911** — do not wait for a reply through this form',
       'You can stop and come back later; your progress is saved on this device until you submit',
@@ -80,7 +80,7 @@ const PROD = {
     warning: 'Responda con la mayor precisión posible. Este formulario recopila información para su cita; no es consejo médico y nadie lo lee en tiempo real.',
     intro: 'Este formulario ayuda al Dr. Wey y a su equipo a prepararse para su cita.',
     points: [
-      'Sus respuestas van únicamente al consultorio del Dr. Aaron Wey en Holy Name Medical Center, donde el personal las revisa antes de su visita',
+      'Sus respuestas van únicamente al Dr. Aaron Wey y a su equipo, que las revisan antes de su visita',
       'Un asistente le ayudará a recopilar su historial mediante una conversación — **no puede dar consejos médicos**',
       'Si tiene una emergencia, **llame al 911** — no espere una respuesta a través de este formulario',
       'Puede detenerse y volver más tarde; su progreso se guarda en este dispositivo hasta que lo envíe',
@@ -91,7 +91,7 @@ const PROD = {
     warning: '请尽可能准确地回答。本表格用于为您的就诊收集信息；它不是医疗建议，也不会有人实时阅读。',
     intro: '本表格帮助 Wey 医生及其团队为您的就诊做准备。',
     points: [
-      '您的回答只会发送至 Holy Name Medical Center 的 Aaron Wey 医生办公室，工作人员会在您就诊前审阅',
+      '您的回答只会发送给 Aaron Wey 医生及其团队，他们会在您就诊前审阅',
       '一位助手将通过对话帮助收集您的病史——它**不能提供医疗建议**',
       '如遇紧急情况，请**拨打 911**——不要等待通过本表格得到回复',
       '您可以中途停止并稍后返回；在提交之前，您的进度会保存在本设备上',
@@ -109,14 +109,14 @@ export default function BeforeWeBegin({ onNext, onBack }) {
     <div className="animate-fade-in min-h-[75vh] flex items-center justify-center px-4 py-8">
       <div className="card max-w-xl w-full text-center">
         {/* Icon */}
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#2A8A8A] flex items-center justify-center shadow-sm">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#0E8482] flex items-center justify-center shadow-sm">
           <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
 
-        <h1 className="font-serif text-[1.75rem] md:text-[2rem] font-semibold text-[#1A2A44] mb-6">
+        <h1 className="font-serif text-[1.75rem] md:text-[2rem] font-semibold text-[#123559] mb-6">
           {t.title}
         </h1>
 
