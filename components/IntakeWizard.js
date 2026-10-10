@@ -6,7 +6,7 @@ import { useLang, makeT, tx, isRtl } from '../lib/i18n';
 import { INTAKE_STEPS } from '../lib/constants';
 
 const CHROME = {
-  'Spine Surgery Intake': { es: 'Admisión de cirugía de columna', zh: '脊柱外科登记' },
+  'Your Spine Story': { es: 'La historia de su columna', zh: '您的脊柱故事' },
   'Save & Exit': { es: 'Guardar y salir', zh: '保存并退出' },
   'Your progress is automatically saved. You can return later to continue.': {
     es: 'Su progreso se guarda automáticamente. Puede regresar más tarde para continuar.',
@@ -150,7 +150,7 @@ export default function IntakeWizard() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-sm font-semibold text-navy-600">{t('Spine Surgery Intake')}</h1>
+                  <h1 className="text-sm font-semibold text-navy-600">{t('Your Spine Story')}</h1>
                   <p className="text-xs text-gray-400">
                     {stepOf(currentStep, INTAKE_STEPS.length - 1)}
                     {' · '}

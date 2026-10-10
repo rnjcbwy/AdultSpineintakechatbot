@@ -57,26 +57,29 @@ function dictionaryKeys(src) {
   return keys;
 }
 
-/** Every string literal inside the first `en: { ... }` block of a file. */
+/** Every string literal inside each `en: { ... }` block of a file (a file may have several). */
 function englishBlockStrings(src) {
-  const start = src.search(/\n\s*en:\s*\{/);
-  if (start === -1) return [];
-  let i = src.indexOf('{', start);
-  let depth = 0;
-  let end = i;
-  for (; end < src.length; end++) {
-    if (src[end] === '{') depth++;
-    else if (src[end] === '}') { depth--; if (depth === 0) break; }
-  }
-  const block = src.slice(i, end + 1);
   const out = [];
-  const re = /(['"])((?:\\.|(?!\1).)*?)\1/g;
-  let m;
-  while ((m = re.exec(block))) {
-    const s = unescape(m[2]);
-    // Skip object keys ('subtitle', 'banner', ...) and tiny tokens.
-    if (/^[a-zA-Z0-9_]+$/.test(s) || s.length < 3) continue;
-    out.push(s);
+  const blockRe = /\n\s*en:\s*\{/g;
+  let hit;
+  while ((hit = blockRe.exec(src))) {
+    const i = src.indexOf('{', hit.index);
+    let depth = 0;
+    let end = i;
+    for (; end < src.length; end++) {
+      if (src[end] === '{') depth++;
+      else if (src[end] === '}') { depth--; if (depth === 0) break; }
+    }
+    const block = src.slice(i, end + 1);
+    const re = /(['"])((?:\\.|(?!\1).)*?)\1/g;
+    let m;
+    while ((m = re.exec(block))) {
+      const str = unescape(m[2]);
+      // Skip object keys ('subtitle', 'banner', ...) and tiny tokens.
+      if (/^[a-zA-Z0-9_]+$/.test(str) || str.length < 3) continue;
+      out.push(str);
+    }
+    blockRe.lastIndex = end;
   }
   return out;
 }

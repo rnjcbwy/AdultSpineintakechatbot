@@ -113,6 +113,10 @@ const LOCAL = {
     zh: '您的表格已收到。您的摘要仍在准备中——本页面会自动更新。',
   },
   'The office has received your form.': { es: 'El consultorio ha recibido su formulario.', zh: '诊所已收到您的表格。' },
+  'This form gathers information only; it is not medical advice and does not replace an in-person evaluation.': {
+    es: 'Este formulario solo recopila información; no es consejo médico ni reemplaza una evaluación en persona.',
+    zh: '本表格仅用于收集信息；它不是医疗建议，也不能替代当面评估。',
+  },
   'Could not submit the form. Your answers are saved on this device — please try again in a moment.': {
     es: 'No se pudo enviar el formulario. Sus respuestas están guardadas en este dispositivo; inténtelo de nuevo en un momento.',
     zh: '无法提交表格。您的回答已保存在本设备上，请稍后重试。',
@@ -447,7 +451,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
         <p className="text-sm text-gray-600">
           {t('By submitting this form you confirm the acknowledgments above. Your signature, the date and time, and your answers are kept with your record.')}
           {' '}
-          {t('This intake form is for information gathering only and does not constitute medical advice or replace a direct medical evaluation. Your surgeon will review this information and may ask additional questions during your visit.')}
+          {t('This form gathers information only; it is not medical advice and does not replace an in-person evaluation.')}
         </p>
       </div>
 

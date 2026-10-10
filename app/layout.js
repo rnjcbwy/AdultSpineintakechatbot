@@ -2,8 +2,8 @@ import './globals.css';
 import { IS_PRODUCTION_TIER } from '../lib/deploymentTier';
 
 export const metadata = {
-  title: 'Spine Surgery Intake | Patient History Form',
-  description: 'Secure patient intake form for adult spine surgery clinic. Complete your medical history before your appointment.',
+  title: 'Your Spine Story',
+  description: 'A calm, step-by-step way to put your whole spine history in one place.',
 };
 
 export default function RootLayout({ children }) {
@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
         <footer className="py-6 text-center">
           <p className="text-xs text-gray-400">
             {IS_PRODUCTION_TIER
-              ? 'Your answers are reviewed before your visit.'
+              ? 'Take your time. You can pause and come back whenever you like.'
               : '🚧 Prototype for demonstration purposes only — not a medical device and not HIPAA compliant. Do not enter real patient information.'}
           </p>
         </footer>

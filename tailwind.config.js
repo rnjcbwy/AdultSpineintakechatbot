@@ -10,19 +10,18 @@ module.exports = {
         // Brand palette: deep navy and the teal from the practice's print
         // material. 600 is the reference navy; teal-300 is the reference teal,
         // teal-400 the same hue darkened enough to read as text on white.
-        // "navy" is the ink colour: a deep slate rather than a hospital navy,
-        // so the form reads as a clean document, not a brand.
+        // Holy Name Medical Center's navy, as the ink colour.
         navy: {
-          50: '#F3F5F8',
-          100: '#E3E8EE',
-          200: '#C7D0DB',
-          300: '#98A6B8',
-          400: '#5C6B7E',
-          500: '#334155',
-          600: '#1E293B',
-          700: '#16202E',
-          800: '#0F172A',
-          900: '#0B1120',
+          50: '#EEF3F8',
+          100: '#D9E3EE',
+          200: '#B3C6DB',
+          300: '#7E9CBD',
+          400: '#3A6A9E',
+          500: '#1B4A7A',
+          600: '#123559',
+          700: '#0D2842',
+          800: '#081B2D',
+          900: '#040E18',
         },
         teal: {
           50: '#E3F3F3',

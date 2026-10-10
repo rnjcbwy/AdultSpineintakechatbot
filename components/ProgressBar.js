@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+
 /**
  * The step timeline, and the way back to any step already reached.
  *
@@ -16,6 +18,13 @@
  */
 export default function ProgressBar({ current, total, steps, onGoToStep, canGoToStep, t = (x) => x }) {
   const percentage = Math.round((current / total) * 100);
+  const currentRef = useRef(null);
+
+  // On a phone the strip is wider than the screen; keep the current dot in
+  // view so the patient always sees where they are.
+  useEffect(() => {
+    currentRef.current?.scrollIntoView?.({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  }, [current]);
 
   // steps[0] is the welcome screen, which has no dot; dot i maps to step i + 1.
   const dots = steps.slice(1);
@@ -46,6 +55,7 @@ export default function ProgressBar({ current, total, steps, onGoToStep, canGoTo
           return (
             <div
               key={step.id}
+              ref={isCurrent ? currentRef : undefined}
               className="group relative flex flex-col items-center flex-1 min-w-[24px]"
             >
               <button

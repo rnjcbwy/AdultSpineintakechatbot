@@ -7,12 +7,12 @@ import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
 
 const T = {
   en: {
-    title: 'New Patient Intake',
-    subtitle: 'A few organized sections before your visit.',
+    title: 'Your Spine Story',
+    subtitle: 'A calm, step-by-step way to put your whole history in one place: your symptoms, what you have tried, and what matters to you.',
     banner:
       '⚠️ PROTOTYPE / DEMONSTRATION ONLY — Please do not enter real patient information. Use fictional names and details for testing purposes.',
-    under18Prefix: 'Patient under 18 years old? ',
-    under18Link: 'Please use our pediatric intake form',
+    under18Prefix: 'Younger and teenage patients can use the ',
+    under18Link: 'pediatric version, which asks more age-appropriate questions',
     description:
       'This takes about 15–25 minutes and covers:',
     steps: [
@@ -30,12 +30,12 @@ const T = {
     bannerProd: 'Your answers are sent securely to the care team and reviewed before your visit.',
   },
   es: {
-    title: 'Admisión de nuevo paciente',
-    subtitle: 'Unas secciones organizadas antes de su cita.',
+    title: 'La historia de su columna',
+    subtitle: 'Una forma tranquila, paso a paso, de reunir toda su historia en un solo lugar: sus síntomas, lo que ha probado y lo que le importa.',
     banner:
       '⚠️ SOLO PROTOTIPO / DEMOSTRACIÓN — Por favor, no ingrese información real de pacientes. Use nombres y datos ficticios con fines de prueba.',
-    under18Prefix: '¿Paciente menor de 18 años? ',
-    under18Link: 'Por favor, use nuestro formulario de admisión pediátrica',
+    under18Prefix: 'Los pacientes más jóvenes y adolescentes pueden usar la ',
+    under18Link: 'versión pediátrica, con preguntas más adecuadas a su edad',
     description:
       'Toma entre 15 y 25 minutos y abarca:',
     steps: [
@@ -53,12 +53,12 @@ const T = {
     bannerProd: 'Sus respuestas se envían de forma segura al equipo de atención y se revisan antes de su cita.',
   },
   zh: {
-    title: '新患者登记',
-    subtitle: '就诊前的几个有条理的步骤。',
+    title: '您的脊柱故事',
+    subtitle: '以平静、循序渐进的方式，把您的全部病史放在一处：您的症状、尝试过的治疗，以及对您重要的事。',
     banner:
       '⚠️ 仅供原型/演示 — 请勿输入真实患者信息。请使用虚构的姓名和信息进行测试。',
-    under18Prefix: '患者未满 18 岁？',
-    under18Link: '请使用我们的儿科登记表',
+    under18Prefix: '儿童和青少年患者可以使用',
+    under18Link: '儿科版本，其中的问题更适合他们的年龄',
     description:
       '大约需要 15–25 分钟，包括：',
     steps: [
@@ -77,6 +77,33 @@ const T = {
   },
 };
 
+function SpineLogo() {
+  const vertebrae = [10, 25, 40, 55, 70, 85, 100];
+  return (
+    <svg viewBox="0 0 100 120" className="spine-logo mx-auto" aria-hidden="true">
+      <defs>
+        <linearGradient id="spineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#1B4A7A" />
+          <stop offset="100%" stopColor="#123559" />
+        </linearGradient>
+      </defs>
+      {vertebrae.map((y, i) => (
+        <rect
+          key={y}
+          x="30"
+          y={y}
+          width="40"
+          height="12"
+          rx="6"
+          fill="url(#spineGrad)"
+          className="vertebra"
+          style={{ animationDelay: `${i * 0.1}s` }}
+        />
+      ))}
+    </svg>
+  );
+}
+
 export default function Welcome({ onNext }) {
   const { data, resetIntake, setLanguage } = useIntake();
   const hasExisting = data.lastUpdated && data.demographics?.firstName;
@@ -88,17 +115,15 @@ export default function Welcome({ onNext }) {
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
       <div className="max-w-[560px] w-full mx-auto text-center animate-fade-in">
-        {/* No name, no logo: the page is the form, nothing more. */}
-        <div className="mx-auto mb-7 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-navy-100 shadow-sm" aria-hidden="true">
-          <svg className="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z" />
-          </svg>
+        {/* No name, no ownership: the page is the form. The spine is the only mark. */}
+        <div className="mb-7">
+          <SpineLogo />
         </div>
 
         <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">
           {t.title}
         </h1>
-        <p className="text-base md:text-lg text-gray-500 mb-7">
+        <p className="text-base md:text-lg text-gray-500 leading-relaxed max-w-md mx-auto mb-7">
           {t.subtitle}
         </p>
 
