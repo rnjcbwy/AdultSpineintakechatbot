@@ -41,5 +41,5 @@ aws(['amplify', 'update-app', '--app-id', appId, '--platform', 'WEB_COMPUTE', '-
 aws(['amplify', 'update-branch', '--app-id', appId, '--branch-name', branch, '--framework', 'Next.js - SSR', '--stage', 'PRODUCTION']);
 
 const app = JSON.parse(aws(['amplify', 'get-app', '--app-id', appId])).app;
-console.log(`Done. Default domain: https://${branch}.${app.defaultDomain}`);
+console.log(`Done. Default domain: https://${branch.replace(///g, '-')}.${app.defaultDomain}`);
 console.log('Next: add that origin to cdk.json "allowedOrigins" and run `npx cdk deploy` again so the bucket accepts uploads from it; then start a build (push to the branch or "Redeploy this version" in the console).');
