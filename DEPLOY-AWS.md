@@ -107,6 +107,20 @@ Then complete the intake on the live site with a fictional patient: the form
 should appear under Practice Hub → Intake forms with the transcript, the draft
 note and any attachments, and the office inbox should show it.
 
+## Two deploys, not one
+
+The site (Amplify) and the worker (Lambda) are deployed separately. A push to
+the branch rebuilds the site only. Anything the worker runs, which is the note
+prompt (`lib/prompts.js`), the transcript PDF, the Practice Hub hand-off and
+whatever they import, reaches production only with:
+
+```bash
+npx cdk deploy
+```
+
+If you change how the note is written and the live notes do not change, this
+is why.
+
 ## Operating it
 
 - **Logs**: CloudWatch `/aws/lambda/spine-intake-worker` and the Amplify
@@ -137,13 +151,13 @@ staff policies and training, Holy Name's sign-off on a practice-run system,
 reviewing Practice Hub's access log, and the business-associate relationship
 for anything else in the chain.
 
-**Practice Hub itself runs on AWS App Runner, which is not on the AWS
-HIPAA-eligible services list** (checked 2026-10-10). Its database (RDS),
-storage (S3), secrets and build pipeline are eligible, but the container
-host is not covered by the BAA. The fix is to move that container to a
-listed host — ECS Fargate behind an ALB, or Amplify Hosting like this app —
-keeping everything else as is. Until then, the intake's hand-off lands PHI on
-an App Runner service.
+Practice Hub now runs on ECS Fargate behind CloudFront and an ALB (its App
+Runner service, which was not HIPAA-eligible, has been retired), so the whole
+chain from the patient's browser to the office inbox is on eligible services.
+The hand-off URL is the CloudFront address in `cdk.json`; if Practice Hub
+moves again, change it there, `npx cdk deploy`, re-run
+`scripts/aws/amplify-configure.mjs` and redeploy the branch, because the
+Amplify build bakes the URL into the server bundle.
 
 ## Languages
 
