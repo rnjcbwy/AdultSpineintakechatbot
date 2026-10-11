@@ -160,7 +160,7 @@ export default function Welcome({ onNext }) {
         <p className="text-sm text-gray-600 mb-6">
           {t.under18Prefix}
           <a
-            href="https://peds-spine-intake.vercel.app/"
+            href="https://master.d1dsz5t255b12o.amplifyapp.com/"
             className="font-semibold text-teal-500 underline hover:text-teal-600"
           >
             {t.under18Link}
