@@ -3,7 +3,7 @@
 import { useIntake } from '../lib/store';
 import { useEffect } from 'react';
 import { useLang, makeT, tx, isRtl } from '../lib/i18n';
-import { INTAKE_STEPS } from '../lib/constants';
+import { stepsForVisit } from '../lib/flows';
 
 const CHROME = {
   'Your Spine Story': { es: 'La historia de su columna', zh: '您的脊柱故事' },
@@ -17,6 +17,10 @@ const CHROME = {
     zh: '此表格仅用于收集信息，不能替代直接的医疗评估。您的回答会自动保存。如需紧急医疗救助，请拨打 911 或前往最近的急诊室。',
   },
   // Step labels (shown in the header)
+  'Type of Visit': { es: 'Tipo de visita', zh: '就诊类型' },
+  'Work Injury & Claim': { es: 'Lesión laboral y reclamo', zh: '工伤与理赔' },
+  'Since Your Last Visit': { es: 'Desde su última visita', zh: '自上次就诊以来' },
+  'Your Surgery & Recovery': { es: 'Su cirugía y recuperación', zh: '您的手术与康复' },
   'Demographics': { es: 'Datos demográficos', zh: '基本信息' },
   'Chief Complaint': { es: 'Motivo de consulta', zh: '主诉' },
   'Pain Map': { es: 'Mapa del dolor', zh: '疼痛图' },
@@ -44,6 +48,10 @@ const STEP_OF = {
 import ProgressBar from './ProgressBar';
 import Welcome from './steps/Welcome';
 import BeforeWeBegin from './steps/BeforeWeBegin';
+import VisitType from './steps/VisitType';
+import WorkInjury from './steps/WorkInjury';
+import IntervalHistory from './steps/IntervalHistory';
+import PostOpVisit from './steps/PostOpVisit';
 import Demographics from './steps/Demographics';
 import ChiefComplaint from './steps/ChiefComplaint';
 import PainMap from './steps/PainMap';
@@ -61,27 +69,31 @@ import ReviewOfSystems from './steps/ReviewOfSystems';
 import PROMs from './steps/PROMs';
 import FinalReview from './steps/FinalReview';
 
-// Map step index to component
-const STEP_COMPONENTS = [
-  Welcome,
-  BeforeWeBegin,
-  Demographics,
-  ChiefComplaint,
-  PainMap,
-  SymptomDetails,
-  PriorTreatments,
-  RecordsUpload,
-  AdditionalConcerns,
-  PastMedicalHistory,
-  PastSurgicalHistory,
-  Medications,
-  Allergies,
-  SocialHistory,
-  FamilyHistory,
-  ReviewOfSystems,
-  PROMs,
-  FinalReview,
-];
+// Step id -> component. The order comes from the visit type (lib/flows.js).
+const STEP_COMPONENTS = {
+  welcome: Welcome,
+  consent: BeforeWeBegin,
+  'visit-type': VisitType,
+  'work-injury': WorkInjury,
+  interval: IntervalHistory,
+  postop: PostOpVisit,
+  demographics: Demographics,
+  'chief-complaint': ChiefComplaint,
+  'pain-map': PainMap,
+  'symptom-details': SymptomDetails,
+  treatments: PriorTreatments,
+  records: RecordsUpload,
+  additional: AdditionalConcerns,
+  pmh: PastMedicalHistory,
+  psh: PastSurgicalHistory,
+  medications: Medications,
+  allergies: Allergies,
+  social: SocialHistory,
+  family: FamilyHistory,
+  ros: ReviewOfSystems,
+  proms: PROMs,
+  review: FinalReview,
+};
 
 export default function IntakeWizard() {
   const { data, setStep, completeStep } = useIntake();
@@ -95,15 +107,18 @@ export default function IntakeWizard() {
     document.documentElement.lang = lang;
     document.documentElement.dir = isRtl(lang) ? 'rtl' : 'ltr';
   }, [lang]);
-  const currentStep = data.currentStep;
-  const StepComponent = STEP_COMPONENTS[currentStep];
-  const stepId = INTAKE_STEPS[currentStep]?.id;
+  // The steps for this kind of visit. Until one is chosen the full sequence
+  // is shown, so the progress strip does not jump around on the first screens.
+  const steps = stepsForVisit(data.visit?.type);
+  const currentStep = Math.min(data.currentStep, steps.length - 1);
+  const stepId = steps[currentStep]?.id;
+  const StepComponent = STEP_COMPONENTS[stepId] || Welcome;
   // Welcome (0) and the consent gate show a clean full-page card with no progress header
   const showChrome = currentStep > 0 && stepId !== 'consent';
 
   const goNext = () => {
     completeStep(currentStep);
-    if (currentStep < INTAKE_STEPS.length - 1) {
+    if (currentStep < steps.length - 1) {
       setStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -152,9 +167,9 @@ export default function IntakeWizard() {
                 <div>
                   <h1 className="text-sm font-semibold text-navy-600">{t('Your Spine Story')}</h1>
                   <p className="text-xs text-gray-400">
-                    {stepOf(currentStep, INTAKE_STEPS.length - 1)}
+                    {stepOf(currentStep, steps.length - 1)}
                     {' · '}
-                    {t(INTAKE_STEPS[currentStep]?.label)}
+                    {t(steps[currentStep]?.label)}
                   </p>
                 </div>
               </div>
@@ -171,8 +186,8 @@ export default function IntakeWizard() {
             </div>
             <ProgressBar
               current={currentStep}
-              total={INTAKE_STEPS.length - 1}
-              steps={INTAKE_STEPS}
+              total={steps.length - 1}
+              steps={steps}
               onGoToStep={goToStep}
               canGoToStep={canGoToStep}
               t={t}
@@ -193,7 +208,7 @@ export default function IntakeWizard() {
       </main>
 
       {/* Footer disclaimer */}
-      {showChrome && currentStep < INTAKE_STEPS.length - 1 && (
+      {showChrome && currentStep < steps.length - 1 && (
         <footer className="max-w-4xl mx-auto px-4 pb-8">
           <p className="text-xs text-gray-400 text-center">
             {t('This intake form is for information gathering only and does not replace direct medical evaluation. Your responses are saved automatically. If you need urgent medical attention, please call 911 or go to the nearest emergency room.')}

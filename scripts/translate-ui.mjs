@@ -1,13 +1,15 @@
 // Build the translation tables for the languages that are not written inline.
 //
-// Spanish and Chinese live next to each English string in the components. The
+// Spanish and Chinese live next to most English strings in the components. The
 // other languages are served from lib/translations/<lang>.json, keyed by the
-// exact English string. This script finds every translatable string in the
-// code, asks Claude on Bedrock (under the account's BAA; the strings are UI
-// text, never patient data) for the missing translations, checks that
-// placeholders survived, and writes the tables. Re-run after adding strings:
-// only missing keys are translated, so existing translations are never
-// overwritten (edit the JSON by hand to correct one).
+// exact English string; Spanish and Chinese get a table too, holding only the
+// strings that have no inline entry (the visit-type steps, which keep their
+// strings in plain t('...') calls and option arrays). This script finds every
+// translatable string in the code, asks Claude on Bedrock (under the account's
+// BAA; the strings are UI text, never patient data) for the missing
+// translations, checks that placeholders survived, and writes the tables.
+// Re-run after adding strings: only missing keys are translated, so existing
+// translations are never overwritten (edit the JSON by hand to correct one).
 //
 //   node scripts/translate-ui.mjs                 translate everything missing
 //   node scripts/translate-ui.mjs --extract-only  list the strings and exit
@@ -18,6 +20,8 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const OUT_DIR = path.join(ROOT, 'lib', 'translations');
 const LANGUAGES = {
+  es: 'Spanish (neutral Latin American, as used on US patient forms)',
+  zh: 'Simplified Chinese (Mandarin)',
   ar: 'Arabic (Modern Standard, as used on patient forms)',
   he: 'Hebrew',
   ru: 'Russian',
@@ -93,20 +97,53 @@ function consentStrings(src) {
   return out;
 }
 
+/**
+ * The visit-type steps (and the field kit and flow table they use) keep their
+ * strings in plain t('...') calls, label/placeholder props and UPPER_CASE
+ * option arrays rather than in an inline dictionary. Harvest those.
+ */
+const PLAIN_FILES = /(?:VisitType|WorkInjury|IntervalHistory|PostOpVisit|Fields|flows|operations)\.js$/;
+function plainStrings(src) {
+  const out = [];
+  const add = (str) => {
+    const v = unescape(str);
+    if (/^[a-zA-Z0-9_.-]+$/.test(v) || v.length < 3) return;
+    out.push(v);
+  };
+  let m;
+  const tCall = /\bt\(\s*(['"])((?:\\.|(?!\1).)+?)\1\s*\)/g;
+  while ((m = tCall.exec(src))) add(m[2]);
+  const prop = /\b(?:label|placeholder|hint|description|exclusive)\s*[:=]\s*(['"])((?:\\.|(?!\1).)+?)\1/g;
+  while ((m = prop.exec(src))) add(m[2]);
+  const arr = /const\s+[A-Z][A-Z0-9_]*\s*=\s*\[([^\]]*)\]/g;
+  while ((m = arr.exec(src))) {
+    const lit = /(['"])((?:\\.|(?!\1).)+?)\1/g;
+    let n;
+    while ((n = lit.exec(m[1]))) add(n[2]);
+  }
+  return out;
+}
+
 // Strings built at runtime from templates, which no dictionary lists.
 const EXTRA_KEYS = ['Step {c} of {n}'];
 
+/** Every string the UI can show, and which of them already have inline es/zh. */
 export function extractStrings() {
   const files = [...walk(path.join(ROOT, 'components')), ...walk(path.join(ROOT, 'lib')), ...walk(path.join(ROOT, 'app'))];
   const keys = new Set(EXTRA_KEYS);
+  const inline = new Set();
+  // Strings the plain-file components show. They read only the shared COMMON
+  // dictionary, so an inline es/zh entry elsewhere does not reach them.
+  const plain = new Set();
   for (const f of files) {
     if (f.includes(path.join('lib', 'translations'))) continue;
     const src = fs.readFileSync(f, 'utf8');
-    for (const k of dictionaryKeys(src)) keys.add(k);
+    for (const k of dictionaryKeys(src)) { keys.add(k); inline.add(k); }
     if (/Welcome\.js$|BeforeWeBegin\.js$/.test(f)) for (const k of englishBlockStrings(src)) keys.add(k);
     if (/consent\.js$/.test(f)) for (const k of consentStrings(src)) keys.add(k);
+    if (PLAIN_FILES.test(f)) for (const k of plainStrings(src)) { keys.add(k); plain.add(k); }
   }
-  return [...keys].sort();
+  return { keys: [...keys].sort(), inline, plain };
 }
 
 // ---------------------------------------------------------------------------
@@ -185,10 +222,10 @@ async function translateLanguage(lang, keys, client, ConverseCommand, modelId) {
   console.log(`${lang}: wrote ${done}, ${still} still missing`);
 }
 
-const keys = extractStrings();
+const { keys, inline, plain } = extractStrings();
 if (extractOnly) {
   console.log(keys.join('\n'));
-  console.log(`\n${keys.length} strings`);
+  console.log(`\n${keys.length} strings (${keys.filter((k) => !inline.has(k)).length} without inline es/zh)`);
   process.exit(0);
 }
 
@@ -197,5 +234,8 @@ const { BedrockRuntimeClient, ConverseCommand } = await import('@aws-sdk/client-
 const client = new BedrockRuntimeClient({ region: process.env.BEDROCK_REGION || process.env.AWS_REGION || 'us-east-1' });
 const modelId = process.env.BEDROCK_TRANSLATE_MODEL_ID || process.env.BEDROCK_NOTE_MODEL_ID || 'us.anthropic.claude-sonnet-4-6';
 const langs = onlyLang ? [onlyLang] : Object.keys(LANGUAGES);
-await Promise.all(langs.map((l) => translateLanguage(l, keys, client, ConverseCommand, modelId)));
+// Spanish and Chinese only need the strings that have no inline entry, plus
+// everything the plain-file components show (their dictionary is COMMON only).
+const keysFor = (l) => (l === 'es' || l === 'zh' ? keys.filter((k) => !inline.has(k) || plain.has(k)) : keys);
+await Promise.all(langs.map((l) => translateLanguage(l, keysFor(l), client, ConverseCommand, modelId)));
 console.log('done');

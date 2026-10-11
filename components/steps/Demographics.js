@@ -1,7 +1,7 @@
 'use client';
 
 import { useIntake } from '../../lib/store';
-import { US_STATES, VISIT_REASONS } from '../../lib/constants';
+import { US_STATES } from '../../lib/constants';
 
 // Offered as suggestions only; any country can be typed.
 const COUNTRY_SUGGESTIONS = ['United States', 'Canada', 'Mexico', 'United Kingdom', 'Ireland', 'Spain', 'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Argentina', 'Colombia', 'Dominican Republic', 'Puerto Rico', 'India', 'China', 'Taiwan', 'Hong Kong', 'Singapore', 'Philippines', 'South Korea', 'Japan', 'Australia', 'Israel', 'United Arab Emirates', 'Saudi Arabia', 'Nigeria', 'South Africa'];
@@ -57,18 +57,6 @@ const LOCAL = {
   'Emergency contact name': { es: 'Nombre del contacto de emergencia', zh: '紧急联系人姓名' },
   'Relationship': { es: 'Parentesco', zh: '关系' },
   'e.g., Spouse, Parent': { es: 'p. ej., cónyuge, padre/madre', zh: '例如：配偶、父母' },
-  'Reason for Visit *': { es: 'Motivo de la visita *', zh: '就诊原因 *' },
-  'What brings you to the spine surgery clinic?': {
-    es: '¿Qué lo trae a la clínica de cirugía de columna?',
-    zh: '您来脊柱外科诊所的原因是什么？',
-  },
-  'Continue to Chief Complaint': { es: 'Continuar al motivo principal', zh: '继续填写主诉' },
-  // VISIT_REASONS options (display-only; stored English)
-  'New patient evaluation': { es: 'Evaluación de paciente nuevo', zh: '新患者评估' },
-  'Second opinion': { es: 'Segunda opinión', zh: '第二意见' },
-  'Follow-up visit': { es: 'Visita de seguimiento', zh: '复诊' },
-  'Post-operative follow-up': { es: 'Seguimiento posoperatorio', zh: '术后复诊' },
-  'Referred for surgical evaluation': { es: 'Referido para evaluación quirúrgica', zh: '转诊进行手术评估' },
 };
 
 export default function Demographics({ onNext, onBack }) {
@@ -99,7 +87,7 @@ export default function Demographics({ onNext, onBack }) {
     }
   };
 
-  const isValid = d.firstName && d.lastName && d.dob && d.sex && d.visitReason;
+  const isValid = d.firstName && d.lastName && d.dob && d.sex;
 
   return (
     <div className="animate-fade-in">
@@ -329,47 +317,13 @@ export default function Demographics({ onNext, onBack }) {
           </div>
         </div>
 
-        {/* Visit Reason */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-navy-600 mb-4">{t('Reason for Visit *')}</h3>
-          <p className="text-sm text-gray-500 mb-3">{t('What brings you to the spine surgery clinic?')}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {VISIT_REASONS.map((reason) => (
-              <label
-                key={reason}
-                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                  d.visitReason === reason
-                    ? 'border-teal-400 bg-teal-50 text-teal-700'
-                    : 'border-gray-200 hover:border-teal-200 hover:bg-teal-50/30'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="visitReason"
-                  value={reason}
-                  checked={d.visitReason === reason}
-                  onChange={(e) => updateField('visitReason', e.target.value)}
-                  className="sr-only"
-                />
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  d.visitReason === reason ? 'border-teal-400' : 'border-gray-300'
-                }`}>
-                  {d.visitReason === reason && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-teal-400" />
-                  )}
-                </div>
-                <span className="text-sm font-medium">{t(reason)}</span>
-              </label>
-            ))}
-          </div>
-        </div>
       </div>
 
       <StepNavigation
         onNext={onNext}
         onBack={onBack}
         canGoNext={isValid}
-        nextLabel={t('Continue to Chief Complaint')}
+        nextLabel={t('Continue')}
         showBack={true}
       />
     </div>

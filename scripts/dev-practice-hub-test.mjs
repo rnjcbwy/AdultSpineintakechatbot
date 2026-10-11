@@ -50,6 +50,9 @@ if (!src.includes('turbopack: { root')) {
 const env = {
   ...process.env,
   PGLITE_DIR: path.join(PH, '.data', 'pglite-intake-test'),
+  // A throwaway server with fictional data: skip the 2-step sign-in enrolment
+  // so the test login works straight away. Production always enforces it.
+  REQUIRE_TWO_FACTOR: 'false',
   STORAGE_LOCAL_DIR: path.join(PH, '.data', 'storage-intake-test'),
   BETTER_AUTH_URL: `http://localhost:${PORT}`,
   DEV_ENFORCE_RLS: 'true',

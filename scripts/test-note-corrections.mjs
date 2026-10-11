@@ -18,10 +18,12 @@ const COPIES = [
   ['lib/questionnaires.js', 'lib/__q.test.mjs', (t) => t],
   ['lib/promSummary.js', 'lib/__ps.test.mjs',
     (t) => t.replace("from './questionnaires'", "from './__q.test.mjs'")],
+  ['lib/operations.js', 'lib/__op.test.mjs', (t) => t],
   ['lib/prompts.js', 'lib/__pr.test.mjs',
     (t) => t
       .replace("from './bodyMap'", "from './__bm.test.mjs'")
-      .replace("from './promSummary'", "from './__ps.test.mjs'")],
+      .replace("from './promSummary'", "from './__ps.test.mjs'")
+      .replace("from './operations'", "from './__op.test.mjs'")],
 ];
 for (const [src, dst, tr] of COPIES) {
   fs.writeFileSync(path.resolve(dst), tr(fs.readFileSync(path.resolve(src), 'utf8')));

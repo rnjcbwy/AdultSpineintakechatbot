@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-09-10T15:50:57.684Z",
+    "generatedAt": "2026-10-11T21:51:16.733Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -24,6 +24,13 @@
       "currentStep": 0,
       "completedSteps": [],
       "language": "en",
+      "invite": null,
+      "visit": {
+        "type": "",
+        "wc": {},
+        "followup": {},
+        "postop": {}
+      },
       "demographics": {
         "firstName": "",
         "lastName": "",
@@ -36,6 +43,7 @@
         "city": "",
         "state": "",
         "zip": "",
+        "country": "United States",
         "insuranceProvider": "",
         "memberId": "",
         "referringPhysician": "",
@@ -256,6 +264,16 @@
         "recordsNotes": ""
       },
       "documents": [],
+      "consent": {
+        "accurate": false,
+        "financial": false,
+        "privacy": false,
+        "contact": false,
+        "signatureName": "",
+        "signedAt": null,
+        "representativeName": "",
+        "representativeRelationship": ""
+      },
       "redFlags": [],
       "generatedSummary": null,
       "submittedAt": null
@@ -276,6 +294,14 @@
     },
     {
       "order": 2,
+      "id": "visit-type",
+      "label": "Type of Visit",
+      "component": "VisitType",
+      "title": "What kind of visit is this?",
+      "subtitle": "This shapes the questions that follow, so you are only asked what matters for this visit. If you are not sure, choose the first one."
+    },
+    {
+      "order": 3,
       "id": "demographics",
       "label": "Demographics",
       "component": "Demographics",
@@ -333,14 +359,20 @@
         {
           "path": "demographics.state",
           "type": "select",
-          "label": "State",
+          "label": "Contact Information",
           "placeholder": null
         },
         {
           "path": "demographics.zip",
           "type": "text",
-          "label": "ZIP",
-          "placeholder": "ZIP code"
+          "label": "Contact Information",
+          "placeholder": null
+        },
+        {
+          "path": "demographics.country",
+          "type": "text",
+          "label": "Country",
+          "placeholder": "Country"
         },
         {
           "path": "demographics.insuranceProvider",
@@ -383,17 +415,35 @@
           "type": "text",
           "label": "Relationship",
           "placeholder": "e.g., Spouse, Parent"
-        },
-        {
-          "path": "demographics.visitReason",
-          "type": "text",
-          "label": "Reason for Visit *",
-          "placeholder": null
         }
       ]
     },
     {
-      "order": 3,
+      "order": 4,
+      "id": "work-injury",
+      "label": "Work Injury & Claim",
+      "component": "WorkInjury",
+      "title": "Work Injury & Claim",
+      "subtitle": "These details are needed to document a work-related injury and to communicate with the claim's administrator. Fields marked with * are required."
+    },
+    {
+      "order": 5,
+      "id": "interval",
+      "label": "Since Your Last Visit",
+      "component": "IntervalHistory",
+      "title": "Since Your Last Visit",
+      "subtitle": "Your history is already on file. This visit is about what has changed and what has been tried in between."
+    },
+    {
+      "order": 6,
+      "id": "postop",
+      "label": "Your Surgery & Recovery",
+      "component": "PostOpVisit",
+      "title": "Your Surgery & Recovery",
+      "subtitle": "A few questions about the operation and how the recovery is going. If you have had more than one spine operation, add each one. The month and year are enough if you do not remember the exact date. Fields marked with * are required."
+    },
+    {
+      "order": 7,
       "id": "chief-complaint",
       "label": "Chief Complaint",
       "component": "ChiefComplaint",
@@ -445,7 +495,7 @@
       ]
     },
     {
-      "order": 4,
+      "order": 8,
       "id": "pain-map",
       "label": "Pain Map",
       "component": "PainMap",
@@ -454,7 +504,7 @@
       "definedIn": "bodyMap"
     },
     {
-      "order": 5,
+      "order": 9,
       "id": "symptom-details",
       "label": "Symptom Details",
       "component": "SymptomDetails",
@@ -736,7 +786,7 @@
       ]
     },
     {
-      "order": 6,
+      "order": 10,
       "id": "treatments",
       "label": "Prior Treatments",
       "component": "PriorTreatments",
@@ -1053,7 +1103,7 @@
       ]
     },
     {
-      "order": 7,
+      "order": 11,
       "id": "records",
       "label": "Records & Documents",
       "component": "RecordsUpload",
@@ -1113,7 +1163,7 @@
       ]
     },
     {
-      "order": 8,
+      "order": 12,
       "id": "additional",
       "label": "Additional Details",
       "component": "AdditionalConcerns",
@@ -1129,7 +1179,7 @@
       ]
     },
     {
-      "order": 9,
+      "order": 13,
       "id": "pmh",
       "label": "Past Medical History",
       "component": "PastMedicalHistory",
@@ -1173,7 +1223,7 @@
       ]
     },
     {
-      "order": 10,
+      "order": 14,
       "id": "psh",
       "label": "Past Surgical History",
       "component": "PastSurgicalHistory",
@@ -1258,7 +1308,7 @@
       ]
     },
     {
-      "order": 11,
+      "order": 15,
       "id": "medications",
       "label": "Medications",
       "component": "Medications",
@@ -1304,7 +1354,7 @@
       ]
     },
     {
-      "order": 12,
+      "order": 16,
       "id": "allergies",
       "label": "Allergies",
       "component": "Allergies",
@@ -1356,7 +1406,7 @@
       ]
     },
     {
-      "order": 13,
+      "order": 17,
       "id": "social",
       "label": "Social History",
       "component": "SocialHistory",
@@ -1520,7 +1570,7 @@
       ]
     },
     {
-      "order": 14,
+      "order": 18,
       "id": "family",
       "label": "Family History",
       "component": "FamilyHistory",
@@ -1551,7 +1601,7 @@
       ]
     },
     {
-      "order": 15,
+      "order": 19,
       "id": "ros",
       "label": "Review of Systems",
       "component": "ReviewOfSystems",
@@ -1568,7 +1618,7 @@
       "definedIn": "reviewOfSystems"
     },
     {
-      "order": 16,
+      "order": 20,
       "id": "proms",
       "label": "Outcome Questionnaires",
       "component": "PROMs",
@@ -1577,7 +1627,7 @@
       "definedIn": "proms"
     },
     {
-      "order": 17,
+      "order": 21,
       "id": "review",
       "label": "Review & Submit",
       "component": "FinalReview",
@@ -1786,13 +1836,105 @@
       "Other"
     ],
     "visitReasons": [
-      "New patient evaluation",
-      "Second opinion",
+      "New patient or new problem",
       "Follow-up visit",
-      "Post-operative follow-up",
-      "Referred for surgical evaluation",
-      "Other"
+      "After surgery",
+      "Workers' compensation"
     ],
+    "visitTypes": [
+      {
+        "id": "new",
+        "label": "New patient or new problem",
+        "description": "A first visit for this problem, a second opinion, or a referral for a surgical opinion."
+      },
+      {
+        "id": "followup",
+        "label": "Follow-up visit",
+        "description": "You have been seen for this problem before and are coming back."
+      },
+      {
+        "id": "postop",
+        "label": "After surgery",
+        "description": "A visit after a spine operation, whether it was done here or elsewhere."
+      },
+      {
+        "id": "workers_comp",
+        "label": "Workers' compensation",
+        "description": "A work-related injury with a claim. You will be asked for the claim number."
+      }
+    ],
+    "stepsByVisitType": {
+      "new": [
+        "welcome",
+        "consent",
+        "visit-type",
+        "demographics",
+        "chief-complaint",
+        "pain-map",
+        "symptom-details",
+        "treatments",
+        "records",
+        "additional",
+        "pmh",
+        "psh",
+        "medications",
+        "allergies",
+        "social",
+        "family",
+        "ros",
+        "proms",
+        "review"
+      ],
+      "followup": [
+        "welcome",
+        "consent",
+        "visit-type",
+        "demographics",
+        "interval",
+        "pain-map",
+        "symptom-details",
+        "records",
+        "additional",
+        "ros",
+        "proms",
+        "review"
+      ],
+      "postop": [
+        "welcome",
+        "consent",
+        "visit-type",
+        "demographics",
+        "postop",
+        "pain-map",
+        "records",
+        "additional",
+        "ros",
+        "proms",
+        "review"
+      ],
+      "workers_comp": [
+        "welcome",
+        "consent",
+        "visit-type",
+        "demographics",
+        "work-injury",
+        "chief-complaint",
+        "pain-map",
+        "symptom-details",
+        "treatments",
+        "records",
+        "additional",
+        "pmh",
+        "psh",
+        "medications",
+        "allergies",
+        "social",
+        "family",
+        "ros",
+        "proms",
+        "review"
+      ]
+    },
     "familyConditions": [
       "Scoliosis or spinal deformity",
       "Degenerative spine disease",
@@ -5098,7 +5240,8 @@
         "difficulty urinating"
       ],
       "detectInFields": [
-        "bowelBladder"
+        "bowelBladder",
+        "visit.postop.bowelBladder"
       ]
     },
     {
@@ -5186,6 +5329,28 @@
         "intravenous drug"
       ],
       "detectInFields": []
+    },
+    {
+      "id": "postop_wound_concern",
+      "label": "Post-operative wound concern or fever",
+      "severity": "urgent",
+      "patientMessage": "You mentioned redness, drainage, an open incision, or fever or chills after your surgery. Please call the office today so this can be looked at promptly; go to the emergency room if you feel unwell.",
+      "detectInText": [],
+      "detectInFields": [
+        "visit.postop.wound",
+        "visit.postop.complications"
+      ]
+    },
+    {
+      "id": "postop_new_deficit",
+      "label": "New numbness/weakness or new limb symptoms after surgery",
+      "severity": "urgent",
+      "patientMessage": "You mentioned new numbness, weakness, or new arm or leg symptoms since your surgery. Please tell the office about this before your visit.",
+      "detectInText": [],
+      "detectInFields": [
+        "visit.postop.limbSymptoms",
+        "visit.postop.neuroDetails"
+      ]
     },
     {
       "id": "night_pain_severe",
@@ -16235,7 +16400,7 @@
   },
   "noteGeneration": {
     "language": "Always English, whatever language the patient used; translate free text.",
-    "systemPrompt": "You are a medical documentation assistant generating a formal pre-visit clinic note summary for a spine surgery practice specializing in adult degenerative spine conditions.\n\nOUTPUT REQUIREMENTS:\n- Write in formal medical prose, as if for a clinic note.\n- Use PARAGRAPH form, NOT bullet points.\n- Sound like a high-quality pre-charting summary.\n- Do not make definitive diagnoses unless clearly patient-reported.\n- Present symptoms organized by anatomical region.\n- Preserve uncertainty where appropriate.\n- Be concise but thorough.\n\nHPI SECTION STRUCTURE:\n1. Begin with patient age and sex (if available).\n2. State the main reason for visit.\n3. Present symptoms in coherent chronology.\n4. Group by anatomical region.\n5. Include associated neurologic symptoms.\n6. Include pertinent negatives (especially myelopathic symptoms, cauda equina red flags when applicable).\n7. Include functional limitations and their severity.\n8. Include conservative treatment history and treatment response.\n9. Note any red flags identified.\n\nSTYLE GUIDELINES:\n- Use phrases like \"The patient reports...\", \"Per patient history...\", \"The patient denies...\"\n- For patient-reported prior diagnoses: \"The patient reports a prior diagnosis of...\"\n- For uncertain information: \"The patient is uncertain about...\" or \"approximately\"\n- Avoid overclaiming or editorializing.\n- Do not recommend treatment or give impressions.\n- Make the output ready for easy physician editing.\n- Use standard medical abbreviations where appropriate (PT, ESI, NSAIDs, MRI, etc.) but spell out on first use.\n\nSECTION HEADERS TO GENERATE:\n- CHIEF COMPLAINT\n- HISTORY OF PRESENT ILLNESS\n- CONSERVATIVE TREATMENT HISTORY\n- PAST MEDICAL HISTORY\n- PAST SURGICAL HISTORY\n- MEDICATIONS (highlight anticoagulants/antiplatelets)\n- ALLERGIES\n- SOCIAL HISTORY\n- FAMILY HISTORY (if relevant)\n- REVIEW OF SYSTEMS (report by body system. Name every system reviewed, give\n  the positives, and state the rest as negative. Do not invent systems that\n  were not asked about, and do not claim a system was reviewed if the intake\n  marks it as not reviewed.)\n- PATIENT-REPORTED OUTCOME MEASURES. Give the questionnaire name, score and\n  interpretation. The individual items are functional HISTORY, not just\n  questionnaire data, so do not stop at the score: work the clinically\n  meaningful ones into the history and functional status as ordinary prose\n  (\"walks about a quarter of a mile before pain stops him; sleep is disturbed\n  most nights\"). Do NOT transcribe every item as a list. mJOA is the exception\n  to brevity: its hand dexterity, gait and sphincter items are a myelopathy\n  history and must appear explicitly. Never invent an item that is not listed\n  above, and never report a score that was not provided.\n- RED FLAGS / SAFETY SCREENING\n- FUNCTIONAL STATUS\n\nFormat each section with the header in caps followed by a colon and the narrative content.",
+    "systemPrompt": "You are a medical documentation assistant generating a formal pre-visit clinic note for a spine surgery practice specializing in adult degenerative spine conditions.\n\nThe KIND of note depends on the kind of visit, which the user message states:\na new-patient history, a follow-up (interval) note, a post-operative visit\nnote, or a workers' compensation initial evaluation. The user message lists\nthe exact section headers for that kind of note. Use those headers, in that\norder, and no others.\n\nOUTPUT REQUIREMENTS:\n- Write in formal medical prose, as if for a clinic note.\n- Use PARAGRAPH form, NOT bullet points.\n- Sound like a high-quality pre-charting summary.\n- Do not make definitive diagnoses unless clearly patient-reported.\n- Present symptoms organized by anatomical region.\n- Preserve uncertainty where appropriate.\n- Be concise but thorough. A follow-up or post-operative note is SHORT: it\n  covers the interval, not the patient's life history.\n\nHISTORY STRUCTURE (new-patient and workers' compensation notes):\n1. Begin with patient age and sex (if available).\n2. State the main reason for visit.\n3. Present symptoms in coherent chronology.\n4. Group by anatomical region.\n5. Include associated neurologic symptoms.\n6. Include pertinent negatives (especially myelopathic symptoms, cauda equina red flags when applicable).\n7. Include functional limitations and their severity.\n8. Include conservative treatment history and treatment response.\n9. Note any red flags identified.\n\nSTYLE GUIDELINES:\n- Use phrases like \"The patient reports...\", \"Per patient history...\", \"The patient denies...\"\n- For patient-reported prior diagnoses: \"The patient reports a prior diagnosis of...\"\n- For uncertain information: \"The patient is uncertain about...\" or \"approximately\"\n- Avoid overclaiming or editorializing.\n- Do not recommend treatment or give impressions.\n- Make the output ready for easy physician editing.\n- Use standard medical abbreviations where appropriate (PT, ESI, NSAIDs, MRI, etc.) but spell out on first use.\n- Only report what the intake contains. Never invent a questionnaire item, a\n  score, a date or a finding that is not in the data.\n\nSECTION-SPECIFIC RULES (apply when the section is in the list given):\n- MEDICATIONS: highlight anticoagulants/antiplatelets; in a post-operative\n  note, state current opioid use explicitly, including \"none\".\n- REVIEW OF SYSTEMS: report by body system. Name every system reviewed, give\n  the positives, and state the rest as negative. Do not invent systems that\n  were not asked about, and do not claim a system was reviewed if the intake\n  marks it as not reviewed.\n- PATIENT-REPORTED OUTCOME MEASURES: give the questionnaire name, score and\n  interpretation. The individual items are functional HISTORY, not just\n  questionnaire data, so work the clinically meaningful ones into the history\n  and functional status as ordinary prose (\"walks about a quarter of a mile\n  before pain stops him; sleep is disturbed most nights\"). Do NOT transcribe\n  every item as a list. mJOA is the exception to brevity: its hand dexterity,\n  gait and sphincter items are a myelopathy history and must appear\n  explicitly. Never report a score that was not provided.\n\nFormat each section with the header in caps followed by a colon and the narrative content.\n\nPLAIN TEXT ONLY. The note is pasted into an electronic medical record that\nshows markup literally: no markdown, no \"#\" headings, no \"**\" bold, no\nhorizontal rules, no bullet symbols, no title block. Start directly with the\nfirst section header.",
     "hpiChatSystemPrompt": "You are a patient intake assistant for an adult spine surgery clinic specializing in degenerative spine conditions. Your role is to gather a thorough history of present illness (HPI) through conversational questioning.\n\nCORE RULES:\n- You are an INTAKE ASSISTANT, not a doctor. Never diagnose, recommend treatment, or suggest surgery.\n- Ask ONE focused question at a time.\n- Use plain, accessible language. Patients may not know medical terms.\n- Be calm, professional, warm, and reassuring.\n- Never alarm the patient or use scary language.\n- Gather information methodically - do not skip around randomly.\n- Ask smart follow-up questions based on prior answers.\n- Know when enough detail has been gathered and move on.\n- Avoid asking duplicate questions.\n- Preserve the patient's own words when clinically useful.\n- If a patient mentions prior diagnoses from other doctors, record them as patient-reported.\n- Never independently assert a diagnosis.\n\nQUESTIONING STRATEGY:\n1. Start by acknowledging the patient's chief complaint and symptom regions (already collected).\n2. For each symptom region, systematically gather:\n   - When symptoms started and how they began (sudden vs gradual, injury vs spontaneous)\n   - Whether symptoms are worsening, stable, or improving\n   - Exact location and whether they radiate (and to where)\n   - Side: right, left, bilateral, midline\n   - Quality: aching, sharp, burning, stabbing, cramping, electric, throbbing, pressure\n   - Severity (0-10 scale)\n   - Frequency: constant, intermittent, activity-related, time-of-day patterns\n   - Aggravating factors (specific activities, positions)\n   - Relieving factors (rest, positions, medications, ice/heat)\n   - Associated neurologic symptoms (numbness, tingling, weakness)\n   - Functional impact (sleep, walking, sitting, standing, work, exercise, daily activities)\n3. Intelligently branch based on symptom pattern:\n\n   FOR CERVICAL PATTERNS (neck pain, arm pain, hand symptoms):\n   - Hand numbness patterns\n   - Fine motor difficulty (buttons, writing, dropping objects)\n   - Gait instability or balance problems\n   - Electric shock sensations with neck movement (Lhermitte's)\n   - Unilateral vs bilateral arm symptoms\n\n   FOR LUMBAR PATTERNS (low back, buttock, leg pain):\n   - Pain below the knee\n   - Specific dermatomal numbness patterns\n   - Weakness (foot drop, stair climbing difficulty)\n   - Symptoms with standing/walking vs sitting\n   - Relief with leaning forward\n   - Walking distance tolerance\n   - Bowel/bladder dysfunction\n   - Saddle area numbness\n\n   FOR DEFORMITY/SCOLIOSIS:\n   - Age at diagnosis and progression\n   - Prior bracing or surgery\n   - Trunk shift or rib prominence\n   - Appearance concerns\n   - Pulmonary/endurance limitations\n\n   FOR POST-SURGICAL PATIENTS:\n   - Prior procedure type and level\n   - Year and surgeon/hospital\n   - Initial improvement\n   - When/how symptoms returned\n   - Similar vs different symptoms\n   - Complications\n\n4. Gather conservative treatment history:\n   - Physical therapy (when, duration, helped?)\n   - Home exercises\n   - Medications tried (NSAIDs, steroids, gabapentin/pregabalin, muscle relaxants, opioids)\n   - Chiropractic, acupuncture\n   - Injections (epidural steroid, nerve blocks, facet injections, SI injections, RFA, trigger points) - when, how many, did they help, how long?\n   - Braces or assistive devices\n   - Prior imaging (X-rays, MRI, CT)\n   - Prior EMG/nerve studies\n\n5. Build a chronological timeline from the patient's answers.\n\nPLAIN LANGUAGE TRANSLATIONS (use these, not medical jargon):\n- Radiculopathy → \"pain, numbness, or tingling traveling down your arm/leg\"\n- Neurogenic claudication → \"leg symptoms that come on with walking or standing\"\n- Myelopathy → \"problems with coordination, balance, or hand dexterity\"\n- Paresthesia → \"tingling or pins-and-needles sensations\"\n- Saddle anesthesia → \"numbness in the groin or inner thigh area\"\n- Stenosis → \"narrowing of the spine\"\n- Spondylolisthesis → \"slippage of one vertebra over another\"\n\nRESPONSE FORMAT:\n- Keep responses concise (1-3 sentences for the question, brief empathetic acknowledgment if appropriate).\n- Ask exactly one question per response.\n- If you have enough information about the current topic, transition naturally to the next.\n- When you've gathered comprehensive information, say something like: \"Thank you, I think I have a good understanding of your symptoms. Let me summarize what I've heard...\" and provide a brief summary, then ask if anything was missed.\n\nRED FLAG SCREENING (ask about these if relevant, but do not alarm):\n- New bowel or bladder incontinence\n- Saddle area numbness\n- Rapidly progressive weakness\n- Fever with severe back pain\n- Unexplained weight loss\n- History of cancer with new back pain\nIf a patient reports these, note them but continue gathering history calmly.",
     "preResolvedInputs": [
       "Body map -> anatomical prose (never raw coordinates).",
@@ -16393,6 +16558,22 @@
         "es": "Información del paciente",
         "zh": "患者信息"
       },
+      "State / Province / Region": {
+        "es": "Estado / Provincia / Región",
+        "zh": "州 / 省 / 地区"
+      },
+      "Postal code": {
+        "es": "Código postal",
+        "zh": "邮政编码"
+      },
+      "Country": {
+        "es": "País",
+        "zh": "国家"
+      },
+      "Patients travel to Dr. Wey from everywhere; enter the country you live in.": {
+        "es": "Pacientes de todo el mundo acuden al Dr. Wey; indique el país donde vive.",
+        "zh": "世界各地的患者都会来找 Wey 医生；请填写您居住的国家。"
+      },
       "Let's start with some basic information. Fields marked with * are required.": {
         "es": "Comencemos con información básica. Los campos marcados con * son obligatorios.",
         "zh": "让我们从一些基本信息开始。标有 * 的字段为必填项。"
@@ -16540,38 +16721,6 @@
       "e.g., Spouse, Parent": {
         "es": "p. ej., cónyuge, padre/madre",
         "zh": "例如：配偶、父母"
-      },
-      "Reason for Visit *": {
-        "es": "Motivo de la visita *",
-        "zh": "就诊原因 *"
-      },
-      "What brings you to the spine surgery clinic?": {
-        "es": "¿Qué lo trae a la clínica de cirugía de columna?",
-        "zh": "您来脊柱外科诊所的原因是什么？"
-      },
-      "Continue to Chief Complaint": {
-        "es": "Continuar al motivo principal",
-        "zh": "继续填写主诉"
-      },
-      "New patient evaluation": {
-        "es": "Evaluación de paciente nuevo",
-        "zh": "新患者评估"
-      },
-      "Second opinion": {
-        "es": "Segunda opinión",
-        "zh": "第二意见"
-      },
-      "Follow-up visit": {
-        "es": "Visita de seguimiento",
-        "zh": "复诊"
-      },
-      "Post-operative follow-up": {
-        "es": "Seguimiento posoperatorio",
-        "zh": "术后复诊"
-      },
-      "Referred for surgical evaluation": {
-        "es": "Referido para evaluación quirúrgica",
-        "zh": "转诊进行手术评估"
       },
       "What Brings You In Today?": {
         "es": "¿Qué lo trae hoy?",
@@ -20285,6 +20434,74 @@
         "es": "Revise su información a continuación. Puede volver a cualquier sección para hacer cambios. Cuando todo esté correcto, envíe su formulario de admisión.",
         "zh": "请在下方核对您的信息。您可以返回任何部分进行修改。确认无误后，请提交您的入院表。"
       },
+      "Type of Visit": {
+        "es": "Tipo de visita",
+        "zh": "就诊类型"
+      },
+      "Work Injury & Claim": {
+        "es": "Lesión laboral y reclamo",
+        "zh": "工伤与理赔"
+      },
+      "Since Your Last Visit": {
+        "es": "Desde su última visita",
+        "zh": "自上次就诊以来"
+      },
+      "Your Surgery & Recovery": {
+        "es": "Su cirugía y recuperación",
+        "zh": "您的手术与康复"
+      },
+      "Visit": {
+        "es": "Visita",
+        "zh": "就诊"
+      },
+      "Claim number": {
+        "es": "Número de reclamo",
+        "zh": "理赔编号"
+      },
+      "Date of injury": {
+        "es": "Fecha de la lesión",
+        "zh": "受伤日期"
+      },
+      "Employer": {
+        "es": "Empleador",
+        "zh": "雇主"
+      },
+      "Working now": {
+        "es": "Trabaja actualmente",
+        "zh": "目前工作状态"
+      },
+      "Last visit": {
+        "es": "Última visita",
+        "zh": "上次就诊"
+      },
+      "Compared with last visit": {
+        "es": "En comparación con la última visita",
+        "zh": "与上次就诊相比"
+      },
+      "Pain today": {
+        "es": "Dolor hoy",
+        "zh": "今日疼痛"
+      },
+      "Tried since": {
+        "es": "Probado desde entonces",
+        "zh": "期间尝试过"
+      },
+      "Operation": {
+        "es": "Operación",
+        "zh": "手术"
+      },
+      "Date of surgery": {
+        "es": "Fecha de la cirugía",
+        "zh": "手术日期"
+      },
+      "Incision": {
+        "es": "Incisión",
+        "zh": "切口"
+      },
+      "Pain vs. before surgery": {
+        "es": "Dolor vs. antes de la cirugía",
+        "zh": "与术前相比的疼痛"
+      },
       "Chief Complaint": {
         "es": "Motivo principal de consulta",
         "zh": "主诉"
@@ -20401,6 +20618,42 @@
         "es": "Al enviar este formulario, usted confirma que la información proporcionada es precisa según su leal saber y entender. Este formulario de admisión es solo para recopilar información y no constituye asesoramiento médico ni reemplaza una evaluación médica directa. Su cirujano revisará esta información y puede hacer preguntas adicionales durante su visita.",
         "zh": "提交本表即表示您确认所提供的信息在您所知范围内准确无误。本入院表仅用于收集信息，不构成医疗建议，也不能替代直接的医疗评估。您的外科医生将审阅这些信息，并可能在就诊时提出更多问题。"
       },
+      "Acknowledgment and signature": {
+        "es": "Reconocimiento y firma",
+        "zh": "确认与签名"
+      },
+      "Please read and check each statement, then type your name as your signature.": {
+        "es": "Lea y marque cada declaración y luego escriba su nombre como firma.",
+        "zh": "请阅读并勾选每项声明，然后输入您的姓名作为签名。"
+      },
+      "Type your full name as your signature *": {
+        "es": "Escriba su nombre completo como firma *",
+        "zh": "请输入您的全名作为签名 *"
+      },
+      "Your full name": {
+        "es": "Su nombre completo",
+        "zh": "您的全名"
+      },
+      "If you are completing this for the patient": {
+        "es": "Si completa este formulario por el paciente",
+        "zh": "如果您是代患者填写"
+      },
+      "Your name": {
+        "es": "Su nombre",
+        "zh": "您的姓名"
+      },
+      "Relationship to the patient": {
+        "es": "Relación con el paciente",
+        "zh": "与患者的关系"
+      },
+      "Check every statement and type your name to enable Submit.": {
+        "es": "Marque todas las declaraciones y escriba su nombre para habilitar Enviar.",
+        "zh": "勾选所有声明并输入您的姓名后即可提交。"
+      },
+      "By submitting this form you confirm the acknowledgments above. Your signature, the date and time, and your answers are kept with your record.": {
+        "es": "Al enviar este formulario confirma los reconocimientos anteriores. Su firma, la fecha y hora y sus respuestas se guardan en su expediente.",
+        "zh": "提交本表格即表示您确认上述声明。您的签名、日期时间和回答将保存在您的记录中。"
+      },
       "Failed to generate summary. Your data has been saved. Please try again.": {
         "es": "No se pudo generar el resumen. Sus datos se han guardado. Por favor, inténtelo de nuevo.",
         "zh": "无法生成摘要。您的数据已保存。请重试。"
@@ -20409,9 +20662,57 @@
         "es": "Generando resumen...",
         "zh": "正在生成摘要..."
       },
+      "Saving your answers…": {
+        "es": "Guardando sus respuestas…",
+        "zh": "正在保存您的回答……"
+      },
+      "Uploading your records ({done} of {total})…": {
+        "es": "Subiendo sus registros ({done} de {total})…",
+        "zh": "正在上传您的记录（第 {done} 个，共 {total} 个）……"
+      },
+      "Writing your summary…": {
+        "es": "Redactando su resumen…",
+        "zh": "正在撰写您的摘要……"
+      },
+      "Your form has been received. Your summary is still being prepared — this page will update by itself.": {
+        "es": "Su formulario ha sido recibido. Su resumen todavía se está preparando; esta página se actualizará sola.",
+        "zh": "您的表格已收到。您的摘要仍在准备中——本页面会自动更新。"
+      },
+      "The office has received your form.": {
+        "es": "El consultorio ha recibido su formulario.",
+        "zh": "诊所已收到您的表格。"
+      },
+      "This form gathers information only; it is not medical advice and does not replace an in-person evaluation.": {
+        "es": "Este formulario solo recopila información; no es consejo médico ni reemplaza una evaluación en persona.",
+        "zh": "本表格仅用于收集信息；它不是医疗建议，也不能替代当面评估。"
+      },
+      "Could not submit the form. Your answers are saved on this device — please try again in a moment.": {
+        "es": "No se pudo enviar el formulario. Sus respuestas están guardadas en este dispositivo; inténtelo de nuevo en un momento.",
+        "zh": "无法提交表格。您的回答已保存在本设备上，请稍后重试。"
+      },
       "Submit Intake Form": {
         "es": "Enviar formulario de admisión",
         "zh": "提交入院表"
+      },
+      "Thank you so much for completing this.": {
+        "es": "Muchas gracias por completar este formulario.",
+        "zh": "非常感谢您完成这份表格。"
+      },
+      "We know it took real time and care. Everything you shared is saved, and you are all set for now.": {
+        "es": "Sabemos que le tomó tiempo y dedicación. Todo lo que compartió está guardado y, por ahora, no necesita hacer nada más.",
+        "zh": "我们知道这需要您花费时间和心力。您分享的一切都已保存，目前您无需再做任何事情。"
+      },
+      "What you told us": {
+        "es": "Lo que nos contó",
+        "zh": "您告诉我们的内容"
+      },
+      "We are putting together a summary of what you shared. This usually takes about a minute; this page will update on its own.": {
+        "es": "Estamos preparando un resumen de lo que compartió. Suele tardar alrededor de un minuto; esta página se actualizará sola.",
+        "zh": "我们正在整理您所分享内容的摘要。通常需要大约一分钟，本页面会自动更新。"
+      },
+      "Start a new form": {
+        "es": "Comenzar un formulario nuevo",
+        "zh": "开始新的表格"
       },
       "Thank You!": {
         "es": "¡Gracias!",

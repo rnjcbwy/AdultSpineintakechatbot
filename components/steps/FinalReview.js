@@ -6,7 +6,9 @@ import NoteReview from '../NoteReview';
 import PainMapSummary from '../PainMapFigure';
 import { countMarks } from '../../lib/bodyMap';
 import { fingerprintAnswers, isNoteStale } from '../../lib/noteFingerprint';
-import { INTAKE_STEPS, SYMPTOM_REGIONS } from '../../lib/constants';
+import { SYMPTOM_REGIONS } from '../../lib/constants';
+import { stepsForVisit, stepIndex, VISIT_LABEL } from '../../lib/flows';
+import { sortOperations, describeOperation } from '../../lib/operations';
 import { detectRedFlags } from '../../lib/redFlags';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { useLang, makeT, COMMON, tx } from '../../lib/i18n';
@@ -25,6 +27,23 @@ const LOCAL = {
 
   // Section titles
   'Patient Information': { es: 'Información del paciente', zh: '患者信息' },
+  'Type of Visit': { es: 'Tipo de visita', zh: '就诊类型' },
+  'Work Injury & Claim': { es: 'Lesión laboral y reclamo', zh: '工伤与理赔' },
+  'Since Your Last Visit': { es: 'Desde su última visita', zh: '自上次就诊以来' },
+  'Your Surgery & Recovery': { es: 'Su cirugía y recuperación', zh: '您的手术与康复' },
+  'Visit': { es: 'Visita', zh: '就诊' },
+  'Claim number': { es: 'Número de reclamo', zh: '理赔编号' },
+  'Date of injury': { es: 'Fecha de la lesión', zh: '受伤日期' },
+  'Employer': { es: 'Empleador', zh: '雇主' },
+  'Working now': { es: 'Trabaja actualmente', zh: '目前工作状态' },
+  'Last visit': { es: 'Última visita', zh: '上次就诊' },
+  'Compared with last visit': { es: 'En comparación con la última visita', zh: '与上次就诊相比' },
+  'Pain today': { es: 'Dolor hoy', zh: '今日疼痛' },
+  'Tried since': { es: 'Probado desde entonces', zh: '期间尝试过' },
+  'Operation': { es: 'Operación', zh: '手术' },
+  'Date of surgery': { es: 'Fecha de la cirugía', zh: '手术日期' },
+  'Incision': { es: 'Incisión', zh: '切口' },
+  'Pain vs. before surgery': { es: 'Dolor vs. antes de la cirugía', zh: '与术前相比的疼痛' },
   'Chief Complaint': { es: 'Motivo principal de consulta', zh: '主诉' },
   'Symptom Details & Treatment History': { es: 'Detalles de los síntomas e historial de tratamiento', zh: '症状详情与治疗史' },
   'Past Medical History': { es: 'Antecedentes médicos', zh: '既往病史' },
@@ -261,6 +280,18 @@ export default function FinalReview({ onBack, onGoToStep }) {
   // Red flags detected
   const currentFlags = detectRedFlags(data);
 
+  // The steps this kind of visit went through; cards and "Edit" links are
+  // looked up by step id, since the position depends on the visit type.
+  const visitType = data.visit?.type || '';
+  const steps = stepsForVisit(visitType);
+  const has = (id) => stepIndex(steps, id) >= 0;
+  const go = (id) => onGoToStep(Math.max(0, stepIndex(steps, id)));
+  const wc = data.visit?.wc || {};
+  const fu = data.visit?.followup || {};
+  const po = data.visit?.postop || {};
+  const regionsLabel = (data.chiefComplaint.symptomRegions || []).map(id =>
+    t(SYMPTOM_REGIONS.find(r => r.id === id)?.label)).filter(Boolean).join(', ');
+
   if (isSubmitted && data.generatedSummary) {
     return <SubmittedView data={data} onGoToStep={onGoToStep} />;
   }
@@ -294,154 +325,200 @@ export default function FinalReview({ onBack, onGoToStep }) {
         </div>
       )}
 
-      {/* Section summaries */}
+      {/* Section summaries: one card per step this kind of visit went through */}
       <div className="space-y-4">
+        <ReviewCard
+          t={t}
+          title="Type of Visit"
+          onEdit={() => go('visit-type')}
+          items={[{ label: 'Visit', value: t(VISIT_LABEL[visitType] || data.demographics.visitReason) }]}
+        />
+
         {/* Demographics */}
         <ReviewCard
           t={t}
           title="Patient Information"
-          step={1}
-          onEdit={() => onGoToStep(1)}
+          onEdit={() => go('demographics')}
           items={[
             { label: 'Name', value: `${data.demographics?.firstName || ''} ${data.demographics?.lastName || ''}`.trim() },
             { label: 'DOB', value: data.demographics.dob },
             { label: 'Sex', value: data.demographics.sex },
             { label: 'Phone', value: data.demographics.phone },
-            { label: 'Visit reason', value: data.demographics.visitReason },
           ]}
         />
 
-        {/* Chief Complaint */}
-        <ReviewCard
-          t={t}
-          title="Chief Complaint"
-          step={2}
-          onEdit={() => onGoToStep(2)}
-          items={[
-            { label: 'Main concern', value: data.chiefComplaint.mainReason },
-            { label: 'Duration', value: data.chiefComplaint.duration },
-            { label: 'Symptom areas', value: data.chiefComplaint.symptomRegions.map(id =>
-              t(SYMPTOM_REGIONS.find(r => r.id === id)?.label)).filter(Boolean).join(', ')
-            },
-          ]}
-        />
+        {has('work-injury') && (
+          <ReviewCard
+            t={t}
+            title="Work Injury & Claim"
+            onEdit={() => go('work-injury')}
+            items={[
+              { label: 'Claim number', value: wc.claimNumber },
+              { label: 'Date of injury', value: wc.dateOfInjury },
+              { label: 'Employer', value: wc.employer },
+              { label: 'Working now', value: t(wc.workStatus) },
+            ]}
+          />
+        )}
 
-        {/* HPI Summary */}
-        <ReviewCard
-          t={t}
-          title="Symptom Details & Treatment History"
-          step={3}
-          onEdit={() => onGoToStep(3)}
-          items={[
-            { label: 'Symptom regions documented', value: Object.keys(data.hpiData.symptoms || {}).length.toString() },
-            { label: 'AI conversation messages', value: (data.hpiData.conversationHistory || []).length.toString() },
-            { label: 'Injections recorded', value: (data.hpiData.conservativeTreatments?.injections || []).length.toString() },
-          ]}
-        />
+        {has('interval') && (
+          <ReviewCard
+            t={t}
+            title="Since Your Last Visit"
+            onEdit={() => go('interval')}
+            items={[
+              { label: 'Last visit', value: t(fu.lastVisitWhen) },
+              { label: 'Compared with last visit', value: t(fu.overallChange) },
+              { label: 'Pain today', value: fu.painNow ? `${fu.painNow} / 10` : '' },
+              { label: 'Tried since', value: (fu.treatments || []).map((x) => t(x)).join(', ') },
+              { label: 'Symptom areas', value: regionsLabel },
+            ]}
+          />
+        )}
 
-        {/* PMH */}
-        <ReviewCard
-          t={t}
-          title="Past Medical History"
-          step={4}
-          onEdit={() => onGoToStep(4)}
-          items={[
-            { label: 'Conditions', value: (data.pastMedicalHistory.conditions || []).map(c => c.name).join(', ') || t('None listed') },
-            { label: 'Implanted devices', value: (data.pastMedicalHistory.implantedDevices || []).join(', ') || t('None') },
-          ]}
-        />
+        {has('postop') && (
+          <ReviewCard
+            t={t}
+            title="Your Surgery & Recovery"
+            onEdit={() => go('postop')}
+            items={[
+              ...sortOperations(po.operations || []).map((o, i, all) => ({ label: all.length > 1 ? `${t('Operation')} ${i + 1}` : 'Operation', value: describeOperation(o) })),
+              { label: 'Incision', value: (po.wound || []).map((x) => t(x)).join(', ') },
+              { label: 'Pain vs. before surgery', value: t(po.painVsBefore) },
+              { label: 'Pain today', value: po.painNow ? `${po.painNow} / 10` : '' },
+            ]}
+          />
+        )}
 
-        {/* PSH */}
-        <ReviewCard
-          t={t}
-          title="Past Surgical History"
-          step={5}
-          onEdit={() => onGoToStep(5)}
-          items={[
-            { label: 'Surgeries', value: (data.pastSurgicalHistory.surgeries || []).map(s => s.type).join(', ') || t('None listed') },
-          ]}
-        />
+        {has('chief-complaint') && (
+          <ReviewCard
+            t={t}
+            title="Chief Complaint"
+            onEdit={() => go('chief-complaint')}
+            items={[
+              { label: 'Main concern', value: data.chiefComplaint.mainReason },
+              { label: 'Duration', value: data.chiefComplaint.duration },
+              { label: 'Symptom areas', value: regionsLabel },
+            ]}
+          />
+        )}
 
-        {/* Medications */}
-        <ReviewCard
-          t={t}
-          title="Medications"
-          step={6}
-          onEdit={() => onGoToStep(6)}
-          items={[
-            {
-              label: 'Current medications',
-              value: data.medications.noMedications
-                ? t('No medications')
-                : (data.medications.current || []).map(m => m.name).join(', ') || t('None listed'),
-            },
-          ]}
-        />
+        {has('symptom-details') && (
+          <ReviewCard
+            t={t}
+            title="Symptom Details & Treatment History"
+            onEdit={() => go('symptom-details')}
+            items={[
+              { label: 'Symptom regions documented', value: Object.keys(data.hpiData.symptoms || {}).length.toString() },
+              { label: 'AI conversation messages', value: (data.hpiData.conversationHistory || []).length.toString() },
+              ...(has('treatments') ? [{ label: 'Injections recorded', value: (data.hpiData.conservativeTreatments?.injections || []).length.toString() }] : []),
+            ]}
+          />
+        )}
 
-        {/* Allergies */}
-        <ReviewCard
-          t={t}
-          title="Allergies"
-          step={7}
-          onEdit={() => onGoToStep(7)}
-          items={[
-            {
-              label: 'Allergies',
-              value: data.allergies.nkda
-                ? t('No Known Drug Allergies (NKDA)')
-                : (data.allergies.entries || []).map(a => a.allergen).join(', ') || t('None listed'),
-            },
-          ]}
-        />
+        {has('pmh') && (
+          <ReviewCard
+            t={t}
+            title="Past Medical History"
+            onEdit={() => go('pmh')}
+            items={[
+              { label: 'Conditions', value: (data.pastMedicalHistory.conditions || []).map(c => c.name).join(', ') || t('None listed') },
+              { label: 'Implanted devices', value: (data.pastMedicalHistory.implantedDevices || []).join(', ') || t('None') },
+            ]}
+          />
+        )}
 
-        {/* Social History */}
-        <ReviewCard
-          t={t}
-          title="Social History"
-          step={8}
-          onEdit={() => onGoToStep(8)}
-          items={[
-            { label: 'Tobacco', value: data.socialHistory.tobaccoUse || t('Not specified') },
-            { label: 'Occupation', value: data.socialHistory.occupation || t('Not specified') },
-            { label: 'Work status', value: data.socialHistory.workStatus || t('Not specified') },
-          ]}
-        />
+        {has('psh') && (
+          <ReviewCard
+            t={t}
+            title="Past Surgical History"
+            onEdit={() => go('psh')}
+            items={[
+              { label: 'Surgeries', value: (data.pastSurgicalHistory.surgeries || []).map(s => s.type).join(', ') || t('None listed') },
+            ]}
+          />
+        )}
 
-        {/* Family History */}
-        <ReviewCard
-          t={t}
-          title="Family History"
-          step={9}
-          onEdit={() => onGoToStep(9)}
-          items={[
-            {
-              label: 'Family history',
-              value: data.familyHistory.noRelevantHistory
-                ? t('No relevant history')
-                : (data.familyHistory.entries || []).map(e => `${e.relation}: ${e.condition}`).join(', ') || t('None listed'),
-            },
-          ]}
-        />
+        {has('medications') && (
+          <ReviewCard
+            t={t}
+            title="Medications"
+            onEdit={() => go('medications')}
+            items={[
+              {
+                label: 'Current medications',
+                value: data.medications.noMedications
+                  ? t('No medications')
+                  : (data.medications.current || []).map(m => m.name).join(', ') || t('None listed'),
+              },
+            ]}
+          />
+        )}
 
-        {/* ROS */}
-        <ReviewCard
-          t={t}
-          title="Review of Systems"
-          step={10}
-          onEdit={() => onGoToStep(10)}
-          items={[
-            { label: 'Completed', value: t('Yes') },
-          ]}
-        />
+        {has('allergies') && (
+          <ReviewCard
+            t={t}
+            title="Allergies"
+            onEdit={() => go('allergies')}
+            items={[
+              {
+                label: 'Allergies',
+                value: data.allergies.nkda
+                  ? t('No Known Drug Allergies (NKDA)')
+                  : (data.allergies.entries || []).map(a => a.allergen).join(', ') || t('None listed'),
+              },
+            ]}
+          />
+        )}
 
-        {/* PROMs */}
-        <ReviewCard
-          t={t}
-          title="Outcome Questionnaires"
-          step={11}
-          onEdit={() => onGoToStep(11)}
-          items={getPromsReviewItems(data.proms, t)}
-        />
+        {has('social') && (
+          <ReviewCard
+            t={t}
+            title="Social History"
+            onEdit={() => go('social')}
+            items={[
+              { label: 'Tobacco', value: data.socialHistory.tobaccoUse || t('Not specified') },
+              { label: 'Occupation', value: data.socialHistory.occupation || t('Not specified') },
+              { label: 'Work status', value: data.socialHistory.workStatus || t('Not specified') },
+            ]}
+          />
+        )}
+
+        {has('family') && (
+          <ReviewCard
+            t={t}
+            title="Family History"
+            onEdit={() => go('family')}
+            items={[
+              {
+                label: 'Family history',
+                value: data.familyHistory.noRelevantHistory
+                  ? t('No relevant history')
+                  : (data.familyHistory.entries || []).map(e => `${e.relation}: ${e.condition}`).join(', ') || t('None listed'),
+              },
+            ]}
+          />
+        )}
+
+        {has('ros') && (
+          <ReviewCard
+            t={t}
+            title="Review of Systems"
+            onEdit={() => go('ros')}
+            items={[
+              { label: 'Completed', value: t('Yes') },
+            ]}
+          />
+        )}
+
+        {has('proms') && (
+          <ReviewCard
+            t={t}
+            title="Outcome Questionnaires"
+            onEdit={() => go('proms')}
+            items={getPromsReviewItems(data.proms, t)}
+          />
+        )}
       </div>
 
       {/* Acknowledgments and signature: the paper packet's signature pages, online */}
@@ -541,7 +618,7 @@ function ConsentCard({ t, lang, consent, setNested }) {
   );
 }
 
-function ReviewCard({ t, title, step, onEdit, items }) {
+function ReviewCard({ t, title, onEdit, items }) {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-3">

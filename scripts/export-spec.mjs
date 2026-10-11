@@ -44,8 +44,9 @@ const OUT = path.join(OUT_DIR, 'spine-intake-spec.json');
 // imports rewritten to match; the directory is removed afterwards.
 // ---------------------------------------------------------------------------
 const LIB_MODULES = [
-  'constants', 'questionnaires', 'rosSystems', 'bodyMap', 'redFlags',
-  'promSummary', 'noteFingerprint', 'documents', 'authReadiness',
+  'flows', 'constants', 'questionnaires', 'rosSystems', 'bodyMap', 'redFlags',
+  'promSummary', 'noteFingerprint', 'documentCategories', 'documents', 'authReadiness',
+  'operations',
 ];
 
 function stageModules() {
@@ -159,9 +160,11 @@ const SPEC_SECTIONS = {
   review: 'noteGeneration',
 };
 
-/** Step id (constants.INTAKE_STEPS) -> component file. */
+/** Step id (flows.STEP_LABELS) -> component file. */
 const STEP_FILES = {
-  welcome: 'Welcome', consent: 'BeforeWeBegin', demographics: 'Demographics',
+  welcome: 'Welcome', consent: 'BeforeWeBegin', 'visit-type': 'VisitType',
+  'work-injury': 'WorkInjury', interval: 'IntervalHistory', postop: 'PostOpVisit',
+  demographics: 'Demographics',
   'chief-complaint': 'ChiefComplaint', 'pain-map': 'PainMap', 'symptom-details': 'SymptomDetails',
   treatments: 'PriorTreatments', records: 'RecordsUpload', additional: 'AdditionalConcerns',
   pmh: 'PastMedicalHistory', psh: 'PastSurgicalHistory', medications: 'Medications',
@@ -582,6 +585,7 @@ async function main() {
   let spec;
   try {
     const constants = await load('constants');
+    const flows = await load('flows');
     const q = await load('questionnaires');
     const ros = await load('rosSystems');
     const bm = await load('bodyMap');
@@ -595,7 +599,10 @@ async function main() {
 
     // ---- steps + fields -------------------------------------------------
     const translations = { ...COMMON };
-    const steps = constants.INTAKE_STEPS.map((s, i) => {
+    // Every step any visit type can show, in the order the new-patient flow
+    // uses, with the visit-specific steps where their flow places them.
+    const allSteps = Object.entries(flows.STEP_LABELS).map(([id, label]) => ({ id, label }));
+    const steps = allSteps.map((s, i) => {
       const file = STEP_FILES[s.id];
       const out = { order: i, id: s.id, label: s.label, component: file || null };
       if (file) {
@@ -944,6 +951,8 @@ async function main() {
         anticoagulants: constants.ANTICOAGULANTS,
         injectionTypes: constants.INJECTION_TYPES,
         visitReasons: constants.VISIT_REASONS,
+        visitTypes: flows.VISIT_TYPES,
+        stepsByVisitType: Object.fromEntries(flows.VISIT_TYPES.map((v) => [v.id, flows.stepsForVisit(v.id).map((st) => st.id)])),
         familyConditions: constants.FAMILY_CONDITIONS,
         familyRelations: constants.FAMILY_RELATIONS,
       },
