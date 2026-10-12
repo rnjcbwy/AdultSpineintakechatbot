@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { detectRedFlags } from '../../../../lib/redFlags';
 import { consentComplete } from '../../../../lib/consent';
+import { deleteDraft, isDraftId } from '../../../../lib/server/draftStore';
 import { limitOr429 } from '../../../../lib/server/rateLimit';
 import { logError, logEvent } from '../../../../lib/server/log';
 import {
@@ -47,8 +48,10 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Please check each acknowledgment and type your name as your signature before submitting.' }, { status: 422 });
   }
 
-  // Server-owned fields are never taken from the client.
-  const { submission: _ignored, generatedSummary: _old, ...clean } = intake;
+  // Server-owned fields are never taken from the client. A finish-later
+  // draft is removed once the answers are in (the link is dead from here).
+  const { submission: _ignored, generatedSummary: _old, draft, ...clean } = intake;
+  if (draft && isDraftId(draft.id)) deleteDraft(draft.id).catch(() => {});
   const documents = (Array.isArray(clean.documents) ? clean.documents : [])
     .filter((doc) => doc && typeof doc.id === 'string' && /^doc_[a-z0-9_]+$/i.test(doc.id))
     .slice(0, MAX_ATTACHMENTS)

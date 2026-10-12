@@ -133,6 +133,17 @@ is why.
 - **Rotate the service key**: `terraform apply` with a tainted
   `random_password.intake_api_key`, then `deploy.ps1`; the worker reads the new
   value within 10 minutes (it caches the secret).
+- **Finish-later links**: a patient can ask for a link to carry on from
+  another device. The answers so far go to `drafts/<id>/draft.json` in the
+  bucket (same KMS key), the link carries a bearer code (hash stored), it
+  expires after 30 days and is deleted when the intake is submitted. Emailing
+  the link needs a verified Amazon SES identity: set `emailFrom` in
+  `cdk.json` (e.g. `"Dr. Aaron Wey's office <office@example.com>"`), verify
+  that address in SES (and move the account out of the SES sandbox so it can
+  mail any patient), then `npx cdk deploy` and re-run
+  `scripts/aws/amplify-configure.mjs`. Until then the form offers the link to
+  copy or to open in the patient's own mail app. The email holds the link
+  only, never a name or any answer.
 - **Costs**: Amplify ≈ $0–5/mo at clinic volumes, Lambda/S3/KMS/EventBridge a
   few dollars, Bedrock ≈ $0.15–0.40 per intake (one Opus note, a short chat),
   CloudTrail's first management-event trail is free (S3 storage only).

@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-12T02:59:34.195Z",
+    "generatedAt": "2026-10-12T04:02:20.538Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -25,6 +25,7 @@
       "completedSteps": [],
       "language": "en",
       "invite": null,
+      "draft": null,
       "visit": {
         "type": "",
         "wc": {},

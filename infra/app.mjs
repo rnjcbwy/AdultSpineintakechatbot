@@ -46,6 +46,8 @@ class SpineIntakeStack extends cdk.Stack {
     const practiceHubUrl = ctx('practiceHubUrl', '');
     const practiceHubSecretName = ctx('practiceHubSecretName', 'practicehub/INTAKE_API_KEY');
     const practiceHubKmsKeyArn = ctx('practiceHubKmsKeyArn', '');
+    // A verified SES identity for emailing finish-later links; empty = not sent.
+    const emailFrom = ctx('emailFrom', '');
     const allowedOrigins = ctx('allowedOrigins', ['http://localhost:3000']);
     const noteModelId = ctx('noteModelId', 'us.anthropic.claude-opus-4-6-v1');
     const chatModelId = ctx('chatModelId', 'us.anthropic.claude-sonnet-4-6');
@@ -101,7 +103,15 @@ class SpineIntakeStack extends cdk.Stack {
       SPINE_KMS_KEY_ARN: key.keyArn,
       PRACTICEHUB_URL: practiceHubUrl,
       PRACTICEHUB_API_KEY_SECRET_ID: practiceHubSecretName,
+      // "Finish later" links are emailed from this verified SES identity.
+      // Empty: the form offers the link to copy or to open in a mail app.
+      ...(emailFrom ? { EMAIL_FROM: emailFrom } : {}),
     };
+
+    // The web tier emails finish-later links (a link only, no health data).
+    const sesPolicy = emailFrom
+      ? new iam.PolicyStatement({ actions: ['ses:SendEmail', 'ses:SendRawEmail'], resources: ['*'] })
+      : null;
 
     const bedrockPolicy = new iam.PolicyStatement({
       actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
@@ -165,6 +175,7 @@ class SpineIntakeStack extends cdk.Stack {
     computeRole.addToPolicy(bedrockPolicy);
     practiceHubSecret.grantRead(computeRole);
     if (practiceHubKmsPolicy) computeRole.addToPolicy(practiceHubKmsPolicy);
+    if (sesPolicy) computeRole.addToPolicy(sesPolicy);
     worker.grantInvoke(computeRole);
 
     // ---- CloudTrail (audit controls) ------------------------------------

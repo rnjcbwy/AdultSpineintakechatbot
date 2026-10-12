@@ -1,13 +1,13 @@
 'use client';
 
 import { useIntake } from '../lib/store';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLang, makeT, tx, isRtl } from '../lib/i18n';
 import { stepsForVisit } from '../lib/flows';
 
 const CHROME = {
   'Your Spine Story': { es: 'La historia de su columna', zh: '您的脊柱故事' },
-  'Save & Exit': { es: 'Guardar y salir', zh: '保存并退出' },
+  'Finish later': { es: 'Terminar más tarde', zh: '稍后完成' },
   'Your progress is automatically saved. You can return later to continue.': {
     es: 'Su progreso se guarda automáticamente. Puede regresar más tarde para continuar.',
     zh: '您的进度会自动保存。您可以稍后返回继续。',
@@ -46,6 +46,7 @@ const STEP_OF = {
   en: (c, n) => `Step ${c} of ${n}`,
 };
 import ProgressBar from './ProgressBar';
+import FinishLater from './FinishLater';
 import Welcome from './steps/Welcome';
 import BeforeWeBegin from './steps/BeforeWeBegin';
 import VisitType from './steps/VisitType';
@@ -99,6 +100,7 @@ export default function IntakeWizard() {
   const { data, setStep, completeStep } = useIntake();
   const lang = useLang();
   const t = makeT(CHROME, lang);
+  const [finishLater, setFinishLater] = useState(false);
   const stepOf = STEP_OF[lang] || ((c, n) => tx(lang, 'Step {c} of {n}').replace('{c}', c).replace('{n}', n));
 
   // Right-to-left languages flip the page; the lang attribute helps screen
@@ -174,14 +176,11 @@ export default function IntakeWizard() {
                 </div>
               </div>
               <button
-                onClick={() => {
-                  if (confirm(t('Your progress is automatically saved. You can return later to continue.'))) {
-                    // Just close or show saved message
-                  }
-                }}
+                type="button"
+                onClick={() => setFinishLater(true)}
                 className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                {t('Save & Exit')}
+                {t('Finish later')}
               </button>
             </div>
             <ProgressBar
@@ -195,6 +194,8 @@ export default function IntakeWizard() {
           </div>
         </header>
       )}
+
+      {finishLater && <FinishLater onClose={() => setFinishLater(false)} />}
 
       {/* Main content area */}
       <main className="max-w-4xl mx-auto px-4 py-6">
