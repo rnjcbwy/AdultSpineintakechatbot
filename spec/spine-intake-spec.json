@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-11T21:51:16.733Z",
+    "generatedAt": "2026-10-12T02:59:34.195Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -128,8 +128,10 @@
             "facility": "",
             "provider": "",
             "results": ""
-          }
+          },
+          "noneTried": false
         },
+        "detailMode": "",
         "priorSpineSurgeries": [],
         "chatComplete": false,
         "structuredComplete": false
@@ -248,7 +250,8 @@
           "seasonalAllergies": "",
           "immuneSuppression": ""
         },
-        "additionalNotes": ""
+        "additionalNotes": "",
+        "mode": "screen"
       },
       "noteCorrections": [],
       "proms": {},
@@ -359,13 +362,13 @@
         {
           "path": "demographics.state",
           "type": "select",
-          "label": "Contact Information",
+          "label": "Address",
           "placeholder": null
         },
         {
           "path": "demographics.zip",
           "type": "text",
-          "label": "Contact Information",
+          "label": "Address",
           "placeholder": null
         },
         {
@@ -508,8 +511,8 @@
       "id": "symptom-details",
       "label": "Symptom Details",
       "component": "SymptomDetails",
-      "title": "Symptom Details",
-      "subtitle": "Let's go through the symptoms you told us about. You can fill this out for all of your symptoms on this one page — answer what you can and skip anything that doesn't apply.",
+      "title": "How would you like to describe your symptoms?",
+      "subtitle": "Either way takes about five minutes. Pick whichever feels easier.",
       "fields": [
         {
           "path": "hpiData.overall.aggravatingFactors",
@@ -794,22 +797,31 @@
       "subtitle": "What treatments have you already tried for your spine symptoms? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.",
       "fields": [
         {
+          "path": "hpiData.conservativeTreatments.noneTried",
+          "type": "yes_no",
+          "label": "Which of these have you tried for this problem? Tap all that apply.",
+          "placeholder": null
+        },
+        {
           "path": "hpiData.conservativeTreatments.physicalTherapy.tried",
           "type": "yes_no",
           "label": "Physical therapy",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.physicalTherapy.facility",
           "type": "text",
           "label": "Where? (clinic name & city)",
-          "placeholder": "e.g., ProCare Physical Therapy, Denver — (303) 555-0142"
+          "placeholder": "e.g., ProCare Physical Therapy, Denver — (303) 555-0142",
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.physicalTherapy.provider",
           "type": "text",
           "label": "Who referred or performed it?",
-          "placeholder": "e.g., Sarah Mills, PT — (303) 555-0142"
+          "placeholder": "e.g., Sarah Mills, PT — (303) 555-0142",
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.physicalTherapy.duration",
@@ -821,7 +833,8 @@
             "3 months",
             "6 months",
             "More than a year"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.physicalTherapy.frequency",
@@ -832,7 +845,8 @@
             "1x per week",
             "2x per week",
             "3x per week"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.physicalTherapy.helped",
@@ -845,13 +859,15 @@
             "Helped temporarily",
             "Did not help",
             "Made it worse"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.homeExercise.tried",
           "type": "yes_no",
           "label": "Home exercise program",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.homeExercise.guided",
@@ -863,7 +879,8 @@
             "Guided by a therapist",
             "App or online program",
             "Handout / printed exercises"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.homeExercise.appService",
@@ -875,7 +892,8 @@
             "Printed handout",
             "YouTube",
             "Phone app"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.homeExercise.duration",
@@ -887,7 +905,8 @@
             "3 months",
             "6 months",
             "More than a year"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.homeExercise.frequency",
@@ -898,7 +917,8 @@
             "Daily",
             "3x per week",
             "A few times a month"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.homeExercise.details",
@@ -909,13 +929,15 @@
             "Core strengthening",
             "Stretching",
             "Walking program"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.chiropracticCare.tried",
           "type": "yes_no",
           "label": "Chiropractic care",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.chiropracticCare.duration",
@@ -927,7 +949,8 @@
             "3 months",
             "6 months",
             "More than a year"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.chiropracticCare.helped",
@@ -939,13 +962,15 @@
             "Helped somewhat",
             "Helped temporarily",
             "Did not help"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.acupuncture.tried",
           "type": "yes_no",
           "label": "Acupuncture",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.acupuncture.duration",
@@ -957,7 +982,8 @@
             "3 months",
             "6 months",
             "More than a year"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.acupuncture.helped",
@@ -969,13 +995,15 @@
             "Helped somewhat",
             "Helped temporarily",
             "Did not help"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.braces.tried",
           "type": "yes_no",
           "label": "Back brace or cervical collar",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.braces.type",
@@ -986,7 +1014,8 @@
             "Lumbar support belt",
             "Soft cervical collar",
             "Rigid back brace"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.braces.helped",
@@ -998,34 +1027,39 @@
             "Helped somewhat",
             "Helped temporarily",
             "Did not help"
-          ]
+          ],
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.injections[].type",
           "type": "select",
           "label": "Injections",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "show('injections')"
         },
         {
           "path": "hpiData.conservativeTreatments.injections[].location",
           "type": "text",
           "label": "Where?",
           "placeholder": "Where? (e.g., L4-L5, left side)",
-          "group": "Injections"
+          "group": "Injections",
+          "showWhen": "show('injections')"
         },
         {
           "path": "hpiData.conservativeTreatments.injections[].provider",
           "type": "text",
           "label": "Who did it?",
           "placeholder": "Who did it? (e.g., Dr. Alan Reyes, Front Range Pain — (303) 555-0199)",
-          "group": "Injections"
+          "group": "Injections",
+          "showWhen": "show('injections')"
         },
         {
           "path": "hpiData.conservativeTreatments.injections[].when",
           "type": "text",
           "label": "When?",
           "placeholder": "When? (e.g., June 2024)",
-          "group": "Injections"
+          "group": "Injections",
+          "showWhen": "show('injections')"
         },
         {
           "path": "hpiData.conservativeTreatments.injections[].count",
@@ -1037,7 +1071,8 @@
             "1",
             "2",
             "3"
-          ]
+          ],
+          "showWhen": "show('injections')"
         },
         {
           "path": "hpiData.conservativeTreatments.injections[].reliefDuration",
@@ -1050,7 +1085,8 @@
             "A few days",
             "About 2 weeks",
             "A few months"
-          ]
+          ],
+          "showWhen": "show('injections')"
         },
         {
           "path": "hpiData.conservativeTreatments.injections[].helped",
@@ -1062,43 +1098,50 @@
             "Helped temporarily",
             "Helped somewhat",
             "Did not help"
-          ]
+          ],
+          "showWhen": "show('injections')"
         },
         {
           "path": "hpiData.conservativeTreatments.priorImaging",
           "type": "text",
           "label": "Prior Imaging",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "show('priorImaging')"
         },
         {
           "path": "hpiData.conservativeTreatments.priorEMG.done",
           "type": "yes_no",
           "label": "EMG or nerve conduction study",
-          "placeholder": null
+          "placeholder": null,
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.priorEMG.when",
           "type": "text",
           "label": "When?",
-          "placeholder": "e.g., March 2024"
+          "placeholder": "e.g., March 2024",
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.priorEMG.facility",
           "type": "text",
           "label": "Where? (facility & city)",
-          "placeholder": "e.g., Denver Neurology, 1400 Elm St — (303) 555-0177"
+          "placeholder": "e.g., Denver Neurology, 1400 Elm St — (303) 555-0177",
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.priorEMG.provider",
           "type": "text",
           "label": "Who did it?",
-          "placeholder": "e.g., Dr. Alan Reyes — (303) 555-0177"
+          "placeholder": "e.g., Dr. Alan Reyes — (303) 555-0177",
+          "showWhen": "anyOn"
         },
         {
           "path": "hpiData.conservativeTreatments.priorEMG.results",
           "type": "text",
           "label": "Results (if known)",
-          "placeholder": "e.g., Mild nerve irritation on the right at L5"
+          "placeholder": "e.g., Mild nerve irritation on the right at L5",
+          "showWhen": "anyOn"
         }
       ]
     },
@@ -1168,7 +1211,7 @@
       "label": "Additional Details",
       "component": "AdditionalConcerns",
       "title": "Anything Else You'd Like to Share?",
-      "subtitle": "This step is optional. If you'd like, you can chat with our assistant, which will ask a few further questions about your symptoms — and/or you can simply type any additional concerns or details about your symptoms that you'd like us to know.",
+      "subtitle": "This step is optional. Type anything else about your symptoms, your goals for the visit, or questions you have.",
       "fields": [
         {
           "path": "hpiData.additionalConcerns",
@@ -1434,45 +1477,6 @@
           "showWhen": "(sh.tobaccoUse === 'Former smoker' || sh.tobaccoUse === 'Current smoker' || sh.tobaccoUse === 'Current vaping/e-cigarette')"
         },
         {
-          "path": "socialHistory.alcoholUse",
-          "type": "single_choice",
-          "label": "Alcohol Use",
-          "placeholder": null,
-          "options": [
-            "None",
-            "Social/occasional",
-            "Moderate (a few per week)",
-            "Daily",
-            "Former heavy use"
-          ]
-        },
-        {
-          "path": "socialHistory.alcoholDetails",
-          "type": "text",
-          "label": null,
-          "placeholder": "Any additional details (optional)",
-          "showWhen": "sh.alcoholUse && sh.alcoholUse !== 'None'"
-        },
-        {
-          "path": "socialHistory.drugUse",
-          "type": "single_choice",
-          "label": "Recreational Drug Use",
-          "placeholder": null,
-          "options": [
-            "None",
-            "Marijuana/cannabis",
-            "Other",
-            "Prefer not to answer"
-          ]
-        },
-        {
-          "path": "socialHistory.drugDetails",
-          "type": "text",
-          "label": null,
-          "placeholder": "Details (optional)",
-          "showWhen": "(sh.drugUse === 'Marijuana/cannabis' || sh.drugUse === 'Other')"
-        },
-        {
           "path": "socialHistory.occupation",
           "type": "text",
           "label": "Occupation",
@@ -1555,6 +1559,45 @@
           "placeholder": "e.g., Golf, gardening, hiking"
         },
         {
+          "path": "socialHistory.alcoholUse",
+          "type": "single_choice",
+          "label": "Alcohol Use",
+          "placeholder": null,
+          "options": [
+            "None",
+            "Social/occasional",
+            "Moderate (a few per week)",
+            "Daily",
+            "Former heavy use"
+          ]
+        },
+        {
+          "path": "socialHistory.alcoholDetails",
+          "type": "text",
+          "label": null,
+          "placeholder": "Any additional details (optional)",
+          "showWhen": "sh.alcoholUse && sh.alcoholUse !== 'None'"
+        },
+        {
+          "path": "socialHistory.drugUse",
+          "type": "single_choice",
+          "label": "Recreational Drug Use",
+          "placeholder": null,
+          "options": [
+            "None",
+            "Marijuana/cannabis",
+            "Other",
+            "Prefer not to answer"
+          ]
+        },
+        {
+          "path": "socialHistory.drugDetails",
+          "type": "text",
+          "label": null,
+          "placeholder": "Details (optional)",
+          "showWhen": "(sh.drugUse === 'Marijuana/cannabis' || sh.drugUse === 'Other')"
+        },
+        {
           "path": "socialHistory.compensationCase",
           "type": "single_choice",
           "label": "Is your condition related to any of the following?",
@@ -1606,7 +1649,7 @@
       "label": "Review of Systems",
       "component": "ReviewOfSystems",
       "title": "Review of Systems",
-      "subtitle": "Please answer these quick yes/no screening questions. They help us spot other health issues that could change your treatment or your surgery plan.",
+      "subtitle": "Tap anything you have had in the past month. If none apply, tap \"None of these\".",
       "fields": [
         {
           "path": "reviewOfSystems.additionalNotes",
@@ -16400,7 +16443,7 @@
   },
   "noteGeneration": {
     "language": "Always English, whatever language the patient used; translate free text.",
-    "systemPrompt": "You are a medical documentation assistant generating a formal pre-visit clinic note for a spine surgery practice specializing in adult degenerative spine conditions.\n\nThe KIND of note depends on the kind of visit, which the user message states:\na new-patient history, a follow-up (interval) note, a post-operative visit\nnote, or a workers' compensation initial evaluation. The user message lists\nthe exact section headers for that kind of note. Use those headers, in that\norder, and no others.\n\nOUTPUT REQUIREMENTS:\n- Write in formal medical prose, as if for a clinic note.\n- Use PARAGRAPH form, NOT bullet points.\n- Sound like a high-quality pre-charting summary.\n- Do not make definitive diagnoses unless clearly patient-reported.\n- Present symptoms organized by anatomical region.\n- Preserve uncertainty where appropriate.\n- Be concise but thorough. A follow-up or post-operative note is SHORT: it\n  covers the interval, not the patient's life history.\n\nHISTORY STRUCTURE (new-patient and workers' compensation notes):\n1. Begin with patient age and sex (if available).\n2. State the main reason for visit.\n3. Present symptoms in coherent chronology.\n4. Group by anatomical region.\n5. Include associated neurologic symptoms.\n6. Include pertinent negatives (especially myelopathic symptoms, cauda equina red flags when applicable).\n7. Include functional limitations and their severity.\n8. Include conservative treatment history and treatment response.\n9. Note any red flags identified.\n\nSTYLE GUIDELINES:\n- Use phrases like \"The patient reports...\", \"Per patient history...\", \"The patient denies...\"\n- For patient-reported prior diagnoses: \"The patient reports a prior diagnosis of...\"\n- For uncertain information: \"The patient is uncertain about...\" or \"approximately\"\n- Avoid overclaiming or editorializing.\n- Do not recommend treatment or give impressions.\n- Make the output ready for easy physician editing.\n- Use standard medical abbreviations where appropriate (PT, ESI, NSAIDs, MRI, etc.) but spell out on first use.\n- Only report what the intake contains. Never invent a questionnaire item, a\n  score, a date or a finding that is not in the data.\n\nSECTION-SPECIFIC RULES (apply when the section is in the list given):\n- MEDICATIONS: highlight anticoagulants/antiplatelets; in a post-operative\n  note, state current opioid use explicitly, including \"none\".\n- REVIEW OF SYSTEMS: report by body system. Name every system reviewed, give\n  the positives, and state the rest as negative. Do not invent systems that\n  were not asked about, and do not claim a system was reviewed if the intake\n  marks it as not reviewed.\n- PATIENT-REPORTED OUTCOME MEASURES: give the questionnaire name, score and\n  interpretation. The individual items are functional HISTORY, not just\n  questionnaire data, so work the clinically meaningful ones into the history\n  and functional status as ordinary prose (\"walks about a quarter of a mile\n  before pain stops him; sleep is disturbed most nights\"). Do NOT transcribe\n  every item as a list. mJOA is the exception to brevity: its hand dexterity,\n  gait and sphincter items are a myelopathy history and must appear\n  explicitly. Never report a score that was not provided.\n\nFormat each section with the header in caps followed by a colon and the narrative content.\n\nPLAIN TEXT ONLY. The note is pasted into an electronic medical record that\nshows markup literally: no markdown, no \"#\" headings, no \"**\" bold, no\nhorizontal rules, no bullet symbols, no title block. Start directly with the\nfirst section header.",
+    "systemPrompt": "You are a medical documentation assistant generating a formal pre-visit clinic note for a spine surgery practice specializing in adult degenerative spine conditions.\n\nThe KIND of note depends on the kind of visit, which the user message states:\na new-patient history, a follow-up (interval) note, a post-operative visit\nnote, or a workers' compensation initial evaluation. The user message lists\nthe exact section headers for that kind of note. Use those headers, in that\norder, and no others.\n\nOUTPUT REQUIREMENTS:\n- Write in formal medical prose, as if for a clinic note.\n- Use PARAGRAPH form, NOT bullet points.\n- Sound like a high-quality pre-charting summary.\n- Do not make definitive diagnoses unless clearly patient-reported.\n- Present symptoms organized by anatomical region.\n- Preserve uncertainty where appropriate.\n- Be concise but thorough. A follow-up or post-operative note is SHORT: it\n  covers the interval, not the patient's life history.\n\nHISTORY STRUCTURE (new-patient and workers' compensation notes):\n1. Begin with patient age and sex (if available).\n2. State the main reason for visit.\n3. Present symptoms in coherent chronology.\n4. Group by anatomical region.\n5. Include associated neurologic symptoms.\n6. Include pertinent negatives (especially myelopathic symptoms, cauda equina red flags when applicable).\n7. Include functional limitations and their severity.\n8. Include conservative treatment history and treatment response.\n9. Note any red flags identified.\n\nSTYLE GUIDELINES:\n- Use phrases like \"The patient reports...\", \"Per patient history...\", \"The patient denies...\"\n- For patient-reported prior diagnoses: \"The patient reports a prior diagnosis of...\"\n- For uncertain information: \"The patient is uncertain about...\" or \"approximately\"\n- Avoid overclaiming or editorializing.\n- Do not recommend treatment or give impressions.\n- Make the output ready for easy physician editing.\n- Use standard medical abbreviations where appropriate (PT, ESI, NSAIDs, MRI, etc.) but spell out on first use.\n- Only report what the intake contains. Never invent a questionnaire item, a\n  score, a date or a finding that is not in the data.\n\nSECTION-SPECIFIC RULES (apply when the section is in the list given):\n- MEDICATIONS: highlight anticoagulants/antiplatelets; in a post-operative\n  note, state current opioid use explicitly, including \"none\".\n- REVIEW OF SYSTEMS: reviewOfSystems.mode says which was done. 'screen' is a\n  focused spine screening list: report it as \"Focused review of systems:\" with\n  the positives named and the remaining screened items negative; questions\n  whose value is blank were NOT asked, so say nothing about them and do not\n  call the review complete. 'full' is the fourteen-system review: name every\n  system reviewed, give the positives, and state the rest as negative. Never\n  invent a system that was not asked about.\n- PATIENT-REPORTED OUTCOME MEASURES: give the questionnaire name, score and\n  interpretation. The individual items are functional HISTORY, not just\n  questionnaire data, so work the clinically meaningful ones into the history\n  and functional status as ordinary prose (\"walks about a quarter of a mile\n  before pain stops him; sleep is disturbed most nights\"). Do NOT transcribe\n  every item as a list. mJOA is the exception to brevity: its hand dexterity,\n  gait and sphincter items are a myelopathy history and must appear\n  explicitly. Never report a score that was not provided.\n\nFormat each section with the header in caps followed by a colon and the narrative content.\n\nPLAIN TEXT ONLY. The note is pasted into an electronic medical record that\nshows markup literally: no markdown, no \"#\" headings, no \"**\" bold, no\nhorizontal rules, no bullet symbols, no title block. Start directly with the\nfirst section header.",
     "hpiChatSystemPrompt": "You are a patient intake assistant for an adult spine surgery clinic specializing in degenerative spine conditions. Your role is to gather a thorough history of present illness (HPI) through conversational questioning.\n\nCORE RULES:\n- You are an INTAKE ASSISTANT, not a doctor. Never diagnose, recommend treatment, or suggest surgery.\n- Ask ONE focused question at a time.\n- Use plain, accessible language. Patients may not know medical terms.\n- Be calm, professional, warm, and reassuring.\n- Never alarm the patient or use scary language.\n- Gather information methodically - do not skip around randomly.\n- Ask smart follow-up questions based on prior answers.\n- Know when enough detail has been gathered and move on.\n- Avoid asking duplicate questions.\n- Preserve the patient's own words when clinically useful.\n- If a patient mentions prior diagnoses from other doctors, record them as patient-reported.\n- Never independently assert a diagnosis.\n\nQUESTIONING STRATEGY:\n1. Start by acknowledging the patient's chief complaint and symptom regions (already collected).\n2. For each symptom region, systematically gather:\n   - When symptoms started and how they began (sudden vs gradual, injury vs spontaneous)\n   - Whether symptoms are worsening, stable, or improving\n   - Exact location and whether they radiate (and to where)\n   - Side: right, left, bilateral, midline\n   - Quality: aching, sharp, burning, stabbing, cramping, electric, throbbing, pressure\n   - Severity (0-10 scale)\n   - Frequency: constant, intermittent, activity-related, time-of-day patterns\n   - Aggravating factors (specific activities, positions)\n   - Relieving factors (rest, positions, medications, ice/heat)\n   - Associated neurologic symptoms (numbness, tingling, weakness)\n   - Functional impact (sleep, walking, sitting, standing, work, exercise, daily activities)\n3. Intelligently branch based on symptom pattern:\n\n   FOR CERVICAL PATTERNS (neck pain, arm pain, hand symptoms):\n   - Hand numbness patterns\n   - Fine motor difficulty (buttons, writing, dropping objects)\n   - Gait instability or balance problems\n   - Electric shock sensations with neck movement (Lhermitte's)\n   - Unilateral vs bilateral arm symptoms\n\n   FOR LUMBAR PATTERNS (low back, buttock, leg pain):\n   - Pain below the knee\n   - Specific dermatomal numbness patterns\n   - Weakness (foot drop, stair climbing difficulty)\n   - Symptoms with standing/walking vs sitting\n   - Relief with leaning forward\n   - Walking distance tolerance\n   - Bowel/bladder dysfunction\n   - Saddle area numbness\n\n   FOR DEFORMITY/SCOLIOSIS:\n   - Age at diagnosis and progression\n   - Prior bracing or surgery\n   - Trunk shift or rib prominence\n   - Appearance concerns\n   - Pulmonary/endurance limitations\n\n   FOR POST-SURGICAL PATIENTS:\n   - Prior procedure type and level\n   - Year and surgeon/hospital\n   - Initial improvement\n   - When/how symptoms returned\n   - Similar vs different symptoms\n   - Complications\n\n4. Gather conservative treatment history:\n   - Physical therapy (when, duration, helped?)\n   - Home exercises\n   - Medications tried (NSAIDs, steroids, gabapentin/pregabalin, muscle relaxants, opioids)\n   - Chiropractic, acupuncture\n   - Injections (epidural steroid, nerve blocks, facet injections, SI injections, RFA, trigger points) - when, how many, did they help, how long?\n   - Braces or assistive devices\n   - Prior imaging (X-rays, MRI, CT)\n   - Prior EMG/nerve studies\n\n5. Build a chronological timeline from the patient's answers.\n\nPLAIN LANGUAGE TRANSLATIONS (use these, not medical jargon):\n- Radiculopathy → \"pain, numbness, or tingling traveling down your arm/leg\"\n- Neurogenic claudication → \"leg symptoms that come on with walking or standing\"\n- Myelopathy → \"problems with coordination, balance, or hand dexterity\"\n- Paresthesia → \"tingling or pins-and-needles sensations\"\n- Saddle anesthesia → \"numbness in the groin or inner thigh area\"\n- Stenosis → \"narrowing of the spine\"\n- Spondylolisthesis → \"slippage of one vertebra over another\"\n\nRESPONSE FORMAT:\n- Keep responses concise (1-3 sentences for the question, brief empathetic acknowledgment if appropriate).\n- Ask exactly one question per response.\n- If you have enough information about the current topic, transition naturally to the next.\n- When you've gathered comprehensive information, say something like: \"Thank you, I think I have a good understanding of your symptoms. Let me summarize what I've heard...\" and provide a brief summary, then ask if anything was missed.\n\nRED FLAG SCREENING (ask about these if relevant, but do not alarm):\n- New bowel or bladder incontinence\n- Saddle area numbness\n- Rapidly progressive weakness\n- Fever with severe back pain\n- Unexplained weight loss\n- History of cancer with new back pain\nIf a patient reports these, note them but continue gathering history calmly.",
     "preResolvedInputs": [
       "Body map -> anatomical prose (never raw coordinates).",
@@ -16554,6 +16597,18 @@
         "es": "Lesión o traumatismo reciente",
         "zh": "近期受伤或外伤"
       },
+      "Address, insurance and contacts (optional)": {
+        "es": "Dirección, seguro y contactos (opcional)",
+        "zh": "地址、保险和联系人（可选）"
+      },
+      "The office can take these at your visit. Fill them in now if you have them handy.": {
+        "es": "El consultorio puede tomarlos en su visita. Complételos ahora si los tiene a mano.",
+        "zh": "诊所可以在您就诊时登记这些信息。如果方便，现在也可以填写。"
+      },
+      "Address": {
+        "es": "Dirección",
+        "zh": "地址"
+      },
       "Patient Information": {
         "es": "Información del paciente",
         "zh": "患者信息"
@@ -16641,10 +16696,6 @@
       "Email": {
         "es": "Correo electrónico",
         "zh": "电子邮件"
-      },
-      "Address": {
-        "es": "Dirección",
-        "zh": "地址"
       },
       "Street address": {
         "es": "Dirección de la calle",
@@ -16953,6 +17004,42 @@
       "You have added the maximum of 4 of your own symptoms.": {
         "es": "Ha agregado el máximo de 4 síntomas propios.",
         "zh": "您已添加最多4个自定义症状。"
+      },
+      "How would you like to describe your symptoms?": {
+        "es": "¿Cómo prefiere describir sus síntomas?",
+        "zh": "您想如何描述您的症状？"
+      },
+      "Either way takes about five minutes. Pick whichever feels easier.": {
+        "es": "Cualquiera de las dos toma unos cinco minutos. Elija la que le resulte más fácil.",
+        "zh": "两种方式都大约需要五分钟。选择您觉得更容易的一种。"
+      },
+      "Tell it in your own words": {
+        "es": "Cuéntelo con sus propias palabras",
+        "zh": "用您自己的话讲述"
+      },
+      "A short back-and-forth: our assistant asks about five questions and you answer however you like.": {
+        "es": "Una conversación corta: nuestro asistente hace unas cinco preguntas y usted responde como quiera.",
+        "zh": "简短的问答：我们的助手会问大约五个问题，您可以随意作答。"
+      },
+      "Answer quick questions": {
+        "es": "Responder preguntas rápidas",
+        "zh": "回答快速问题"
+      },
+      "Tap through a few multiple-choice questions for each area that hurts.": {
+        "es": "Responda unas pocas preguntas de opción múltiple por cada zona que le duele.",
+        "zh": "为每个疼痛部位点选几个选择题。"
+      },
+      "Prefer to talk it through instead?": {
+        "es": "¿Prefiere contarlo en una conversación?",
+        "zh": "更想通过对话来讲述？"
+      },
+      "Prefer quick questions instead?": {
+        "es": "¿Prefiere las preguntas rápidas?",
+        "zh": "更想回答快速问题？"
+      },
+      "Switch": {
+        "es": "Cambiar",
+        "zh": "切换"
       },
       "Symptom Details": {
         "es": "Detalles de los síntomas",
@@ -17426,6 +17513,26 @@
         "es": "Rigidez",
         "zh": "僵硬"
       },
+      "Which of these have you tried for this problem? Tap all that apply.": {
+        "es": "¿Cuáles de estos ha probado para este problema? Toque todos los que apliquen.",
+        "zh": "您为这个问题尝试过哪些？请点选所有适用项。"
+      },
+      "Nothing yet": {
+        "es": "Nada todavía",
+        "zh": "尚未尝试"
+      },
+      "Injections": {
+        "es": "Inyecciones",
+        "zh": "注射"
+      },
+      "Imaging (X-ray, MRI, CT)": {
+        "es": "Imágenes (radiografía, resonancia, tomografía)",
+        "zh": "影像检查（X光、核磁、CT）"
+      },
+      "A few details about each, as much as you remember:": {
+        "es": "Algunos detalles de cada uno, lo que recuerde:",
+        "zh": "请尽量回忆每项的一些细节："
+      },
       "The more detail you can give, the better — if you know your therapist's full name and phone number, or the clinic address, please add it. But do not worry if you cannot remember everything. Partial answers are genuinely useful, and you can leave anything blank.": {
         "es": "Cuanto más detalle pueda dar, mejor: si sabe el nombre completo y el teléfono de su terapeuta, o la dirección de la clínica, agréguelos. Pero no se preocupe si no recuerda todo. Las respuestas parciales son realmente útiles, y puede dejar cualquier campo en blanco.",
         "zh": "您提供的细节越多越好——如果您知道治疗师的全名和电话号码，或诊所地址，请填写。但如果记不全也不用担心。部分答案同样非常有用，任何一项都可以留空。"
@@ -17565,10 +17672,6 @@
       "Back brace or cervical collar": {
         "es": "Faja lumbar o collarín cervical",
         "zh": "腰背支具或颈托"
-      },
-      "Injections": {
-        "es": "Inyecciones",
-        "zh": "注射"
       },
       "Prior Imaging": {
         "es": "Estudios de imagen previos",
@@ -18066,9 +18169,9 @@
         "es": "¿Algo más que quiera compartir?",
         "zh": "还有什么想告诉我们的吗？"
       },
-      "This step is optional. If you'd like, you can chat with our assistant, which will ask a few further questions about your symptoms — and/or you can simply type any additional concerns or details about your symptoms that you'd like us to know.": {
-        "es": "Este paso es opcional. Si lo desea, puede conversar con nuestro asistente, que le hará algunas preguntas más sobre sus síntomas, y/o simplemente puede escribir cualquier inquietud o detalle adicional sobre sus síntomas que quiera que sepamos.",
-        "zh": "此步骤为可选。如果您愿意，可以与我们的助手交谈，助手会就您的症状再问几个问题；您也可以直接输入任何想让我们了解的、关于您症状的其他顾虑或细节。"
+      "This step is optional. Type anything else about your symptoms, your goals for the visit, or questions you have.": {
+        "es": "Este paso es opcional. Escriba cualquier otra cosa sobre sus síntomas, sus objetivos para la consulta o las preguntas que tenga.",
+        "zh": "此步骤为可选。请写下关于您的症状、就诊目标或疑问的任何其他内容。"
       },
       "Additional concerns or details (optional)": {
         "es": "Inquietudes o detalles adicionales (opcional)",
@@ -18714,6 +18817,14 @@
         "es": "Continuar a Historia social",
         "zh": "继续到社会史"
       },
+      "Alcohol, other substances and legal context (optional)": {
+        "es": "Alcohol, otras sustancias y contexto legal (opcional)",
+        "zh": "酒精、其他物质和法律背景（可选）"
+      },
+      "Only if you want to add them. They do not change the care you receive.": {
+        "es": "Solo si desea agregarlos. No cambian la atención que recibe.",
+        "zh": "仅在您愿意时填写。这不会改变您获得的治疗。"
+      },
       "Social History": {
         "es": "Historia social",
         "zh": "社会史"
@@ -19105,6 +19216,98 @@
       "Review of Systems": {
         "es": "Revisión por sistemas",
         "zh": "系统回顾"
+      },
+      "Tap anything you have had in the past month. If none apply, tap \"None of these\".": {
+        "es": "Toque todo lo que haya tenido en el último mes. Si nada aplica, toque \"Ninguno de estos\".",
+        "zh": "请点选过去一个月内您出现过的任何情况。如果都没有，请点选“以上都没有”。"
+      },
+      "None of these": {
+        "es": "Ninguno de estos",
+        "zh": "以上都没有"
+      },
+      "Prefer the complete review? It asks about every body system (about 50 quick yes/no questions).": {
+        "es": "¿Prefiere la revisión completa? Pregunta sobre cada sistema del cuerpo (unas 50 preguntas rápidas de sí/no).",
+        "zh": "想做完整回顾？它会询问每个身体系统（约 50 个快速是/否问题）。"
+      },
+      "Do the complete review": {
+        "es": "Hacer la revisión completa",
+        "zh": "进行完整回顾"
+      },
+      "Back to the short list": {
+        "es": "Volver a la lista corta",
+        "zh": "返回简短列表"
+      },
+      "Complete review of every body system. Tap \"No to all\" in any section that does not apply.": {
+        "es": "Revisión completa de cada sistema del cuerpo. Toque \"No a todo\" en cualquier sección que no aplique.",
+        "zh": "对每个身体系统的完整回顾。在不适用的部分点选“全部选否”。"
+      },
+      "Fever or chills": {
+        "es": "Fiebre o escalofríos",
+        "zh": "发热或寒战"
+      },
+      "Weight loss without trying": {
+        "es": "Pérdida de peso sin intentarlo",
+        "zh": "非刻意的体重下降"
+      },
+      "A change in bladder control": {
+        "es": "Un cambio en el control de la vejiga",
+        "zh": "膀胱控制的变化"
+      },
+      "A change in bowel control": {
+        "es": "Un cambio en el control intestinal",
+        "zh": "排便控制的变化"
+      },
+      "Trouble with balance or unsteady walking": {
+        "es": "Problemas de equilibrio o marcha inestable",
+        "zh": "平衡困难或行走不稳"
+      },
+      "Clumsy hands, dropping things": {
+        "es": "Manos torpes, se le caen las cosas",
+        "zh": "手不灵活、东西掉落"
+      },
+      "Weakness in an arm or leg": {
+        "es": "Debilidad en un brazo o una pierna",
+        "zh": "手臂或腿部无力"
+      },
+      "A fall": {
+        "es": "Una caída",
+        "zh": "跌倒"
+      },
+      "Chest pain or pressure": {
+        "es": "Dolor u opresión en el pecho",
+        "zh": "胸痛或胸闷"
+      },
+      "Shortness of breath": {
+        "es": "Falta de aire",
+        "zh": "气短"
+      },
+      "A blood clot, now or in the past": {
+        "es": "Un coágulo de sangre, ahora o en el pasado",
+        "zh": "现在或过去有血栓"
+      },
+      "Cancer, now or in the past": {
+        "es": "Cáncer, ahora o en el pasado",
+        "zh": "现在或过去患过癌症"
+      },
+      "Osteoporosis or thinning bones": {
+        "es": "Osteoporosis o huesos debilitados",
+        "zh": "骨质疏松或骨质变薄"
+      },
+      "Steroids or medicines that lower immunity": {
+        "es": "Esteroides o medicamentos que bajan las defensas",
+        "zh": "类固醇或降低免疫力的药物"
+      },
+      "Trouble swallowing or hoarseness": {
+        "es": "Dificultad para tragar o ronquera",
+        "zh": "吞咽困难或声音嘶哑"
+      },
+      "Feeling down or anxious": {
+        "es": "Sentirse decaído o ansioso",
+        "zh": "情绪低落或焦虑"
+      },
+      "Pain that keeps you from sleeping": {
+        "es": "Dolor que no le deja dormir",
+        "zh": "疼痛影响睡眠"
       },
       "Please answer these quick yes/no screening questions. They help us spot other health issues that could change your treatment or your surgery plan.": {
         "es": "Por favor responda estas preguntas rápidas de sí/no. Nos ayudan a detectar otros problemas de salud que podrían cambiar su tratamiento o su plan quirúrgico.",

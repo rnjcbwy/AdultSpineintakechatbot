@@ -14,7 +14,7 @@ const T = {
     under18Prefix: 'Younger and teenage patients can use the ',
     under18Link: 'pediatric version, which asks more age-appropriate questions',
     description:
-      'This takes about 15–25 minutes and covers:',
+      'This takes about 10–15 minutes and covers:',
     steps: [
       'Basic demographic information',
       'A guided conversation about your symptoms',
@@ -60,7 +60,7 @@ const T = {
     under18Prefix: '儿童和青少年患者可以使用',
     under18Link: '儿科版本，其中的问题更适合他们的年龄',
     description:
-      '大约需要 15–25 分钟，包括：',
+      '大约需要 10–15 分钟，包括：',
     steps: [
       '基本人口统计信息',
       '关于症状的引导式对话',

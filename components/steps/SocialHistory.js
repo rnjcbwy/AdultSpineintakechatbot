@@ -3,8 +3,14 @@
 import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
+import Collapsible, { countFilled } from '../ui/Collapsible';
 
 const LOCAL = {
+  'Alcohol, other substances and legal context (optional)': { es: 'Alcohol, otras sustancias y contexto legal (opcional)', zh: '酒精、其他物质和法律背景（可选）' },
+  'Only if you want to add them. They do not change the care you receive.': {
+    es: 'Solo si desea agregarlos. No cambian la atención que recibe.',
+    zh: '仅在您愿意时填写。这不会改变您获得的治疗。',
+  },
   // Section header
   'Social History': { es: 'Historia social', zh: '社会史' },
   'This information helps your surgeon understand your overall health and lifestyle. All responses are confidential.': {
@@ -178,57 +184,6 @@ export default function SocialHistory({ onNext, onBack }) {
 
         {/* Alcohol */}
         <div className="card">
-          <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Alcohol Use')}</h3>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {['None', 'Social/occasional', 'Moderate (a few per week)', 'Daily', 'Former heavy use'].map((opt) => (
-              <button
-                key={opt}
-                onClick={() => update('alcoholUse', opt)}
-                className={`chip ${sh.alcoholUse === opt ? 'chip-selected' : 'chip-unselected'}`}
-              >
-                {t(opt)}
-              </button>
-            ))}
-          </div>
-          {sh.alcoholUse && sh.alcoholUse !== 'None' && (
-            <input
-              type="text"
-              value={sh.alcoholDetails || ''}
-              onChange={(e) => update('alcoholDetails', e.target.value)}
-              placeholder={t('Any additional details (optional)')}
-            />
-          )}
-        </div>
-
-        {/* Recreational drugs */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Recreational Drug Use')}</h3>
-          <p className="text-sm text-gray-400 mb-3">
-            {t('This is asked for your safety during medical care. Your responses are confidential.')}
-          </p>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {['None', 'Marijuana/cannabis', 'Other', 'Prefer not to answer'].map((opt) => (
-              <button
-                key={opt}
-                onClick={() => update('drugUse', opt)}
-                className={`chip ${sh.drugUse === opt ? 'chip-selected' : 'chip-unselected'}`}
-              >
-                {t(opt)}
-              </button>
-            ))}
-          </div>
-          {(sh.drugUse === 'Marijuana/cannabis' || sh.drugUse === 'Other') && (
-            <input
-              type="text"
-              value={sh.drugDetails || ''}
-              onChange={(e) => update('drugDetails', e.target.value)}
-              placeholder={t('Details (optional)')}
-            />
-          )}
-        </div>
-
-        {/* Occupation & Work */}
-        <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Work & Occupation')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -335,6 +290,63 @@ export default function SocialHistory({ onNext, onBack }) {
         </div>
 
         {/* Compensation/Legal */}
+        <Collapsible
+          title={t('Alcohol, other substances and legal context (optional)')}
+          hint={t('Only if you want to add them. They do not change the care you receive.')}
+          filled={countFilled([sh.alcoholUse, sh.drugUse, sh.compensationCase])}
+          total={3}
+        >
+        <div className="card">
+          <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Alcohol Use')}</h3>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {['None', 'Social/occasional', 'Moderate (a few per week)', 'Daily', 'Former heavy use'].map((opt) => (
+              <button
+                key={opt}
+                onClick={() => update('alcoholUse', opt)}
+                className={`chip ${sh.alcoholUse === opt ? 'chip-selected' : 'chip-unselected'}`}
+              >
+                {t(opt)}
+              </button>
+            ))}
+          </div>
+          {sh.alcoholUse && sh.alcoholUse !== 'None' && (
+            <input
+              type="text"
+              value={sh.alcoholDetails || ''}
+              onChange={(e) => update('alcoholDetails', e.target.value)}
+              placeholder={t('Any additional details (optional)')}
+            />
+          )}
+        </div>
+
+        {/* Recreational drugs */}
+        <div className="card">
+          <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Recreational Drug Use')}</h3>
+          <p className="text-sm text-gray-400 mb-3">
+            {t('This is asked for your safety during medical care. Your responses are confidential.')}
+          </p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {['None', 'Marijuana/cannabis', 'Other', 'Prefer not to answer'].map((opt) => (
+              <button
+                key={opt}
+                onClick={() => update('drugUse', opt)}
+                className={`chip ${sh.drugUse === opt ? 'chip-selected' : 'chip-unselected'}`}
+              >
+                {t(opt)}
+              </button>
+            ))}
+          </div>
+          {(sh.drugUse === 'Marijuana/cannabis' || sh.drugUse === 'Other') && (
+            <input
+              type="text"
+              value={sh.drugDetails || ''}
+              onChange={(e) => update('drugDetails', e.target.value)}
+              placeholder={t('Details (optional)')}
+            />
+          )}
+        </div>
+
+        {/* Occupation & Work */}
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Additional Context')}</h3>
           <p className="text-sm text-gray-400 mb-3">
@@ -355,6 +367,7 @@ export default function SocialHistory({ onNext, onBack }) {
             </div>
           </div>
         </div>
+        </Collapsible>
       </div>
 
       <StepNavigation

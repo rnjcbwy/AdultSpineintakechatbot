@@ -4,10 +4,29 @@ import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import { PAIN_QUALITIES, SYMPTOM_REGIONS } from '../../lib/constants';
 import StepNavigation from '../ui/StepNavigation';
+import HPIChat from '../HPIChat';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 // Display-only translations. Stored values stay canonical English.
 const LOCAL = {
+  'How would you like to describe your symptoms?': { es: '¿Cómo prefiere describir sus síntomas?', zh: '您想如何描述您的症状？' },
+  'Either way takes about five minutes. Pick whichever feels easier.': {
+    es: 'Cualquiera de las dos toma unos cinco minutos. Elija la que le resulte más fácil.',
+    zh: '两种方式都大约需要五分钟。选择您觉得更容易的一种。',
+  },
+  'Tell it in your own words': { es: 'Cuéntelo con sus propias palabras', zh: '用您自己的话讲述' },
+  'A short back-and-forth: our assistant asks about five questions and you answer however you like.': {
+    es: 'Una conversación corta: nuestro asistente hace unas cinco preguntas y usted responde como quiera.',
+    zh: '简短的问答：我们的助手会问大约五个问题，您可以随意作答。',
+  },
+  'Answer quick questions': { es: 'Responder preguntas rápidas', zh: '回答快速问题' },
+  'Tap through a few multiple-choice questions for each area that hurts.': {
+    es: 'Responda unas pocas preguntas de opción múltiple por cada zona que le duele.',
+    zh: '为每个疼痛部位点选几个选择题。',
+  },
+  'Prefer to talk it through instead?': { es: '¿Prefiere contarlo en una conversación?', zh: '更想通过对话来讲述？' },
+  'Prefer quick questions instead?': { es: '¿Prefiere las preguntas rápidas?', zh: '更想回答快速问题？' },
+  'Switch': { es: 'Cambiar', zh: '切换' },
   // Section header
   'Symptom Details': { es: 'Detalles de los síntomas', zh: '症状详情' },
   "Let's go through the symptoms you told us about. You can fill this out for all of your symptoms on this one page — answer what you can and skip anything that doesn't apply.":
@@ -189,6 +208,50 @@ export default function SymptomDetails({ onNext, onBack }) {
   const hasCervical = areas.has('cervical');
   const hasLumbar = areas.has('lumbar');
 
+  // One path or the other, never both: a short guided conversation, or the
+  // structured questions. The choice is kept so coming back shows the same.
+  const mode = hpi.detailMode || '';
+  const setMode = (m) => setNested('hpiData.detailMode', m);
+
+  if (selectedRegions.length > 0 && !mode) {
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-8">
+          <h2 className="section-title">{t('How would you like to describe your symptoms?')}</h2>
+          <p className="section-subtitle">{t('Either way takes about five minutes. Pick whichever feels easier.')}</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button type="button" onClick={() => setMode('conversation')} className="text-left p-6 rounded-2xl border-2 border-gray-200 bg-white hover:border-teal-300 transition-all">
+            <span className="block text-base font-semibold text-navy-600">{t('Tell it in your own words')}</span>
+            <span className="block text-sm text-gray-500 mt-1 leading-relaxed">{t('A short back-and-forth: our assistant asks about five questions and you answer however you like.')}</span>
+          </button>
+          <button type="button" onClick={() => setMode('questions')} className="text-left p-6 rounded-2xl border-2 border-gray-200 bg-white hover:border-teal-300 transition-all">
+            <span className="block text-base font-semibold text-navy-600">{t('Answer quick questions')}</span>
+            <span className="block text-sm text-gray-500 mt-1 leading-relaxed">{t('Tap through a few multiple-choice questions for each area that hurts.')}</span>
+          </button>
+        </div>
+        <StepNavigation onNext={onNext} onBack={onBack} canGoNext={false} />
+      </div>
+    );
+  }
+
+  if (selectedRegions.length > 0 && mode === 'conversation') {
+    const answered = (hpi.conversationHistory || []).filter((m) => m.role === 'user').length;
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-6">
+          <h2 className="section-title">{t('Symptom Details')}</h2>
+          <p className="section-subtitle">
+            {t('Prefer quick questions instead?')}{' '}
+            <button type="button" onClick={() => setMode('questions')} className="text-teal-600 hover:underline font-medium">{t('Switch')}</button>
+          </p>
+        </div>
+        <HPIChat intakeData={data} hpiData={hpi} setNested={setNested} maxTurns={5} autoStart />
+        <StepNavigation onNext={onNext} onBack={onBack} canGoNext={answered >= 1} nextLabel={t('Continue')} />
+      </div>
+    );
+  }
+
   if (selectedRegions.length === 0) {
     return (
       <div className="animate-fade-in">
@@ -208,7 +271,9 @@ export default function SymptomDetails({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Symptom Details')}</h2>
         <p className="section-subtitle">
-          {t("Let's go through the symptoms you told us about. You can fill this out for all of your symptoms on this one page — answer what you can and skip anything that doesn't apply.")}
+          {t("Let's go through the symptoms you told us about. You can fill this out for all of your symptoms on this one page — answer what you can and skip anything that doesn't apply.")}{' '}
+          {t('Prefer to talk it through instead?')}{' '}
+          <button type="button" onClick={() => setMode('conversation')} className="text-teal-600 hover:underline font-medium">{t('Switch')}</button>
         </p>
       </div>
 

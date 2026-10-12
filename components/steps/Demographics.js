@@ -6,9 +6,16 @@ import { US_STATES } from '../../lib/constants';
 // Offered as suggestions only; any country can be typed.
 const COUNTRY_SUGGESTIONS = ['United States', 'Canada', 'Mexico', 'United Kingdom', 'Ireland', 'Spain', 'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Argentina', 'Colombia', 'Dominican Republic', 'Puerto Rico', 'India', 'China', 'Taiwan', 'Hong Kong', 'Singapore', 'Philippines', 'South Korea', 'Japan', 'Australia', 'Israel', 'United Arab Emirates', 'Saudi Arabia', 'Nigeria', 'South Africa'];
 import StepNavigation from '../ui/StepNavigation';
+import Collapsible, { countFilled } from '../ui/Collapsible';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
+  'Address, insurance and contacts (optional)': { es: 'Dirección, seguro y contactos (opcional)', zh: '地址、保险和联系人（可选）' },
+  'The office can take these at your visit. Fill them in now if you have them handy.': {
+    es: 'El consultorio puede tomarlos en su visita. Complételos ahora si los tiene a mano.',
+    zh: '诊所可以在您就诊时登记这些信息。如果方便，现在也可以填写。',
+  },
+  'Address': { es: 'Dirección', zh: '地址' },
   'Patient Information': { es: 'Información del paciente', zh: '患者信息' },
   'State / Province / Region': { es: 'Estado / Provincia / Región', zh: '州 / 省 / 地区' },
   'Postal code': { es: 'Código postal', zh: '邮政编码' },
@@ -175,6 +182,18 @@ export default function Demographics({ onNext, onBack }) {
                 placeholder="patient@email.com"
               />
             </div>
+          </div>
+        </div>
+
+        <Collapsible
+          title={t('Address, insurance and contacts (optional)')}
+          hint={t('The office can take these at your visit. Fill them in now if you have them handy.')}
+          filled={countFilled([d.address, d.city, d.zip, d.insuranceProvider, d.memberId, d.referringPhysician, d.primaryCarePhysician, d.emergencyContactName, d.emergencyContactPhone])}
+          total={9}
+        >
+        <div className="card">
+          <h3 className="text-lg font-medium text-navy-600 mb-4">{t('Address')}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="form-label">{t('Address')}</label>
               <input
@@ -316,7 +335,7 @@ export default function Demographics({ onNext, onBack }) {
             </div>
           </div>
         </div>
-
+        </Collapsible>
       </div>
 
       <StepNavigation

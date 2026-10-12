@@ -8,6 +8,17 @@ import { useLang, makeT, COMMON } from '../../lib/i18n';
 import SuggestedAnswers, { useAdoptExample } from '../ui/SuggestedAnswers';
 
 const LOCAL = {
+  'Which of these have you tried for this problem? Tap all that apply.': {
+    es: '¿Cuáles de estos ha probado para este problema? Toque todos los que apliquen.',
+    zh: '您为这个问题尝试过哪些？请点选所有适用项。',
+  },
+  'Nothing yet': { es: 'Nada todavía', zh: '尚未尝试' },
+  'Injections': { es: 'Inyecciones', zh: '注射' },
+  'Imaging (X-ray, MRI, CT)': { es: 'Imágenes (radiografía, resonancia, tomografía)', zh: '影像检查（X光、核磁、CT）' },
+  'A few details about each, as much as you remember:': {
+    es: 'Algunos detalles de cada uno, lo que recuerde:',
+    zh: '请尽量回忆每项的一些细节：',
+  },
   'The more detail you can give, the better — if you know your therapist\'s full name and phone number, or the clinic address, please add it. But do not worry if you cannot remember everything. Partial answers are genuinely useful, and you can leave anything blank.': {
     es: 'Cuanto más detalle pueda dar, mejor: si sabe el nombre completo y el teléfono de su terapeuta, o la dirección de la clínica, agréguelos. Pero no se preocupe si no recuerda todo. Las respuestas parciales son realmente útiles, y puede dejar cualquier campo en blanco.',
     zh: '您提供的细节越多越好——如果您知道治疗师的全名和电话号码，或诊所地址，请填写。但如果记不全也不用担心。部分答案同样非常有用，任何一项都可以留空。',
@@ -203,6 +214,41 @@ export default function PriorTreatments({ onNext, onBack }) {
     setNested('hpiData.conservativeTreatments.injections', current.filter((_, i) => i !== index));
   };
 
+  // The chip row. The object-shaped treatments keep their `tried` flag; the
+  // list-shaped ones (injections, imaging) count as tried while they hold
+  // anything, plus a local flag for "tapped but nothing added yet".
+  const [opened, setOpened] = useState({});
+  const GROUPS = [
+    { key: 'physicalTherapy', label: 'Physical therapy', flag: 'physicalTherapy.tried' },
+    { key: 'homeExercise', label: 'Home exercise program', flag: 'homeExercise.tried' },
+    { key: 'chiropracticCare', label: 'Chiropractic care', flag: 'chiropracticCare.tried' },
+    { key: 'acupuncture', label: 'Acupuncture', flag: 'acupuncture.tried' },
+    { key: 'braces', label: 'Back brace or cervical collar', flag: 'braces.tried' },
+    { key: 'injections', label: 'Injections', list: 'injections' },
+    { key: 'priorImaging', label: 'Imaging (X-ray, MRI, CT)', list: 'priorImaging' },
+    { key: 'priorEMG', label: 'EMG or nerve conduction study', flag: 'priorEMG.done' },
+  ];
+  const isOn = (g) => (g.flag ? !!tx[g.key]?.[g.flag.split('.')[1]] : (tx[g.list] || []).filter((x) => x && x !== 'None').length > 0 || !!opened[g.key]);
+  const toggleGroup = (g) => {
+    const on = isOn(g);
+    if (g.flag) updateTx(g.flag, !on);
+    else {
+      if (on) setNested(`hpiData.conservativeTreatments.${g.list}`, []);
+      setOpened((o) => ({ ...o, [g.key]: !on }));
+    }
+  };
+  const anyOn = GROUPS.some(isOn);
+  const noneYet = tx.noneTried === true && !anyOn;
+  const tapNone = () => {
+    for (const g of GROUPS) {
+      if (g.flag) updateTx(g.flag, false);
+      else setNested(`hpiData.conservativeTreatments.${g.list}`, []);
+    }
+    setOpened({});
+    updateTx('noneTried', true);
+  };
+  const show = (key) => isOn(GROUPS.find((g) => g.key === key));
+
   return (
     <div className="animate-fade-in">
       <div className="mb-6">
@@ -212,30 +258,31 @@ export default function PriorTreatments({ onNext, onBack }) {
         </p>
       </div>
 
-      {/* Detail here is what insurers weigh, but a patient who feels
-          interrogated abandons the form. Ask for everything, forgive anything
-          missing, and show what "detailed" looks like in the examples. */}
-      <p className="text-sm text-gray-500 leading-relaxed mb-4">
-        {t('The more detail you can give, the better — if you know your therapist\'s full name and phone number, or the clinic address, please add it. But do not worry if you cannot remember everything. Partial answers are genuinely useful, and you can leave anything blank.')}
-      </p>
-
-      {/* Set the expectation before the questions, not after. Insurers
-          approve spine surgery on documented conservative care, so the notes
-          matter as much as the answers — and a patient who knows that at the
-          start of the section can start looking for them today. */}
-      <div className="flex items-start gap-3 p-4 mb-4 rounded-xl bg-teal-50 border border-teal-200">
-        <span className="text-lg leading-none mt-0.5" aria-hidden="true">📎</span>
-        <div>
-          <p className="text-sm font-semibold text-teal-800 mb-1">
-            {t('You will be asked to upload documentation later')}
-          </p>
-          <p className="text-sm text-teal-700 leading-relaxed">
-            {t('Further along in this form there is a Records & Documents step where you can upload physical therapy notes, injection reports, EMG results, and imaging reports. Insurance companies require written proof of the treatments you have already tried before they will approve surgery, so anything you can gather now will speed up your approval. You can still finish this form without them.')}
-          </p>
+      <div className="card mb-4">
+        <label className="form-label text-base">{t('Which of these have you tried for this problem? Tap all that apply.')}</label>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {GROUPS.map((g) => {
+            const on = isOn(g);
+            return (
+              <button key={g.key} type="button" onClick={() => { toggleGroup(g); if (tx.noneTried) updateTx('noneTried', false); }} aria-pressed={on}
+                className={`px-3.5 py-2.5 rounded-full text-sm border transition-colors ${on ? 'bg-teal-400 text-white border-teal-400' : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'}`}>
+                {t(g.label)}
+              </button>
+            );
+          })}
+          <button type="button" onClick={tapNone} aria-pressed={noneYet}
+            className={`px-3.5 py-2.5 rounded-full text-sm border transition-colors ${noneYet ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'}`}>
+            {t('Nothing yet')}
+          </button>
         </div>
       </div>
 
+      {anyOn && (
       <div className="space-y-4">
+        <p className="text-sm text-gray-500">{t('A few details about each, as much as you remember:')}</p>
+        <p className="text-sm text-gray-500 leading-relaxed">
+          {t('The more detail you can give, the better — if you know your therapist\'s full name and phone number, or the clinic address, please add it. But do not worry if you cannot remember everything. Partial answers are genuinely useful, and you can leave anything blank.')}
+        </p>
         <div className="card space-y-6">
           <TreatmentToggle label={t('Physical therapy')} tried={tx.physicalTherapy?.tried} onToggle={(v) => updateTx('physicalTherapy.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
@@ -314,6 +361,7 @@ export default function PriorTreatments({ onNext, onBack }) {
           </TreatmentToggle>
 
           {/* Injections */}
+          {show('injections') && (
           <div className="border border-gray-200 rounded-xl p-4">
             <h4 className="text-base font-medium text-navy-600 mb-1">{t('Injections')}</h4>
             <p className="text-sm text-gray-400 mb-3">
@@ -372,12 +420,15 @@ export default function PriorTreatments({ onNext, onBack }) {
             <RecordsNote text={t('Injection records or procedure notes: upload them at the Records step, or bring them to your visit.')} />
           </div>
 
+          )}
+
           {/* Prior Imaging */}
+          {show('priorImaging') && (
           <div className="border border-gray-200 rounded-xl p-4">
             <h4 className="text-base font-medium text-navy-600 mb-3">{t('Prior Imaging')}</h4>
             <p className="text-sm text-gray-400 mb-3">{t('What imaging studies have you had for your spine?')}</p>
             <div className="flex flex-wrap gap-2">
-              {['X-rays', 'MRI', 'CT scan', 'Myelogram', 'Bone density scan (DEXA)', 'None'].map((img) => {
+              {['X-rays', 'MRI', 'CT scan', 'Myelogram', 'Bone density scan (DEXA)'].map((img) => {
                 const selected = (tx.priorImaging || []).includes(img);
                 return (
                   <button key={img}
@@ -393,6 +444,8 @@ export default function PriorTreatments({ onNext, onBack }) {
               })}
             </div>
           </div>
+
+          )}
 
           {/* EMG */}
           <TreatmentToggle label={t('EMG or nerve conduction study')} tried={tx.priorEMG?.done} onToggle={(v) => updateTx('priorEMG.done', v)}>
@@ -410,8 +463,9 @@ export default function PriorTreatments({ onNext, onBack }) {
           </TreatmentToggle>
         </div>
       </div>
+      )}
 
-      <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue to Additional Details')} />
+      <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue')} />
     </div>
   );
 }
@@ -489,23 +543,12 @@ function HelpedSelect({ value, onChange, includeWorse }) {
   );
 }
 
-function TreatmentToggle({ label, tried, onToggle, children }) {
+function TreatmentToggle({ label, tried, children }) {
+  if (!tried) return null;
   return (
     <div className="border border-gray-200 rounded-xl p-4">
-      <div className="flex items-center justify-between">
-        <span className="text-base font-medium text-gray-700">{label}</span>
-        <div className="flex gap-2">
-          <button onClick={() => onToggle(true)}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-              tried === true ? 'bg-teal-100 text-teal-700 border border-teal-300' : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'
-            }`}>Yes</button>
-          <button onClick={() => onToggle(false)}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-              tried === false ? 'bg-gray-100 text-gray-700 border border-gray-300' : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'
-            }`}>No</button>
-        </div>
-      </div>
-      {tried && children}
+      <span className="text-base font-medium text-gray-700">{label}</span>
+      {children}
     </div>
   );
 }
