@@ -148,6 +148,14 @@ const LOCAL = {
     es: 'Sabemos que le tomó tiempo y dedicación. Todo lo que compartió está guardado y, por ahora, no necesita hacer nada más.',
     zh: '我们知道这需要您花费时间和心力。您分享的一切都已保存，目前您无需再做任何事情。',
   },
+  'Our office will contact you within two business days to schedule your consultation.': {
+    es: 'Nuestra oficina se comunicará con usted en un plazo de dos días hábiles para programar su consulta.',
+    zh: '我们的办公室将在两个工作日内与您联系，安排您的会诊。',
+  },
+  'We look forward to seeing you at your upcoming visit.': {
+    es: 'Esperamos verle en su próxima visita.',
+    zh: '我们期待在您的下次就诊时见到您。',
+  },
   'What you told us': { es: 'Lo que nos contó', zh: '您告诉我们的内容' },
   'We are putting together a summary of what you shared. This usually takes about a minute; this page will update on its own.': {
     es: 'Estamos preparando un resumen de lo que compartió. Suele tardar alrededor de un minuto; esta página se actualizará sola.',
@@ -732,6 +740,9 @@ function SubmittedView({ data, onGoToStep }) {
         <h2 className="font-serif text-[1.9rem] md:text-[2.3rem] font-semibold text-navy-600 mb-3 leading-tight">{t('Thank you so much for completing this.')}</h2>
         <p className="text-base md:text-lg text-gray-500 max-w-md mx-auto">
           {t('We know it took real time and care. Everything you shared is saved, and you are all set for now.')}
+        </p>
+        <p className="text-base md:text-lg text-navy-600 font-medium max-w-md mx-auto mt-3">
+          {visitType && visitType !== 'new' ? t('We look forward to seeing you at your upcoming visit.') : t('Our office will contact you within two business days to schedule your consultation.')}
         </p>
         {data.submittedAt && (
           <p className="text-xs text-gray-400 mt-3">
