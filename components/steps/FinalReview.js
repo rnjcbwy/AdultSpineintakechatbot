@@ -14,7 +14,8 @@ import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { useLang, makeT, COMMON, tx } from '../../lib/i18n';
 import { submitIntake, pollStatus, fetchStatus, finalizeSubmission } from '../../lib/submitClient';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
-import { CONSENT_ITEMS, consentTextVia, consentComplete } from '../../lib/consent';
+import { CONSENT_ITEMS, consentTextVia, consentComplete, signatureDrawn } from '../../lib/consent';
+import SignaturePad from '../SignaturePad';
 
 // Patient-facing UI strings for this component (display-only translation).
 const LOCAL = {
@@ -195,7 +196,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
   const [showSummary, setShowSummary] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
-  const consentOk = consentComplete(data.consent);
+  const consentOk = consentComplete(data.consent) && signatureDrawn(data.consent);
 
   /**
    * Submit for real: store the answers server-side, upload the attached
@@ -586,7 +587,7 @@ function ConsentCard({ t, lang, consent, setNested }) {
   return (
     <div className="card mt-6 border-teal-100">
       <h3 className="text-base font-semibold text-navy-600 mb-1">{t('Acknowledgment and signature')}</h3>
-      <p className="text-sm text-gray-500 mb-4">{t('Please read and check each statement, then type your name as your signature.')}</p>
+      <p className="text-sm text-gray-500 mb-4">{t('Please read and check each statement, then print your name and sign below.')}</p>
       <div className="space-y-3">
         {CONSENT_ITEMS.map((item) => (
           <label key={item.key} className="flex items-start gap-3 cursor-pointer">
@@ -602,7 +603,7 @@ function ConsentCard({ t, lang, consent, setNested }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
         <div className="md:col-span-2">
-          <label className="form-label">{t('Type your full name as your signature *')}</label>
+          <label className="form-label">{t('Your full name (printed) *')}</label>
           <input
             type="text"
             value={consent.signatureName || ''}
@@ -610,6 +611,14 @@ function ConsentCard({ t, lang, consent, setNested }) {
             placeholder={t('Your full name')}
             className="font-serif text-lg"
             autoComplete="name"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <SignaturePad
+            value={consent.signatureImage || null}
+            onChange={(png) => set('signatureImage', png)}
+            label={t('Sign here with your finger or mouse *')}
+            clearLabel={t('Clear')}
           />
         </div>
         <div className="md:col-span-2 text-xs font-medium text-gray-500 mt-1">{t('If you are completing this for the patient')}</div>
