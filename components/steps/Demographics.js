@@ -299,7 +299,64 @@ export default function Demographics({ onNext, onBack }) {
                 placeholder={t('Your PCP')}
               />
             </div>
+            <div>
+              <label className="form-label">{t('Group Number')}</label>
+              <input type="text" value={d.groupNumber || ''} onChange={(e) => updateField('groupNumber', e.target.value)} placeholder={t('Group # on your card')} />
+            </div>
+            <div>
+              <label className="form-label">{t('Insurance Phone')}</label>
+              <input type="tel" value={d.insurancePhone || ''} onChange={(e) => updateField('insurancePhone', e.target.value)} placeholder={t('Member services number on the card')} />
+            </div>
+            <div>
+              <label className="form-label">{t('Policy Holder (if not you)')}</label>
+              <input type="text" value={d.policyHolderName || ''} onChange={(e) => updateField('policyHolderName', e.target.value)} placeholder={t('Name of the person who holds the policy')} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">{t('Policy Holder Date of Birth')}</label>
+                <input type="date" value={d.policyHolderDob || ''} onChange={(e) => updateField('policyHolderDob', e.target.value)} />
+              </div>
+              <div>
+                <label className="form-label">{t('Relationship to You')}</label>
+                <input type="text" value={d.policyHolderRelationship || ''} onChange={(e) => updateField('policyHolderRelationship', e.target.value)} placeholder={t('e.g., Spouse, Parent')} />
+              </div>
+            </div>
+            <div>
+              <label className="form-label">{t('Secondary Insurance (if any)')}</label>
+              <input type="text" value={d.secondaryInsurance || ''} onChange={(e) => updateField('secondaryInsurance', e.target.value)} placeholder={t('Insurance company name')} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">{t('Secondary Member ID')}</label>
+                <input type="text" value={d.secondaryMemberId || ''} onChange={(e) => updateField('secondaryMemberId', e.target.value)} />
+              </div>
+              <div>
+                <label className="form-label">{t('Secondary Group Number')}</label>
+                <input type="text" value={d.secondaryGroupNumber || ''} onChange={(e) => updateField('secondaryGroupNumber', e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">{t('Referring Physician Phone')}</label>
+                <input type="tel" value={d.referringPhone || ''} onChange={(e) => updateField('referringPhone', e.target.value)} placeholder="(555) 123-4567" />
+              </div>
+              <div>
+                <label className="form-label">{t('Referring Physician Fax')}</label>
+                <input type="tel" value={d.referringFax || ''} onChange={(e) => updateField('referringFax', e.target.value)} placeholder="(555) 123-4567" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">{t('Primary Care Phone')}</label>
+                <input type="tel" value={d.pcpPhone || ''} onChange={(e) => updateField('pcpPhone', e.target.value)} placeholder="(555) 123-4567" />
+              </div>
+              <div>
+                <label className="form-label">{t('Primary Care Fax')}</label>
+                <input type="tel" value={d.pcpFax || ''} onChange={(e) => updateField('pcpFax', e.target.value)} placeholder="(555) 123-4567" />
+              </div>
+            </div>
           </div>
+          <p className="text-xs text-gray-400 mt-3">{t('If you do not have an appointment yet, this is what the office needs to verify your benefits and request your records before scheduling.')}</p>
         </div>
 
         {/* Emergency Contact */}
