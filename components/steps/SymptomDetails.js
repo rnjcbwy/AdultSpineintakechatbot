@@ -4,11 +4,48 @@ import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import { PAIN_QUALITIES, SYMPTOM_REGIONS } from '../../lib/constants';
 import StepNavigation from '../ui/StepNavigation';
+import { PainScale } from '../ui/Fields';
+import { problemsFor, ONSET_OPTIONS, ONSET_TYPE_OPTIONS, PROGRESSION_OPTIONS } from '../../lib/problems';
 import HPIChat from '../HPIChat';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 // Display-only translations. Stored values stay canonical English.
 const LOCAL = {
+  'Neck and arm symptoms': { es: 'Síntomas de cuello y brazo', zh: '颈部和手臂症状' },
+  'Mid-back symptoms': { es: 'Síntomas de la espalda media', zh: '中背部症状' },
+  'Low back and leg symptoms': { es: 'Síntomas de la espalda baja y la pierna', zh: '下背部和腿部症状' },
+  'Posture or curvature': { es: 'Postura o curvatura', zh: '姿势或脊柱弯曲' },
+  'Your symptoms': { es: 'Sus síntomas', zh: '您的症状' },
+  'A few quick questions about each problem. Where it hurts and where it travels comes from the body map you drew, so we will not ask that again.': {
+    es: 'Unas pocas preguntas rápidas sobre cada problema. Dónde le duele y hacia dónde se extiende viene del mapa corporal que dibujó, así que no lo volveremos a preguntar.',
+    zh: '关于每个问题的几个快速提问。疼痛的部位和放射范围来自您绘制的身体图，因此不会再次询问。',
+  },
+  'Which problem bothers you the most?': { es: '¿Qué problema le molesta más?', zh: '哪个问题最困扰您？' },
+  'When did this start?': { es: '¿Cuándo empezó esto?', zh: '这是什么时候开始的？' },
+  'Gradually, for no clear reason': { es: 'Gradualmente, sin una razón clara', zh: '逐渐出现，没有明显原因' },
+  'Suddenly': { es: 'De repente', zh: '突然' },
+  'After an injury or accident': { es: 'Después de una lesión o accidente', zh: '受伤或事故之后' },
+  'After lifting or straining': { es: 'Después de levantar algo o hacer esfuerzo', zh: '搬重物或用力之后' },
+  'Getting better': { es: 'Mejorando', zh: '正在好转' },
+  'Getting worse': { es: 'Empeorando', zh: '正在加重' },
+  'Comes and goes': { es: 'Va y viene', zh: '时好时坏' },
+  'How bad is it on a typical day? (0 to 10)': { es: '¿Qué tan fuerte es en un día típico? (0 a 10)', zh: '通常一天的疼痛程度如何？（0 到 10）' },
+  'How would you describe it? (optional, tap all that apply)': { es: '¿Cómo lo describiría? (opcional, toque todos los que apliquen)', zh: '您会如何描述它？（可选，点选所有适用项）' },
+  'Safety check': { es: 'Revisión de seguridad', zh: '安全检查' },
+  'A few yes/no questions that matter for your care. Please answer each one.': {
+    es: 'Unas pocas preguntas de sí/no que importan para su atención. Por favor responda cada una.',
+    zh: '几个对您的诊疗很重要的是/否问题。请逐一回答。',
+  },
+  'Numbness anywhere?': { es: '¿Entumecimiento en alguna parte?', zh: '身体任何部位麻木？' },
+  'Tingling or pins-and-needles?': { es: '¿Hormigueo o sensación de alfileres?', zh: '刺痛或针刺感？' },
+  'Weakness in an arm or leg?': { es: '¿Debilidad en un brazo o una pierna?', zh: '手臂或腿部无力？' },
+  'Any new trouble controlling your bladder or bowels?': { es: '¿Algún problema nuevo para controlar la vejiga o el intestino?', zh: '新出现的大小便控制困难？' },
+  'Numbness in the groin or inner thighs?': { es: '¿Entumecimiento en la ingle o la cara interna de los muslos?', zh: '腹股沟或大腿内侧麻木？' },
+  'Foot slapping or catching on stairs?': { es: '¿El pie se arrastra o se traba en las escaleras?', zh: '上楼梯时脚拖地或绊到？' },
+  'Trouble with buttons, writing or small objects?': { es: '¿Dificultad con botones, escritura u objetos pequeños?', zh: '扣扣子、写字或拿小物件有困难？' },
+  'Dropping things more than usual?': { es: '¿Se le caen las cosas más de lo habitual?', zh: '比平时更容易掉东西？' },
+  'Unsteady on your feet?': { es: '¿Inestable al caminar?', zh: '站立或行走不稳？' },
+  'Electric shock down your spine when you bend your neck?': { es: '¿Sensación de descarga eléctrica por la columna al doblar el cuello?', zh: '低头时脊柱有触电感？' },
   'How would you like to describe your symptoms?': { es: '¿Cómo prefiere describir sus síntomas?', zh: '您想如何描述您的症状？' },
   'Either way takes about five minutes. Pick whichever feels easier.': {
     es: 'Cualquiera de las dos toma unos cinco minutos. Elija la que le resulte más fácil.',
@@ -197,16 +234,12 @@ export default function SymptomDetails({ onNext, onBack }) {
 
   const overall = hpi.overall || {};
   const updateOverall = (field, value) => setNested(`hpiData.overall.${field}`, value);
-  const setPrimary = (regionId) => setNested('hpiData.primaryRegion', regionId);
 
-  // Which body areas are involved (drives conditional screening sections)
-  const areas = new Set(
-    selectedRegions
-      .map((id) => SYMPTOM_REGIONS.find((r) => r.id === id)?.area)
-      .filter(Boolean)
-  );
-  const hasCervical = areas.has('cervical');
-  const hasLumbar = areas.has('lumbar');
+  // The areas the patient tapped, folded into the problems they belong to.
+  const problems = problemsFor(selectedRegions);
+  const hasCervical = problems.some((p) => p.id === 'cervical');
+  const hasLumbar = problems.some((p) => p.id === 'lumbar' || p.id === 'general');
+  const primary = hpi.primaryProblem || (problems.length === 1 ? problems[0].id : '');
 
   // One path or the other, never both: a short guided conversation, or the
   // structured questions. The choice is kept so coming back shows the same.
@@ -247,6 +280,7 @@ export default function SymptomDetails({ onNext, onBack }) {
           </p>
         </div>
         <HPIChat intakeData={data} hpiData={hpi} setNested={setNested} maxTurns={5} autoStart />
+        <SafetyCheck t={t} overall={overall} update={updateOverall} hasCervical={hasCervical} hasLumbar={hasLumbar} />
         <StepNavigation onNext={onNext} onBack={onBack} canGoNext={answered >= 1} nextLabel={t('Continue')} />
       </div>
     );
@@ -261,7 +295,7 @@ export default function SymptomDetails({ onNext, onBack }) {
           </p>
           <button onClick={onBack} className="btn-secondary">{t('Go Back')}</button>
         </div>
-        <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue to Prior Treatments')} />
+        <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue')} />
       </div>
     );
   }
@@ -271,262 +305,114 @@ export default function SymptomDetails({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Symptom Details')}</h2>
         <p className="section-subtitle">
-          {t("Let's go through the symptoms you told us about. You can fill this out for all of your symptoms on this one page — answer what you can and skip anything that doesn't apply.")}{' '}
+          {t('A few quick questions about each problem. Where it hurts and where it travels comes from the body map you drew, so we will not ask that again.')}{' '}
           {t('Prefer to talk it through instead?')}{' '}
           <button type="button" onClick={() => setMode('conversation')} className="text-teal-600 hover:underline font-medium">{t('Switch')}</button>
         </p>
       </div>
 
-      {/* Which bothers you most */}
-      {selectedRegions.length > 1 && (
+      {problems.length > 1 && (
         <div className="card mb-4">
-          <label className="form-label text-base">{t('Which symptom bothers you the most?')}</label>
-          <p className="text-sm text-gray-400 mb-3">{t('This helps your surgeon focus on what matters most to you.')}</p>
+          <label className="form-label text-base">{t('Which problem bothers you the most?')}</label>
           <div className="flex flex-wrap gap-2">
-            {selectedRegions.map((id) => {
-              const region = SYMPTOM_REGIONS.find((r) => r.id === id);
-              return (
-                <button
-                  key={id}
-                  onClick={() => setPrimary(id)}
-                  className={`chip ${hpi.primaryRegion === id ? 'chip-selected' : 'chip-unselected'}`}
-                >
-                  {region?.label ? t(region.label) : id}
-                </button>
-              );
-            })}
+            {problems.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setNested('hpiData.primaryProblem', p.id)}
+                className={`chip ${primary === p.id ? 'chip-selected' : 'chip-unselected'}`}
+              >
+                {t(p.label)}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Per-symptom cards */}
       <div className="space-y-4">
-        {selectedRegions.map((id, idx) => {
-          const region = SYMPTOM_REGIONS.find((r) => r.id === id);
-          return (
-            <SymptomCard
-              key={id}
-              t={t}
-              index={idx}
-              total={selectedRegions.length}
-              region={region || { id, label: id }}
-              isPrimary={hpi.primaryRegion === id}
-              regionData={hpi.symptoms?.[id] || {}}
-              update={(field, value) => setNested(`hpiData.symptoms.${id}.${field}`, value)}
-            />
-          );
-        })}
-      </div>
-
-      {/* ================= Shared questions (asked once) ================= */}
-      <div className="mt-6 mb-2">
-        <h3 className="text-lg font-semibold text-navy-600">{t('A Few Questions About Your Symptoms Overall')}</h3>
-        <p className="text-sm text-gray-400">{t('These apply to all of the symptoms above — you only need to answer them once.')}</p>
-      </div>
-
-      {/* Aggravating / relieving */}
-      <div className="card mb-4">
-        <MultiChip
-          t={t}
-          label={t('What makes your symptoms worse? (select all that apply)')}
-          options={['Sitting', 'Standing', 'Walking', 'Bending forward', 'Bending backward',
-            'Twisting', 'Lifting', 'Coughing/sneezing', 'Lying down', 'Getting up from a chair',
-            'Driving', 'Exercise', 'Stairs']}
-          selected={overall.aggravatingFactors || []}
-          onChange={(v) => updateOverall('aggravatingFactors', v)}
-        />
-        <div className="mt-6">
-          <MultiChip
+        {problems.map((p) => (
+          <ProblemCard
+            key={p.id}
             t={t}
-            label={t('What makes your symptoms better? (select all that apply)')}
-            options={['Rest', 'Lying down', 'Sitting', 'Leaning forward', 'Walking', 'Ice', 'Heat',
-              'Medication', 'Stretching', 'Position changes', 'Nothing helps']}
-            selected={overall.relievingFactors || []}
-            onChange={(v) => updateOverall('relievingFactors', v)}
+            problem={p}
+            single={problems.length === 1}
+            isPrimary={problems.length > 1 && primary === p.id}
+            value={hpi.problems?.[p.id] || {}}
+            duration={data.chiefComplaint.duration}
+            update={(field, v) => setNested(`hpiData.problems.${p.id}.${field}`, v)}
           />
-        </div>
+        ))}
       </div>
 
-      {/* Associated symptoms */}
-      <div className="card mb-4">
-        <h4 className="text-base font-medium text-navy-600 mb-4">{t('Associated Symptoms')}</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <YesNoQuestion t={t} label="Numbness?" sublabel="Loss of sensation or feeling"
-            value={overall.numbness} onChange={(v) => updateOverall('numbness', v)} />
-          <YesNoQuestion t={t} label="Tingling or pins-and-needles?"
-            value={overall.tingling} onChange={(v) => updateOverall('tingling', v)} />
-          <YesNoQuestion t={t} label="Weakness?" sublabel="Difficulty moving or muscle feels weak"
-            value={overall.weakness} onChange={(v) => updateOverall('weakness', v)} />
-          <YesNoQuestion t={t} label="Does it disrupt your sleep?"
-            value={overall.sleepDisruption} onChange={(v) => updateOverall('sleepDisruption', v)} />
-        </div>
-      </div>
+      <SafetyCheck t={t} overall={overall} update={updateOverall} hasCervical={hasCervical} hasLumbar={hasLumbar} />
 
-      {/* Cervical screening (shown once if any neck/arm/balance/hand region) */}
-      {hasCervical && (
-        <div className="card mb-4">
-          <h4 className="text-base font-medium text-navy-600 mb-1">{t('Neck & Upper Body')}</h4>
-          <p className="text-sm text-gray-400 mb-4">{t('A few specific questions related to your neck/arm symptoms.')}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <YesNoQuestion t={t} label="Trouble with buttons, writing, or small objects?" sublabel="Fine motor difficulty"
-              value={overall.handDexterity} onChange={(v) => updateOverall('handDexterity', v)} />
-            <YesNoQuestion t={t} label="Dropping objects more than usual?"
-              value={overall.droppingObjects} onChange={(v) => updateOverall('droppingObjects', v)} />
-            <YesNoQuestion t={t} label="Balance or coordination problems?"
-              value={overall.gaitChanges} onChange={(v) => updateOverall('gaitChanges', v)} />
-            <YesNoQuestion t={t} label="Electric shock feeling with neck movement?" sublabel="Sensation down your spine when bending the neck"
-              value={overall.lhermittes} onChange={(v) => updateOverall('lhermittes', v)} />
-          </div>
-        </div>
-      )}
-
-      {/* Lumbar screening (shown once if any low-back/leg/walking region) */}
-      {hasLumbar && (
-        <div className="card mb-4">
-          <h4 className="text-base font-medium text-navy-600 mb-1">{t('Lower Body')}</h4>
-          <p className="text-sm text-gray-400 mb-4">{t('A few specific questions related to your back/leg symptoms.')}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <YesNoQuestion t={t} label="Pain below the knee?"
-              value={overall.painBelowKnee} onChange={(v) => updateOverall('painBelowKnee', v)} />
-            <YesNoQuestion t={t} label="Symptoms improve when you sit or lean forward?"
-              value={overall.reliefLeaningForward} onChange={(v) => updateOverall('reliefLeaningForward', v)} />
-            <YesNoQuestion t={t} label="Difficulty with stairs or foot feels floppy?" sublabel="Foot drop or leg weakness"
-              value={overall.footDrop} onChange={(v) => updateOverall('footDrop', v)} />
-            <YesNoQuestion t={t} label="Changes in bowel or bladder control?" sublabel="New incontinence or difficulty with urination"
-              value={overall.bowelBladder} onChange={(v) => updateOverall('bowelBladder', v)} />
-            <YesNoQuestion t={t} label="Numbness in the groin or inner thigh area?"
-              value={overall.saddleAnesthesia} onChange={(v) => updateOverall('saddleAnesthesia', v)} />
-          </div>
-          <div className="mt-4">
-            <label className="form-label">{t('How far can you walk before needing to stop?')}</label>
-            <div className="flex flex-wrap gap-2">
-              {['Unlimited', 'More than 30 minutes', '15-30 minutes', '5-15 minutes',
-                'Less than 5 minutes', 'Less than 1 block', 'Need a wheelchair/scooter'].map((opt) => (
-                <button key={opt} onClick={() => updateOverall('walkingTolerance', opt)}
-                  className={`chip ${overall.walkingTolerance === opt ? 'chip-selected' : 'chip-unselected'}`}>
-                  {t(opt)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Functional impact (once) */}
-      <div className="card mb-4">
-        <h4 className="text-base font-medium text-navy-600 mb-4">{t('Impact on Daily Life')}</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SelectField t={t} label="Impact on work" value={overall.workImpact} onChange={(v) => updateOverall('workImpact', v)}
-            options={['No impact', 'Mild — can still work', 'Moderate — work is difficult', 'Severe — missing work', 'Unable to work', 'Retired/Not working']} />
-          <SelectField t={t} label="Impact on exercise/activities" value={overall.exerciseImpact} onChange={(v) => updateOverall('exerciseImpact', v)}
-            options={['No impact', 'Mild limitation', 'Moderate limitation', 'Severe limitation', 'Unable to exercise']} />
-          <SelectField t={t} label="How long can you sit comfortably?" value={overall.sittingTolerance} onChange={(v) => updateOverall('sittingTolerance', v)}
-            options={['No limitation', 'More than 1 hour', '30-60 minutes', '15-30 minutes', 'Less than 15 minutes']} />
-          <SelectField t={t} label="How long can you stand comfortably?" value={overall.standingTolerance} onChange={(v) => updateOverall('standingTolerance', v)}
-            options={['No limitation', 'More than 30 minutes', '15-30 minutes', '5-15 minutes', 'Less than 5 minutes']} />
-        </div>
-      </div>
-
-      <StepNavigation
-        onNext={onNext}
-        onBack={onBack}
-        canGoNext
-        nextLabel={t('Continue to Prior Treatments')}
-      />
+      <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue')} />
     </div>
   );
 }
 
 
 // ===========================================================================
-// Per-symptom card — compact, only the fields that vary per symptom
+// One problem: when, how it started, the trend, how bad, what it feels like.
+// The chief-complaint step already asked how long it has been going on, so a
+// single problem does not ask again.
 // ===========================================================================
-function SymptomCard({ t, region, regionData, update, isPrimary, index, total }) {
-  const [open, setOpen] = useState(index === 0 || total <= 3);
-
+function ProblemCard({ t, problem, value, update, single, isPrimary, duration }) {
   return (
-    <div className={`card ${isPrimary ? 'ring-2 ring-teal-300' : ''}`}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between text-left"
-      >
-        <span className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-navy-600">{t(region.label)}</span>
-          {isPrimary && (
-            <span className="text-xs font-medium text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
-              {t('Bothers me most')}
-            </span>
-          )}
-        </span>
-        <svg className={`w-5 h-5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="space-y-5 mt-5">
-          {/* Onset */}
-          <div>
-            <label className="form-label">{t('When did this start?')}</label>
-            <input type="text" value={regionData.onset || ''}
-              onChange={(e) => update('onset', e.target.value)}
-              placeholder={t('e.g., About 6 months ago, After a fall in March 2024')} />
-          </div>
-
-          <ChipRow t={t} label={t('How did it start?')} value={regionData.onsetType} onChange={(v) => update('onsetType', v)}
-            options={['Gradually over time', 'Suddenly', 'After an injury', 'After surgery', "I'm not sure"]} />
-
-          <ChipRow t={t} label={t('Over time, has this symptom been...')} value={regionData.progression} onChange={(v) => update('progression', v)}
-            options={['Getting worse', 'Staying about the same', 'Getting better', 'Comes and goes']} />
-
-          <ChipRow t={t} label={t('Which side?')} value={regionData.side} onChange={(v) => update('side', v)}
-            options={['Right', 'Left', 'Both sides', 'Midline/center', 'Varies']} />
-
-          {/* Severity */}
-          <div>
-            <label className="form-label">
-              {t('How severe is it? (0 = none, 10 = worst imaginable):')}{' '}
-              <strong className="text-teal-600">{regionData.severity ?? 5}</strong>
-            </label>
-            <input type="range" min="0" max="10" value={regionData.severity ?? 5}
-              onChange={(e) => update('severity', parseInt(e.target.value))} />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>{t('0 — None')}</span><span>{t('5 — Moderate')}</span><span>{t('10 — Worst')}</span>
-            </div>
-          </div>
-
-          <MultiChip t={t} label={t('How would you describe it? (select all that apply)')}
-            options={PAIN_QUALITIES} selected={regionData.quality || []}
-            onChange={(v) => update('quality', v)} />
-
-          {/* Radiation */}
-          <div>
-            <label className="form-label">{t('Does it travel or spread to other areas?')}</label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {['No', 'Yes'].map((opt) => (
-                <button key={opt} onClick={() => update('radiation', opt === 'Yes')}
-                  className={`chip ${regionData.radiation === (opt === 'Yes') ? 'chip-selected' : 'chip-unselected'}`}>
-                  {t(opt)}
-                </button>
-              ))}
-            </div>
-            {regionData.radiation && (
-              <input type="text" value={regionData.radiationTo || ''}
-                onChange={(e) => update('radiationTo', e.target.value)}
-                placeholder={t('Where does it travel to? e.g., Down my left leg to the foot')} />
-            )}
-          </div>
-        </div>
+    <div className={`card space-y-5 ${isPrimary ? 'ring-2 ring-teal-300' : ''}`}>
+      <div className="flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-navy-600">{t(problem.label)}</h3>
+        {isPrimary && (
+          <span className="text-xs font-medium text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">{t('Bothers me most')}</span>
+        )}
+      </div>
+      {!(single && duration) && (
+        <ChipRow t={t} label={t('When did this start?')} value={value.onset} onChange={(v) => update('onset', v)} options={ONSET_OPTIONS} />
       )}
+      <ChipRow t={t} label={t('How did it start?')} value={value.onsetType} onChange={(v) => update('onsetType', v)} options={ONSET_TYPE_OPTIONS} />
+      <ChipRow t={t} label={t('Over time, has this symptom been...')} value={value.progression} onChange={(v) => update('progression', v)} options={PROGRESSION_OPTIONS} />
+      <PainScale label={t('How bad is it on a typical day? (0 to 10)')} value={value.severity == null ? '' : String(value.severity)} onChange={(v) => update('severity', v === '' ? '' : parseInt(v, 10))} />
+      <MultiChip t={t} label={t('How would you describe it? (optional, tap all that apply)')} options={PAIN_QUALITIES} selected={value.quality || []} onChange={(v) => update('quality', v)} />
     </div>
   );
 }
 
 
 // ===========================================================================
-// Small reusable field helpers
+// The questions that change management, asked once. The cervical myelopathy
+// screens appear with a neck problem, the cauda equina and foot-drop screens
+// with a back problem; numbness, tingling and weakness always.
 // ===========================================================================
+function SafetyCheck({ t, overall, update, hasCervical, hasLumbar }) {
+  return (
+    <div className="card mt-4 mb-4">
+      <h4 className="text-base font-medium text-navy-600 mb-1">{t('Safety check')}</h4>
+      <p className="text-sm text-gray-400 mb-4">{t('A few yes/no questions that matter for your care. Please answer each one.')}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <YesNoQuestion t={t} label="Numbness anywhere?" value={overall.numbness} onChange={(v) => update('numbness', v)} />
+        <YesNoQuestion t={t} label="Tingling or pins-and-needles?" value={overall.tingling} onChange={(v) => update('tingling', v)} />
+        <YesNoQuestion t={t} label="Weakness in an arm or leg?" value={overall.weakness} onChange={(v) => update('weakness', v)} />
+        <YesNoQuestion t={t} label="Any new trouble controlling your bladder or bowels?" value={overall.bowelBladder} onChange={(v) => update('bowelBladder', v)} />
+        {hasLumbar && (
+          <>
+            <YesNoQuestion t={t} label="Numbness in the groin or inner thighs?" value={overall.saddleAnesthesia} onChange={(v) => update('saddleAnesthesia', v)} />
+            <YesNoQuestion t={t} label="Foot slapping or catching on stairs?" sublabel="Foot drop or leg weakness" value={overall.footDrop} onChange={(v) => update('footDrop', v)} />
+          </>
+        )}
+        {hasCervical && (
+          <>
+            <YesNoQuestion t={t} label="Trouble with buttons, writing or small objects?" value={overall.handDexterity} onChange={(v) => update('handDexterity', v)} />
+            <YesNoQuestion t={t} label="Dropping things more than usual?" value={overall.droppingObjects} onChange={(v) => update('droppingObjects', v)} />
+            <YesNoQuestion t={t} label="Unsteady on your feet?" value={overall.gaitChanges} onChange={(v) => update('gaitChanges', v)} />
+            <YesNoQuestion t={t} label="Electric shock down your spine when you bend your neck?" value={overall.lhermittes} onChange={(v) => update('lhermittes', v)} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 function ChipRow({ t, label, value, onChange, options }) {
   return (
     <div>
@@ -559,20 +445,6 @@ function MultiChip({ t, label, options, selected, onChange }) {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function SelectField({ t, label, value, onChange, options }) {
-  return (
-    <div>
-      <label className="form-label">{t(label)}</label>
-      <select value={value || ''} onChange={(e) => onChange(e.target.value)}>
-        <option value="">{t('Select...')}</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>{t(opt)}</option>
-        ))}
-      </select>
     </div>
   );
 }

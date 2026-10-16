@@ -6,6 +6,10 @@ import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
+  'Choose every area where you have pain, numbness, tingling or weakness. The next step asks what it feels like.': {
+    es: 'Elija cada zona donde tenga dolor, entumecimiento, hormigueo o debilidad. El siguiente paso pregunta cómo se siente.',
+    zh: '请选择所有出现疼痛、麻木、刺痛或无力的部位。下一步会询问具体感受。',
+  },
   'What Brings You In Today?': {
     es: '¿Qué lo trae hoy?',
     zh: '今天您为什么来就诊？',
@@ -162,7 +166,7 @@ export default function ChiefComplaint({ onNext, onBack }) {
             {t('Which areas are affected? Select all that apply. *')}
           </label>
           <p className="text-sm text-gray-400 mb-4">
-            {t('Choose every area where you have pain, numbness, tingling, weakness, or other symptoms.')}
+            {t('Choose every area where you have pain, numbness, tingling or weakness. The next step asks what it feels like.')}
           </p>
 
           {/* Visual body region groups */}
@@ -204,8 +208,7 @@ export default function ChiefComplaint({ onNext, onBack }) {
               <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('Other Symptoms')}</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {SYMPTOM_REGIONS.filter(r =>
-                  ['numbness-tingling', 'weakness', 'balance', 'hand-clumsiness', 'walking-difficulty',
-                   'posture-deformity', 'prior-surgery-pain', 'trauma'].includes(r.id)
+                  ['posture-deformity', 'prior-surgery-pain', 'trauma'].includes(r.id)
                 ).map((region) => (
                   <RegionButton
                     key={region.id}

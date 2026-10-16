@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { PROBLEM_LABEL } from '../../lib/problems';
 import { SYMPTOM_REGIONS } from '../../lib/constants';
 import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { ROS_SECTIONS, countReviewedSystems } from '../../lib/rosSystems';
@@ -242,9 +243,9 @@ function StructuredTab({ data }) {
         <DataRow label="Prior Spine Surgery" value={data.chiefComplaint.hasPriorSpineSurgery ? 'Yes' : 'No'} />
       </DataSection>
 
-      {/* Symptoms by region */}
-      {Object.entries(data.hpiData?.symptoms || {}).map(([region, symptoms]) => (
-        <DataSection key={region} title={`Symptoms: ${SYMPTOM_REGIONS.find(r => r.id === region)?.label || region}`}>
+      {/* Symptoms by problem (per-area entries are what older intakes hold) */}
+      {Object.entries({ ...(data.hpiData?.problems || {}), ...(data.hpiData?.symptoms || {}) }).map(([region, symptoms]) => (
+        <DataSection key={region} title={`Symptoms: ${PROBLEM_LABEL[region] || SYMPTOM_REGIONS.find(r => r.id === region)?.label || region}`}>
           {Object.entries(symptoms).map(([key, value]) => {
             if (!value || (Array.isArray(value) && value.length === 0)) return null;
             const displayValue = Array.isArray(value) ? value.join(', ') : typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;

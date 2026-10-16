@@ -66,7 +66,7 @@ const LOCAL = {
   'Main concern': { es: 'Preocupación principal', zh: '主要问题' },
   'Duration': { es: 'Duración', zh: '持续时间' },
   'Symptom areas': { es: 'Áreas de síntomas', zh: '症状部位' },
-  'Symptom regions documented': { es: 'Regiones de síntomas documentadas', zh: '已记录的症状区域' },
+  'Problems described': { es: 'Problemas descritos', zh: '已描述的问题' },
   'AI conversation messages': { es: 'Mensajes de conversación con IA', zh: 'AI 对话消息数' },
   'Injections recorded': { es: 'Inyecciones registradas', zh: '已记录的注射' },
   'Conditions': { es: 'Afecciones', zh: '疾病状况' },
@@ -418,7 +418,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
             title="Symptom Details & Treatment History"
             onEdit={() => go('symptom-details')}
             items={[
-              { label: 'Symptom regions documented', value: Object.keys(data.hpiData.symptoms || {}).length.toString() },
+              { label: 'Problems described', value: String(Object.keys(data.hpiData.problems || {}).length || Object.keys(data.hpiData.symptoms || {}).length) },
               { label: 'AI conversation messages', value: (data.hpiData.conversationHistory || []).length.toString() },
               ...(has('treatments') ? [{ label: 'Injections recorded', value: (data.hpiData.conservativeTreatments?.injections || []).length.toString() }] : []),
             ]}

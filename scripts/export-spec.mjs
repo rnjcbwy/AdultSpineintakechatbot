@@ -110,7 +110,7 @@ const WRITERS = {
   SocialHistory: { update: 'socialHistory' },
   PriorTreatments: { updateTx: 'hpiData.conservativeTreatments' },
   RecordsUpload: { updateEv: 'authEvidence' },
-  SymptomDetails: { updateOverall: 'hpiData.overall', update: 'hpiData.symptoms.{symptomId}' },
+  SymptomDetails: { updateOverall: 'hpiData.overall', update: 'hpiData.problems.{problemId}' },
 };
 
 /**
@@ -565,7 +565,7 @@ function pathExists(schema, dotted) {
   }
   let cur = schema;
   for (const k of dotted.split('.')) {
-    if (k === '{symptomId}') return true;         // keyed by the patient's symptoms
+    if (k === '{symptomId}' || k === '{problemId}') return true; // keyed by the patient's problems
     if (cur == null || typeof cur !== 'object') return false;
     if (!(k in cur)) {
       // Nested objects that are created on first write (e.g. a treatment's

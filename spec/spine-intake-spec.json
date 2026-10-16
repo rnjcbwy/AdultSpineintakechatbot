@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-16T14:23:34.863Z",
+    "generatedAt": "2026-10-16T16:21:37.951Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -95,6 +95,8 @@
       },
       "hpiData": {
         "conversationHistory": [],
+        "problems": {},
+        "primaryProblem": "",
         "symptoms": {},
         "primaryRegion": "",
         "overall": {},
@@ -595,276 +597,108 @@
       "subtitle": "Either way takes about five minutes. Pick whichever feels easier.",
       "fields": [
         {
-          "path": "hpiData.overall.aggravatingFactors",
-          "type": "multi_choice",
-          "label": "What makes your symptoms worse? (select all that apply)",
+          "path": "hpiData.primaryProblem",
+          "type": "text",
+          "label": "Which problem bothers you the most?",
           "placeholder": null,
-          "options": [
-            "Sitting",
-            "Standing",
-            "Walking",
-            "Bending forward",
-            "Bending backward",
-            "Twisting",
-            "Lifting",
-            "Coughing/sneezing",
-            "Lying down",
-            "Getting up from a chair",
-            "Driving",
-            "Exercise",
-            "Stairs"
-          ]
+          "showWhen": "problems.length > 1"
         },
         {
-          "path": "hpiData.overall.relievingFactors",
-          "type": "multi_choice",
-          "label": "What makes your symptoms better? (select all that apply)",
+          "path": "hpiData.problems.{problemId}.onset",
+          "type": "single_choice",
+          "label": "When did this start?",
           "placeholder": null,
-          "options": [
-            "Rest",
-            "Lying down",
-            "Sitting",
-            "Leaning forward",
-            "Walking",
-            "Ice",
-            "Heat",
-            "Medication",
-            "Stretching",
-            "Position changes",
-            "Nothing helps"
-          ]
+          "showWhen": "!(single && duration)"
         },
         {
-          "path": "hpiData.overall.numbness",
-          "type": "yes_no",
-          "label": "Numbness?",
+          "path": "hpiData.problems.{problemId}.onsetType",
+          "type": "single_choice",
+          "label": "How did it start?",
           "placeholder": null
         },
         {
-          "path": "hpiData.overall.tingling",
+          "path": "hpiData.problems.{problemId}.progression",
+          "type": "single_choice",
+          "label": "Over time, has this symptom been...",
+          "placeholder": null
+        },
+        {
+          "path": "hpiData.problems.{problemId}.severity",
+          "type": "text",
+          "label": "How bad is it on a typical day? (0 to 10)",
+          "placeholder": null
+        },
+        {
+          "path": "hpiData.problems.{problemId}.quality",
+          "type": "multi_choice",
+          "label": "How would you describe it? (optional, tap all that apply)",
+          "placeholder": null
+        },
+        {
+          "path": "hpiData.problems.{problemId}.numbness",
+          "type": "yes_no",
+          "label": "Numbness anywhere?",
+          "placeholder": null
+        },
+        {
+          "path": "hpiData.problems.{problemId}.tingling",
           "type": "yes_no",
           "label": "Tingling or pins-and-needles?",
           "placeholder": null
         },
         {
-          "path": "hpiData.overall.weakness",
+          "path": "hpiData.problems.{problemId}.weakness",
           "type": "yes_no",
-          "label": "Weakness?",
+          "label": "Weakness in an arm or leg?",
           "placeholder": null
         },
         {
-          "path": "hpiData.overall.sleepDisruption",
+          "path": "hpiData.problems.{problemId}.bowelBladder",
           "type": "yes_no",
-          "label": "Does it disrupt your sleep?",
+          "label": "Any new trouble controlling your bladder or bowels?",
           "placeholder": null
         },
         {
-          "path": "hpiData.overall.handDexterity",
+          "path": "hpiData.problems.{problemId}.saddleAnesthesia",
           "type": "yes_no",
-          "label": "Trouble with buttons, writing, or small objects?",
+          "label": "Numbness in the groin or inner thighs?",
+          "placeholder": null,
+          "showWhen": "hasLumbar"
+        },
+        {
+          "path": "hpiData.problems.{problemId}.footDrop",
+          "type": "yes_no",
+          "label": "Foot slapping or catching on stairs?",
+          "placeholder": null,
+          "showWhen": "hasLumbar"
+        },
+        {
+          "path": "hpiData.problems.{problemId}.handDexterity",
+          "type": "yes_no",
+          "label": "Trouble with buttons, writing or small objects?",
           "placeholder": null,
           "showWhen": "hasCervical"
         },
         {
-          "path": "hpiData.overall.droppingObjects",
+          "path": "hpiData.problems.{problemId}.droppingObjects",
           "type": "yes_no",
-          "label": "Dropping objects more than usual?",
+          "label": "Dropping things more than usual?",
           "placeholder": null,
           "showWhen": "hasCervical"
         },
         {
-          "path": "hpiData.overall.gaitChanges",
+          "path": "hpiData.problems.{problemId}.gaitChanges",
           "type": "yes_no",
-          "label": "Balance or coordination problems?",
+          "label": "Unsteady on your feet?",
           "placeholder": null,
           "showWhen": "hasCervical"
         },
         {
-          "path": "hpiData.overall.lhermittes",
+          "path": "hpiData.problems.{problemId}.lhermittes",
           "type": "yes_no",
-          "label": "Electric shock feeling with neck movement?",
+          "label": "Electric shock down your spine when you bend your neck?",
           "placeholder": null,
           "showWhen": "hasCervical"
-        },
-        {
-          "path": "hpiData.overall.painBelowKnee",
-          "type": "yes_no",
-          "label": "Pain below the knee?",
-          "placeholder": null,
-          "showWhen": "hasLumbar"
-        },
-        {
-          "path": "hpiData.overall.reliefLeaningForward",
-          "type": "yes_no",
-          "label": "Symptoms improve when you sit or lean forward?",
-          "placeholder": null,
-          "showWhen": "hasLumbar"
-        },
-        {
-          "path": "hpiData.overall.footDrop",
-          "type": "yes_no",
-          "label": "Difficulty with stairs or foot feels floppy?",
-          "placeholder": null,
-          "showWhen": "hasLumbar"
-        },
-        {
-          "path": "hpiData.overall.bowelBladder",
-          "type": "yes_no",
-          "label": "Changes in bowel or bladder control?",
-          "placeholder": null,
-          "showWhen": "hasLumbar"
-        },
-        {
-          "path": "hpiData.overall.saddleAnesthesia",
-          "type": "yes_no",
-          "label": "Numbness in the groin or inner thigh area?",
-          "placeholder": null,
-          "showWhen": "hasLumbar"
-        },
-        {
-          "path": "hpiData.overall.walkingTolerance",
-          "type": "single_choice",
-          "label": "How far can you walk before needing to stop?",
-          "placeholder": null,
-          "options": [
-            "Unlimited",
-            "More than 30 minutes",
-            "15-30 minutes",
-            "5-15 minutes",
-            "Less than 5 minutes",
-            "Less than 1 block",
-            "Need a wheelchair/scooter"
-          ],
-          "showWhen": "hasLumbar"
-        },
-        {
-          "path": "hpiData.overall.workImpact",
-          "type": "select",
-          "label": "Impact on work",
-          "placeholder": null,
-          "options": [
-            "No impact",
-            "Mild — can still work",
-            "Moderate — work is difficult",
-            "Severe — missing work",
-            "Unable to work",
-            "Retired/Not working"
-          ]
-        },
-        {
-          "path": "hpiData.overall.exerciseImpact",
-          "type": "select",
-          "label": "Impact on exercise/activities",
-          "placeholder": null,
-          "options": [
-            "No impact",
-            "Mild limitation",
-            "Moderate limitation",
-            "Severe limitation",
-            "Unable to exercise"
-          ]
-        },
-        {
-          "path": "hpiData.overall.sittingTolerance",
-          "type": "select",
-          "label": "How long can you sit comfortably?",
-          "placeholder": null,
-          "options": [
-            "No limitation",
-            "More than 1 hour",
-            "30-60 minutes",
-            "15-30 minutes",
-            "Less than 15 minutes"
-          ]
-        },
-        {
-          "path": "hpiData.overall.standingTolerance",
-          "type": "select",
-          "label": "How long can you stand comfortably?",
-          "placeholder": null,
-          "options": [
-            "No limitation",
-            "More than 30 minutes",
-            "15-30 minutes",
-            "5-15 minutes",
-            "Less than 5 minutes"
-          ]
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.onset",
-          "type": "text",
-          "label": "When did this start?",
-          "placeholder": "e.g., About 6 months ago, After a fall in March 2024",
-          "showWhen": "open"
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.onsetType",
-          "type": "single_choice",
-          "label": "How did it start?",
-          "placeholder": null,
-          "options": [
-            "Gradually over time",
-            "Suddenly",
-            "After an injury",
-            "After surgery",
-            "I'm not sure"
-          ],
-          "showWhen": "open"
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.progression",
-          "type": "single_choice",
-          "label": "Over time, has this symptom been...",
-          "placeholder": null,
-          "options": [
-            "Getting worse",
-            "Staying about the same",
-            "Getting better",
-            "Comes and goes"
-          ],
-          "showWhen": "open"
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.side",
-          "type": "single_choice",
-          "label": "Which side?",
-          "placeholder": null,
-          "options": [
-            "Right",
-            "Left",
-            "Both sides",
-            "Midline/center",
-            "Varies"
-          ],
-          "showWhen": "open"
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.severity",
-          "type": "text",
-          "label": "How severe is it? (0 = none, 10 = worst imaginable):",
-          "placeholder": null,
-          "showWhen": "open"
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.quality",
-          "type": "multi_choice",
-          "label": "How would you describe it? (select all that apply)",
-          "placeholder": null,
-          "showWhen": "open"
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.radiation",
-          "type": "text",
-          "label": "Does it travel or spread to other areas?",
-          "placeholder": null,
-          "showWhen": "open"
-        },
-        {
-          "path": "hpiData.symptoms.{symptomId}.radiationTo",
-          "type": "text",
-          "label": "Where does it travel to?",
-          "placeholder": "Where does it travel to? e.g., Down my left leg to the foot",
-          "showWhen": "regionData.radiation"
         }
       ]
     },
@@ -5360,6 +5194,7 @@
       ],
       "detectInFields": [
         "bowelBladder",
+        "hpiData.overall.bowelBladder",
         "visit.postop.bowelBladder"
       ]
     },
@@ -5377,7 +5212,8 @@
         "perineal numbness"
       ],
       "detectInFields": [
-        "saddleAnesthesia"
+        "saddleAnesthesia",
+        "hpiData.overall.saddleAnesthesia"
       ]
     },
     {
@@ -16853,6 +16689,10 @@
         "es": "p. ej., cónyuge, padre/madre",
         "zh": "例如：配偶、父母"
       },
+      "Choose every area where you have pain, numbness, tingling or weakness. The next step asks what it feels like.": {
+        "es": "Elija cada zona donde tenga dolor, entumecimiento, hormigueo o debilidad. El siguiente paso pregunta cómo se siente.",
+        "zh": "请选择所有出现疼痛、麻木、刺痛或无力的部位。下一步会询问具体感受。"
+      },
       "What Brings You In Today?": {
         "es": "¿Qué lo trae hoy?",
         "zh": "今天您为什么来就诊？"
@@ -17085,6 +16925,122 @@
         "es": "Ha agregado el máximo de 4 síntomas propios.",
         "zh": "您已添加最多4个自定义症状。"
       },
+      "Neck and arm symptoms": {
+        "es": "Síntomas de cuello y brazo",
+        "zh": "颈部和手臂症状"
+      },
+      "Mid-back symptoms": {
+        "es": "Síntomas de la espalda media",
+        "zh": "中背部症状"
+      },
+      "Low back and leg symptoms": {
+        "es": "Síntomas de la espalda baja y la pierna",
+        "zh": "下背部和腿部症状"
+      },
+      "Posture or curvature": {
+        "es": "Postura o curvatura",
+        "zh": "姿势或脊柱弯曲"
+      },
+      "Your symptoms": {
+        "es": "Sus síntomas",
+        "zh": "您的症状"
+      },
+      "A few quick questions about each problem. Where it hurts and where it travels comes from the body map you drew, so we will not ask that again.": {
+        "es": "Unas pocas preguntas rápidas sobre cada problema. Dónde le duele y hacia dónde se extiende viene del mapa corporal que dibujó, así que no lo volveremos a preguntar.",
+        "zh": "关于每个问题的几个快速提问。疼痛的部位和放射范围来自您绘制的身体图，因此不会再次询问。"
+      },
+      "Which problem bothers you the most?": {
+        "es": "¿Qué problema le molesta más?",
+        "zh": "哪个问题最困扰您？"
+      },
+      "When did this start?": {
+        "es": "¿Cuándo comenzó esto?",
+        "zh": "这是什么时候开始的？"
+      },
+      "Gradually, for no clear reason": {
+        "es": "Gradualmente, sin una razón clara",
+        "zh": "逐渐出现，没有明显原因"
+      },
+      "Suddenly": {
+        "es": "De repente",
+        "zh": "突然出现"
+      },
+      "After an injury or accident": {
+        "es": "Después de una lesión o accidente",
+        "zh": "受伤或事故之后"
+      },
+      "After lifting or straining": {
+        "es": "Después de levantar algo o hacer esfuerzo",
+        "zh": "搬重物或用力之后"
+      },
+      "Getting better": {
+        "es": "Mejorando",
+        "zh": "逐渐好转"
+      },
+      "Getting worse": {
+        "es": "Empeorando",
+        "zh": "逐渐加重"
+      },
+      "Comes and goes": {
+        "es": "Va y viene",
+        "zh": "时有时无"
+      },
+      "How bad is it on a typical day? (0 to 10)": {
+        "es": "¿Qué tan fuerte es en un día típico? (0 a 10)",
+        "zh": "通常一天的疼痛程度如何？（0 到 10）"
+      },
+      "How would you describe it? (optional, tap all that apply)": {
+        "es": "¿Cómo lo describiría? (opcional, toque todos los que apliquen)",
+        "zh": "您会如何描述它？（可选，点选所有适用项）"
+      },
+      "Safety check": {
+        "es": "Revisión de seguridad",
+        "zh": "安全检查"
+      },
+      "A few yes/no questions that matter for your care. Please answer each one.": {
+        "es": "Unas pocas preguntas de sí/no que importan para su atención. Por favor responda cada una.",
+        "zh": "几个对您的诊疗很重要的是/否问题。请逐一回答。"
+      },
+      "Numbness anywhere?": {
+        "es": "¿Entumecimiento en alguna parte?",
+        "zh": "身体任何部位麻木？"
+      },
+      "Tingling or pins-and-needles?": {
+        "es": "¿Hormigueo o sensación de pinchazos?",
+        "zh": "刺痛或针刺感？"
+      },
+      "Weakness in an arm or leg?": {
+        "es": "¿Debilidad en un brazo o una pierna?",
+        "zh": "手臂或腿部无力？"
+      },
+      "Any new trouble controlling your bladder or bowels?": {
+        "es": "¿Algún problema nuevo para controlar la vejiga o el intestino?",
+        "zh": "新出现的大小便控制困难？"
+      },
+      "Numbness in the groin or inner thighs?": {
+        "es": "¿Entumecimiento en la ingle o la cara interna de los muslos?",
+        "zh": "腹股沟或大腿内侧麻木？"
+      },
+      "Foot slapping or catching on stairs?": {
+        "es": "¿El pie se arrastra o se traba en las escaleras?",
+        "zh": "上楼梯时脚拖地或绊到？"
+      },
+      "Trouble with buttons, writing or small objects?": {
+        "es": "¿Dificultad con botones, escritura u objetos pequeños?",
+        "zh": "扣扣子、写字或拿小物件有困难？"
+      },
+      "Dropping things more than usual?": {
+        "es": "¿Se le caen las cosas más de lo habitual?",
+        "zh": "比平时更容易掉东西？"
+      },
+      "Unsteady on your feet?": {
+        "es": "¿Inestable al caminar?",
+        "zh": "站立或行走不稳？"
+      },
+      "Electric shock down your spine when you bend your neck?": {
+        "es": "¿Sensación de descarga eléctrica por la columna al doblar el cuello?",
+        "zh": "低头时脊柱有触电感？"
+      },
       "How would you like to describe your symptoms?": {
         "es": "¿Cómo prefiere describir sus síntomas?",
         "zh": "您想如何描述您的症状？"
@@ -17285,10 +17241,6 @@
         "es": "Pérdida de sensibilidad",
         "zh": "感觉丧失"
       },
-      "Tingling or pins-and-needles?": {
-        "es": "¿Hormigueo o sensación de pinchazos?",
-        "zh": "刺痛或针刺感？"
-      },
       "Weakness?": {
         "es": "¿Debilidad?",
         "zh": "无力？"
@@ -17457,10 +17409,6 @@
         "es": "¿Cuánto tiempo puede estar de pie cómodamente?",
         "zh": "您能舒适地站多久？"
       },
-      "When did this start?": {
-        "es": "¿Cuándo comenzó esto?",
-        "zh": "这是什么时候开始的？"
-      },
       "e.g., About 6 months ago, After a fall in March 2024": {
         "es": "p. ej., Hace unos 6 meses, Después de una caída en marzo de 2024",
         "zh": "例如：大约6个月前，2024年3月摔倒之后"
@@ -17472,10 +17420,6 @@
       "Gradually over time": {
         "es": "Gradualmente con el tiempo",
         "zh": "随时间逐渐出现"
-      },
-      "Suddenly": {
-        "es": "De repente",
-        "zh": "突然出现"
       },
       "After an injury": {
         "es": "Después de una lesión",
@@ -17489,21 +17433,9 @@
         "es": "Con el tiempo, este síntoma ha estado...",
         "zh": "随着时间推移，这个症状一直是……"
       },
-      "Getting worse": {
-        "es": "Empeorando",
-        "zh": "逐渐加重"
-      },
       "Staying about the same": {
         "es": "Manteniéndose más o menos igual",
         "zh": "大致保持不变"
-      },
-      "Getting better": {
-        "es": "Mejorando",
-        "zh": "逐渐好转"
-      },
-      "Comes and goes": {
-        "es": "Va y viene",
-        "zh": "时有时无"
       },
       "Which side?": {
         "es": "¿Qué lado?",
@@ -20821,9 +20753,9 @@
         "es": "Áreas de síntomas",
         "zh": "症状部位"
       },
-      "Symptom regions documented": {
-        "es": "Regiones de síntomas documentadas",
-        "zh": "已记录的症状区域"
+      "Problems described": {
+        "es": "Problemas descritos",
+        "zh": "已描述的问题"
       },
       "AI conversation messages": {
         "es": "Mensajes de conversación con IA",
