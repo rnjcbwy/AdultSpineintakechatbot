@@ -698,6 +698,8 @@ function SubmittedView({ data, onGoToStep }) {
   const [delivered, setDelivered] = useState(false);
   const summary = data.generatedSummary;
   const sub = data.submission;
+  // Which kind of visit this was, for the closing line.
+  const visitType = data.visit?.type || '';
 
   // The note is written in the background after the answers are stored. If
   // it was not ready when the patient submitted, keep asking until it is.
