@@ -162,7 +162,7 @@ const SPEC_SECTIONS = {
 
 /** Step id (flows.STEP_LABELS) -> component file. */
 const STEP_FILES = {
-  welcome: 'Welcome', consent: 'BeforeWeBegin', 'visit-type': 'VisitType',
+  welcome: 'Welcome', 'visit-type': 'VisitType',
   'work-injury': 'WorkInjury', interval: 'IntervalHistory', postop: 'PostOpVisit',
   demographics: 'Demographics',
   'chief-complaint': 'ChiefComplaint', 'pain-map': 'PainMap', 'symptom-details': 'SymptomDetails',

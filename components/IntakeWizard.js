@@ -48,7 +48,6 @@ const STEP_OF = {
 import ProgressBar from './ProgressBar';
 import FinishLater from './FinishLater';
 import Welcome from './steps/Welcome';
-import BeforeWeBegin from './steps/BeforeWeBegin';
 import VisitType from './steps/VisitType';
 import WorkInjury from './steps/WorkInjury';
 import IntervalHistory from './steps/IntervalHistory';
@@ -73,7 +72,6 @@ import FinalReview from './steps/FinalReview';
 // Step id -> component. The order comes from the visit type (lib/flows.js).
 const STEP_COMPONENTS = {
   welcome: Welcome,
-  consent: BeforeWeBegin,
   'visit-type': VisitType,
   'work-injury': WorkInjury,
   interval: IntervalHistory,
@@ -115,8 +113,8 @@ export default function IntakeWizard() {
   const currentStep = Math.min(data.currentStep, steps.length - 1);
   const stepId = steps[currentStep]?.id;
   const StepComponent = STEP_COMPONENTS[stepId] || Welcome;
-  // Welcome (0) and the consent gate show a clean full-page card with no progress header
-  const showChrome = currentStep > 0 && stepId !== 'consent';
+  // The welcome screen is a clean full-page card with no progress header.
+  const showChrome = currentStep > 0;
 
   const goNext = () => {
     completeStep(currentStep);

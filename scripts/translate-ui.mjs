@@ -139,7 +139,7 @@ export function extractStrings() {
     if (f.includes(path.join('lib', 'translations'))) continue;
     const src = fs.readFileSync(f, 'utf8');
     for (const k of dictionaryKeys(src)) { keys.add(k); inline.add(k); }
-    if (/Welcome\.js$|BeforeWeBegin\.js$/.test(f)) for (const k of englishBlockStrings(src)) keys.add(k);
+    if (/Welcome\.js$/.test(f)) for (const k of englishBlockStrings(src)) keys.add(k);
     if (/consent\.js$/.test(f)) for (const k of consentStrings(src)) keys.add(k);
     if (PLAIN_FILES.test(f)) for (const k of plainStrings(src)) { keys.add(k); plain.add(k); }
   }
@@ -164,7 +164,7 @@ Rules:
 - Patient-facing, formal and polite register; plain language a patient understands; medically accurate.
 - Translate the MEANING, not word by word; keep sentences natural in ${language}.
 - Keep placeholders such as {done} and {total} exactly as they are; keep **double asterisks** around the same words they wrap in English.
-- Keep medical abbreviations and instrument names as commonly written in ${language} clinical settings (ODI, NDI, mJOA, SRS-22r, MRI, CT, EMG, PT, ESI, NSAID); keep "Dr. Wey" and "911" unchanged.
+- Keep medical abbreviations and instrument names as commonly written in ${language} clinical settings (ODI, NDI, mJOA, SRS-22r, MRI, CT, EMG, PT, ESI, NSAID); keep "911" unchanged. The form never names the surgeon; keep it that way.
 - Keep trailing punctuation, ellipses and question marks consistent with the source.
 - Output ONLY a JSON object whose keys are the exact source strings and whose values are the translations. No commentary, no code fences.`;
   const user = JSON.stringify(strings);

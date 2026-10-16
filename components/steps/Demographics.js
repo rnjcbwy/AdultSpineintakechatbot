@@ -10,20 +10,18 @@ import Collapsible, { countFilled } from '../ui/Collapsible';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
-  'Address, insurance and contacts (optional)': { es: 'Dirección, seguro y contactos (opcional)', zh: '地址、保险和联系人（可选）' },
-  'The office can take these at your visit. Fill them in now if you have them handy.': {
-    es: 'El consultorio puede tomarlos en su visita. Complételos ahora si los tiene a mano.',
-    zh: '诊所可以在您就诊时登记这些信息。如果方便，现在也可以填写。',
+  'Address, insurance and referral': { es: 'Dirección, seguro y referencia', zh: '地址、保险与转诊' },
+  'If you already have an appointment, or you have been seen here before, we most likely have this on file and you can leave it blank. If this is your first time, please fill it in.': {
+    es: 'Si ya tiene una cita, o ya ha sido atendido aquí antes, lo más probable es que ya tengamos esta información y puede dejarla en blanco. Si es su primera vez, por favor complétela.',
+    zh: '如果您已经预约，或者之前在这里就诊过，我们很可能已有这些信息，您可以留空。如果这是您第一次来，请填写。',
   },
+  'Emergency contact (optional)': { es: 'Contacto de emergencia (opcional)', zh: '紧急联系人（可选）' },
+  'Someone we may call if we cannot reach you.': { es: 'Alguien a quien podamos llamar si no logramos comunicarnos con usted.', zh: '在联系不到您时可以联系的人。' },
   'Address': { es: 'Dirección', zh: '地址' },
   'Patient Information': { es: 'Información del paciente', zh: '患者信息' },
   'State / Province / Region': { es: 'Estado / Provincia / Región', zh: '州 / 省 / 地区' },
   'Postal code': { es: 'Código postal', zh: '邮政编码' },
   'Country': { es: 'País', zh: '国家' },
-  'Patients travel to Dr. Wey from everywhere; enter the country you live in.': {
-    es: 'Pacientes de todo el mundo acuden al Dr. Wey; indique el país donde vive.',
-    zh: '世界各地的患者都会来找 Wey 医生；请填写您居住的国家。',
-  },
   "Let's start with some basic information. Fields marked with * are required.": {
     es: 'Comencemos con información básica. Los campos marcados con * son obligatorios.',
     zh: '让我们从一些基本信息开始。标有 * 的字段为必填项。',
@@ -185,12 +183,13 @@ export default function Demographics({ onNext, onBack }) {
           </div>
         </div>
 
-        <Collapsible
-          title={t('Address, insurance and contacts (optional)')}
-          hint={t('The office can take these at your visit. Fill them in now if you have them handy.')}
-          filled={countFilled([d.address, d.city, d.zip, d.insuranceProvider, d.memberId, d.referringPhysician, d.primaryCarePhysician, d.emergencyContactName, d.emergencyContactPhone])}
-          total={9}
-        >
+        <div className="pt-2">
+          <h3 className="text-base font-semibold text-navy-600">{t('Address, insurance and referral')}</h3>
+          <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+            {t('If you already have an appointment, or you have been seen here before, we most likely have this on file and you can leave it blank. If this is your first time, please fill it in.')}
+          </p>
+        </div>
+
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-4">{t('Address')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -254,7 +253,6 @@ export default function Demographics({ onNext, onBack }) {
               <datalist id="country-suggestions">
                 {COUNTRY_SUGGESTIONS.map((c) => <option key={c} value={c} />)}
               </datalist>
-              <p className="text-xs text-gray-400 mt-1">{t('Patients travel to Dr. Wey from everywhere; enter the country you live in.')}</p>
             </div>
           </div>
         </div>
@@ -360,6 +358,12 @@ export default function Demographics({ onNext, onBack }) {
         </div>
 
         {/* Emergency Contact */}
+        <Collapsible
+          title={t('Emergency contact (optional)')}
+          hint={t('Someone we may call if we cannot reach you.')}
+          filled={countFilled([d.emergencyContactName, d.emergencyContactPhone, d.emergencyContactRelation])}
+          total={3}
+        >
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-4">{t('Emergency Contact')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
