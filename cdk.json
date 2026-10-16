@@ -8,8 +8,8 @@
       "https://feature-adult-spine-intake-app.d1i6bgjzjkpt0h.amplifyapp.com",
       "http://localhost:3000"
     ],
-    "noteModelId": "us.anthropic.claude-sonnet-4-6",
-    "chatModelId": "us.anthropic.claude-sonnet-4-6",
+    "noteModelId": "us.anthropic.claude-opus-5-5",
+    "chatModelId": "us.anthropic.claude-sonnet-5-5",
     "createCloudTrail": true,
     "@aws-cdk/core:newStyleStackSynthesis": true,
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
