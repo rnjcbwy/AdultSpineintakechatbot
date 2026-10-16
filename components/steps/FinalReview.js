@@ -597,7 +597,17 @@ function ConsentCard({ t, lang, consent, setNested }) {
               onChange={(e) => set(item.key, e.target.checked)}
               className="mt-1 w-5 h-5 flex-shrink-0"
             />
-            <span className="text-sm text-gray-700 leading-relaxed">{consentTextVia(item, lang, tx)}</span>
+            <span className="text-sm text-gray-700 leading-relaxed">
+              {consentTextVia(item, lang, tx)}
+              {item.link && (
+                <>
+                  {' '}
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-teal-600 underline">
+                    {t('Read the Notice of Privacy Practices (PDF)')}
+                  </a>
+                </>
+              )}
+            </span>
           </label>
         ))}
       </div>
