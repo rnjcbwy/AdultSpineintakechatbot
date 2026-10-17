@@ -30,6 +30,9 @@ const LOCAL = {
   'Patient Information': { es: 'Información del paciente', zh: '患者信息' },
   'Type of Visit': { es: 'Tipo de visita', zh: '就诊类型' },
   'Work Injury & Claim': { es: 'Lesión laboral y reclamo', zh: '工伤与理赔' },
+  'The Accident & Your Claim': { es: 'El accidente y su reclamo', zh: '事故与您的索赔' },
+  'Type': { es: 'Tipo', zh: '类型' },
+  'Attorney': { es: 'Abogado', zh: '律师' },
   'Since Your Last Visit': { es: 'Desde su última visita', zh: '自上次就诊以来' },
   'Your Surgery & Recovery': { es: 'Su cirugía y recuperación', zh: '您的手术与康复' },
   'Visit': { es: 'Visita', zh: '就诊' },
@@ -296,6 +299,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
   const has = (id) => stepIndex(steps, id) >= 0;
   const go = (id) => onGoToStep(Math.max(0, stepIndex(steps, id)));
   const wc = data.visit?.wc || {};
+  const pi = data.visit?.pi || {};
   const fu = data.visit?.followup || {};
   const po = data.visit?.postop || {};
   const regionsLabel = (data.chiefComplaint.symptomRegions || []).map(id =>
@@ -366,6 +370,20 @@ export default function FinalReview({ onBack, onGoToStep }) {
               { label: 'Date of injury', value: wc.dateOfInjury },
               { label: 'Employer', value: wc.employer },
               { label: 'Working now', value: t(wc.workStatus) },
+            ]}
+          />
+        )}
+
+        {has('legal-injury') && (
+          <ReviewCard
+            t={t}
+            title="The Accident & Your Claim"
+            onEdit={() => go('legal-injury')}
+            items={[
+              { label: 'Date of injury', value: pi.dateOfInjury },
+              { label: 'Type', value: t(pi.accidentType) },
+              { label: 'Attorney', value: [pi.attorneyName, pi.attorneyFirm].filter(Boolean).join(', ') },
+              { label: 'Claim number', value: pi.claimNumber },
             ]}
           />
         )}

@@ -102,7 +102,7 @@ function consentStrings(src) {
  * strings in plain t('...') calls, label/placeholder props and UPPER_CASE
  * option arrays rather than in an inline dictionary. Harvest those.
  */
-const PLAIN_FILES = /(?:VisitType|WorkInjury|IntervalHistory|PostOpVisit|Fields|flows|operations|problems)\.js$/;
+const PLAIN_FILES = /(?:VisitType|WorkInjury|LegalInjury|IntervalHistory|PostOpVisit|Fields|flows|operations|problems)\.js$/;
 function plainStrings(src) {
   const out = [];
   const add = (str) => {

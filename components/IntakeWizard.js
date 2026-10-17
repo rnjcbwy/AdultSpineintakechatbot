@@ -19,6 +19,7 @@ const CHROME = {
   // Step labels (shown in the header)
   'Type of Visit': { es: 'Tipo de visita', zh: '就诊类型' },
   'Work Injury & Claim': { es: 'Lesión laboral y reclamo', zh: '工伤与理赔' },
+  'The Accident & Your Claim': { es: 'El accidente y su reclamo', zh: '事故与您的索赔' },
   'Since Your Last Visit': { es: 'Desde su última visita', zh: '自上次就诊以来' },
   'Your Surgery & Recovery': { es: 'Su cirugía y recuperación', zh: '您的手术与康复' },
   'Demographics': { es: 'Datos demográficos', zh: '基本信息' },
@@ -50,6 +51,7 @@ import FinishLater from './FinishLater';
 import Welcome from './steps/Welcome';
 import VisitType from './steps/VisitType';
 import WorkInjury from './steps/WorkInjury';
+import LegalInjury from './steps/LegalInjury';
 import IntervalHistory from './steps/IntervalHistory';
 import PostOpVisit from './steps/PostOpVisit';
 import Demographics from './steps/Demographics';
@@ -74,6 +76,7 @@ const STEP_COMPONENTS = {
   welcome: Welcome,
   'visit-type': VisitType,
   'work-injury': WorkInjury,
+  'legal-injury': LegalInjury,
   interval: IntervalHistory,
   postop: PostOpVisit,
   demographics: Demographics,

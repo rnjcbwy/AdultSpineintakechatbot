@@ -7,6 +7,7 @@ import StepNavigation from '../ui/StepNavigation';
 import { Chips } from '../ui/Fields';
 
 const YES_NO = ['Yes', 'No'];
+const CLAIM = ['No', "Yes, a workers' compensation claim", 'Yes, an accident or injury with an attorney or insurance claim'];
 
 /**
  * Two choices: a new patient or a new problem, or a follow-up visit. One
@@ -28,7 +29,7 @@ export default function VisitType({ onNext, onBack }) {
     const work = next.workInjury ?? v.workInjury ?? '';
     const surgery = next.hadSurgery ?? v.hadSurgery ?? '';
     let type = '';
-    if (c === 'new') type = work === 'Yes' ? 'workers_comp' : work === 'No' ? 'new' : '';
+    if (c === 'new') type = work === CLAIM[1] ? 'workers_comp' : work === CLAIM[2] ? 'personal_injury' : work === 'No' || work === CLAIM[0] ? 'new' : '';
     if (c === 'followup') type = surgery === 'Yes' ? 'postop' : surgery === 'No' ? 'followup' : '';
     const changed = type && type !== v.type;
     if (next.choice !== undefined) setNested('visit.choice', next.choice);
@@ -83,11 +84,11 @@ export default function VisitType({ onNext, onBack }) {
       {choice === 'new' && (
         <div className="card mt-4 animate-fade-in">
           <Chips
-            label="Is this a work-related injury with a workers' compensation claim?"
-            options={YES_NO}
-            value={v.workInjury || ''}
+            label="Is this problem the result of an injury with a claim?"
+            options={CLAIM}
+            value={v.workInjury === 'Yes' ? CLAIM[1] : v.workInjury || ''}
             onChange={(x) => apply({ workInjury: x })}
-            hint="If yes, we will ask for the claim number and how the injury happened."
+            hint="If so, we will ask about the injury and the claim before the rest of your history."
           />
         </div>
       )}

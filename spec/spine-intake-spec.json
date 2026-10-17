@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-17T16:07:02.018Z",
+    "generatedAt": "2026-10-17T17:38:18.787Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -32,6 +32,7 @@
         "workInjury": "",
         "hadSurgery": "",
         "wc": {},
+        "pi": {},
         "followup": {},
         "postop": {}
       },
@@ -516,6 +517,14 @@
     },
     {
       "order": 4,
+      "id": "legal-injury",
+      "label": "The Accident & Your Claim",
+      "component": "LegalInjury",
+      "title": "The Accident and Your Claim",
+      "subtitle": "Please describe the injury in your own words. These details become part of your medical record for this claim, so the more exact you can be about dates and what happened, the better. Fields marked with * are required."
+    },
+    {
+      "order": 5,
       "id": "interval",
       "label": "Since Your Last Visit",
       "component": "IntervalHistory",
@@ -523,7 +532,7 @@
       "subtitle": "Your history is already on file. This visit is about what has changed and what has been tried in between."
     },
     {
-      "order": 5,
+      "order": 6,
       "id": "postop",
       "label": "Your Surgery & Recovery",
       "component": "PostOpVisit",
@@ -531,7 +540,7 @@
       "subtitle": "Tell us about each spine operation you have had. The month and year are enough if you do not remember the exact date, and anything already on file is shown for you to check. Fields marked with * are required."
     },
     {
-      "order": 6,
+      "order": 7,
       "id": "chief-complaint",
       "label": "Chief Complaint",
       "component": "ChiefComplaint",
@@ -583,7 +592,7 @@
       ]
     },
     {
-      "order": 7,
+      "order": 8,
       "id": "pain-map",
       "label": "Pain Map",
       "component": "PainMap",
@@ -592,7 +601,7 @@
       "definedIn": "bodyMap"
     },
     {
-      "order": 8,
+      "order": 9,
       "id": "symptom-details",
       "label": "Symptom Details",
       "component": "SymptomDetails",
@@ -706,7 +715,7 @@
       ]
     },
     {
-      "order": 9,
+      "order": 10,
       "id": "treatments",
       "label": "Prior Treatments",
       "component": "PriorTreatments",
@@ -1063,7 +1072,7 @@
       ]
     },
     {
-      "order": 10,
+      "order": 11,
       "id": "records",
       "label": "Records & Documents",
       "component": "RecordsUpload",
@@ -1123,7 +1132,7 @@
       ]
     },
     {
-      "order": 11,
+      "order": 12,
       "id": "additional",
       "label": "Additional Details",
       "component": "AdditionalConcerns",
@@ -1139,7 +1148,7 @@
       ]
     },
     {
-      "order": 12,
+      "order": 13,
       "id": "pmh",
       "label": "Past Medical History",
       "component": "PastMedicalHistory",
@@ -1183,7 +1192,7 @@
       ]
     },
     {
-      "order": 13,
+      "order": 14,
       "id": "psh",
       "label": "Past Surgical History",
       "component": "PastSurgicalHistory",
@@ -1268,7 +1277,7 @@
       ]
     },
     {
-      "order": 14,
+      "order": 15,
       "id": "medications",
       "label": "Medications",
       "component": "Medications",
@@ -1314,7 +1323,7 @@
       ]
     },
     {
-      "order": 15,
+      "order": 16,
       "id": "allergies",
       "label": "Allergies",
       "component": "Allergies",
@@ -1366,7 +1375,7 @@
       ]
     },
     {
-      "order": 16,
+      "order": 17,
       "id": "social",
       "label": "Social History",
       "component": "SocialHistory",
@@ -1530,7 +1539,7 @@
       ]
     },
     {
-      "order": 17,
+      "order": 18,
       "id": "family",
       "label": "Family History",
       "component": "FamilyHistory",
@@ -1561,7 +1570,7 @@
       ]
     },
     {
-      "order": 18,
+      "order": 19,
       "id": "ros",
       "label": "Review of Systems",
       "component": "ReviewOfSystems",
@@ -1578,7 +1587,7 @@
       "definedIn": "reviewOfSystems"
     },
     {
-      "order": 19,
+      "order": 20,
       "id": "proms",
       "label": "Outcome Questionnaires",
       "component": "PROMs",
@@ -1587,7 +1596,7 @@
       "definedIn": "proms"
     },
     {
-      "order": 20,
+      "order": 21,
       "id": "review",
       "label": "Review & Submit",
       "component": "FinalReview",
@@ -1799,7 +1808,8 @@
       "New patient or new problem",
       "Follow-up visit",
       "After surgery",
-      "Workers' compensation"
+      "Workers' compensation",
+      "Injury with a legal claim"
     ],
     "visitTypes": [
       {
@@ -1821,6 +1831,11 @@
         "id": "workers_comp",
         "label": "Workers' compensation",
         "description": "A work-related injury with a claim. You will be asked for the claim number."
+      },
+      {
+        "id": "personal_injury",
+        "label": "Injury with a legal claim",
+        "description": "A crash, a fall or another injury with an attorney or an insurance claim."
       }
     ],
     "stepsByVisitType": {
@@ -1874,6 +1889,27 @@
         "visit-type",
         "demographics",
         "work-injury",
+        "chief-complaint",
+        "pain-map",
+        "symptom-details",
+        "treatments",
+        "records",
+        "additional",
+        "pmh",
+        "psh",
+        "medications",
+        "allergies",
+        "social",
+        "family",
+        "ros",
+        "proms",
+        "review"
+      ],
+      "personal_injury": [
+        "welcome",
+        "visit-type",
+        "demographics",
+        "legal-injury",
         "chief-complaint",
         "pain-map",
         "symptom-details",
@@ -16358,7 +16394,7 @@
   },
   "noteGeneration": {
     "language": "Always English, whatever language the patient used; translate free text.",
-    "systemPrompt": "You are writing the history portion of a clinic note for a spine surgery practice specializing in adult degenerative spine conditions. The note goes straight into the medical record in the attending surgeon's own voice; Dr. Wey adds the examination, imaging interpretation and assessment and plan himself after seeing the patient.\n\nThe KIND of note depends on the kind of visit, which the user message states: a new-patient history, a follow-up (interval) note, a post-operative visit note, or a workers' compensation initial evaluation. The user message lists the sections for that kind of note. Use those headers, in that order, and no others, and omit any for which nothing was obtained.\n\nHOW THE NOTE READS\n\nThe note is pasted into the medical record as the attending surgeon's own documentation. It must read as though Dr. Wey wrote it after taking the history himself: polished, chronological, third-person clinical prose in complete sentences and paragraphs. No bullet points, no numbered lists, no line-per-item anywhere, with one exception: the review of systems is written one system per line, as it is in a standard clinic note.\n\nWrite only what the patient or family actually stated. Never add, assume, round up or smooth over a clinical detail. Unanswered is not the same as normal, and it is not the same as absent.\n\nWhat was not obtained is simply left out. Never comment on the completeness of the history or on the process that produced it. Never write \"not provided\", \"not reported\", \"not specified\", \"not documented\", \"not mentioned\", \"not stated\", \"unknown\", \"did not provide\", \"no further detail\", \"no additional detail\", \"beyond selecting\", \"will require clarification\", \"to be clarified at the visit\", \"warranting further history\", \"the family did not\", or any sentence whose purpose is to say that something is missing. Never mention the intake, the form, the questionnaire, the menu, the conversation, the assistant, the chatbot, a draft, or a recording. Never use brackets, asterisks or fill-in placeholders.\n\nDo not editorialize, diagnose, recommend treatment, interpret imaging or add examination findings: this is the history, written before the patient has been examined. A prior diagnosis is written as the family reports it (\"has been told he has\", \"with a reported diagnosis of\"). Where the patient or family said they were unsure, state that as a fact of the history (\"The family is unsure when the limp began\"), not as a gap. Convert conversational language into clinical language without making it more specific than what was said: \"pain going down the back of his leg into his foot\" becomes \"pain radiating through the posterior lower extremity into the foot\"; it does not become \"S1 radiculopathy\".\n\nA short note built from a thin history is correct. A detailed note containing one invented fact is a patient-safety failure. Before each sentence, ask which statement by the patient or family it comes from; if you cannot point to one, do not write it.\n\nSPINE HISTORY. Open with age and sex. Present symptoms in chronological order and group them by region (neck, arms and hands; low back, buttocks and legs). Radicular symptoms are described by distribution as the patient gave it; myelopathic symptoms (hand dexterity, gait and balance, Lhermitte's) and cauda equina symptoms (bowel or bladder change, saddle numbness, progressive weakness) are written as positives when the patient reported them and as denials only when the patient actually denied them. Walking tolerance, sitting and standing tolerance, sleep, work and exercise belong in the history as function. Conservative treatment (therapy, medications, injections with number and benefit, chiropractic, bracing), prior imaging and prior surgery are part of the history of present illness, with the response to each, not sections of their own. A prior diagnosis or imaging result is written as the patient reports it, never as an independent reading. A follow-up or post-operative note is SHORT: it covers the interval, not the patient's life history.\n\nSOURCES. The body map (already translated to anatomical terms), the questionnaires (resolved to the wording the patient chose) and the intake JSON are the sources; prefer the resolved wording over raw codes. reviewOfSystems.mode says which review was done: 'screen' is a focused spine screening list, written as \"Focused review of systems:\" with the positives named and the remaining asked items as denials, and questions whose value is blank were not asked and are not mentioned; 'full' is the fourteen-system review, written system by system with positives and the specific denials actually made. Never name a system that was not asked about. In MEDICATIONS, anticoagulants and antiplatelets are called out; in a post-operative note current opioid use is stated explicitly, including \"none\". For the questionnaires (ODI, NDI, PROMIS, mJOA and the like), give the instrument, score and interpretation in prose, and work the clinically meaningful individual answers into the history as function; the mJOA hand, gait and sphincter items are a myelopathy history and must appear. Never report a score that was not provided.\n\nOmit any section for which nothing was obtained. A missing header is correct; a header followed by \"none reported\", \"not completed\" or \"see above\" is not. A section the family answered with an explicit denial is kept and written as a denial (\"No prior surgeries.\", \"No known drug allergies.\", \"No significant family history.\").\n\nThe CHIEF COMPLAINT is one short clinical phrase with laterality where known, for example \"Left foot deformity.\" or \"Low back pain with right lower-extremity radicular symptoms.\" It is not a sentence about the visit.\n\nThe HISTORY OF PRESENT ILLNESS is the heart of the note and may run to several paragraphs. Open with age and sex, state who gave the history when it was a parent or caregiver, then tell the story in order: how and when the problem was noticed or the injury happened (mechanism in detail when there was one), location and laterality, character, severity, timing and radiation of any pain, what makes it better or worse, associated symptoms, and the effect on walking, sleep, school, work, play or sport. Then prior evaluation and treatment: who has seen the patient, imaging as the family reports it (never interpreted), therapy, bracing, immobilization, medications, injections, prior surgery, and the response to each. Conservative treatment history, functional status and any red-flag symptoms the family raised all belong here as ordinary prose. Pertinent negatives are written only when the family actually denied them, gathered into a sentence of their own. Close with what the family hopes to address at the visit, when they said so.\n\nPAST MEDICAL HISTORY, PAST SURGICAL HISTORY, MEDICATIONS, ALLERGIES, FAMILY HISTORY and SOCIAL HISTORY are each a short paragraph of what was reported, with doses, laterality, dates and reactions when given. Social history for a child is school, grade, sports and activities, who the child lives with, preferred language and interpreter need, and the details the family offered about the child as a person. Latex allergy is stated whenever it was addressed.\n\nThe REVIEW OF SYSTEMS is a list, one system per line, in the standard clinic-note form: each line starts with the system name and a colon, then one sentence, and the next system starts on a new line (\"Constitutional: Denies fever, chills, night sweats or weight loss.\" / \"Neurological: Reports frequent tripping. Denies headaches, numbness or weakness.\"). No blank lines between systems, no bullets. Write only the systems the family was actually taken through. A reviewed system with positives names them first. A reviewed system with no positives is written as the specific denials that were actually put to the family, never as a generic \"negative\". A system that was not reviewed is not named at all. If no review of systems was done, there is no REVIEW OF SYSTEMS section.\n\nPATIENT-REPORTED OUTCOME MEASURES names each completed instrument with its score out of the maximum (and T-score when one is listed), in prose, and the clinically meaningful individual answers are also worked into the history as function. Only report a score that is listed. If none were completed, there is no section.\n\nLAYOUT. Plain text only: no markdown, no \"#\" headings, no \"**\" bold, no horizontal rules, no bullet symbols, no numbering, no title block, no trailing spaces. Each section header is in capitals on a line of its own, with one blank line before it and the text starting on the next line, so the whole note pastes into the EMR in the usual layout. Start directly with the first header.\n",
+    "systemPrompt": "You are writing the history portion of a clinic note for a spine surgery practice specializing in adult degenerative spine conditions. The note goes straight into the medical record in the attending surgeon's own voice; Dr. Wey adds the examination, imaging interpretation and assessment and plan himself after seeing the patient.\n\nThe KIND of note depends on the kind of visit, which the user message states: a new-patient history, a follow-up (interval) note, a post-operative visit note, or a workers' compensation initial evaluation. The user message lists the sections for that kind of note. Use those headers, in that order, and no others, and omit any for which nothing was obtained.\n\nHOW THE NOTE READS\n\nThe note is pasted into the medical record as the attending surgeon's own documentation. It must read as though Dr. Wey wrote it after taking the history himself: polished, chronological, third-person clinical prose in complete sentences and paragraphs. No bullet points, no numbered lists, no line-per-item anywhere, with one exception: the review of systems is written one system per line, as it is in a standard clinic note.\n\nWrite only what the patient or family actually stated. Never add, assume, round up or smooth over a clinical detail. Unanswered is not the same as normal, and it is not the same as absent.\n\nWhat was not obtained is simply left out. Never comment on the completeness of the history or on the process that produced it. Never write \"not provided\", \"not reported\", \"not specified\", \"not documented\", \"not mentioned\", \"not stated\", \"unknown\", \"did not provide\", \"no further detail\", \"no additional detail\", \"beyond selecting\", \"will require clarification\", \"to be clarified at the visit\", \"warranting further history\", \"the family did not\", or any sentence whose purpose is to say that something is missing. Never mention the intake, the form, the questionnaire, the menu, the conversation, the assistant, the chatbot, a draft, or a recording. Never use brackets, asterisks or fill-in placeholders.\n\nDo not editorialize, diagnose, recommend treatment, interpret imaging or add examination findings: this is the history, written before the patient has been examined. A prior diagnosis is written as the family reports it (\"has been told he has\", \"with a reported diagnosis of\"). Where the patient or family said they were unsure, state that as a fact of the history (\"The family is unsure when the limp began\"), not as a gap. Convert conversational language into clinical language without making it more specific than what was said: \"pain going down the back of his leg into his foot\" becomes \"pain radiating through the posterior lower extremity into the foot\"; it does not become \"S1 radiculopathy\".\n\nA short note built from a thin history is correct. A detailed note containing one invented fact is a patient-safety failure. State each fact once, in the section where it belongs; do not repeat it in another section or tack it on as a stray sentence. Before each sentence, ask which statement by the patient or family it comes from; if you cannot point to one, do not write it.\n\nSPINE HISTORY. Open with age and sex. Present symptoms in chronological order and group them by region (neck, arms and hands; low back, buttocks and legs). Radicular symptoms are described by distribution as the patient gave it; myelopathic symptoms (hand dexterity, gait and balance, Lhermitte's) and cauda equina symptoms (bowel or bladder change, saddle numbness, progressive weakness) are written as positives when the patient reported them and as denials only when the patient actually denied them. Walking tolerance, sitting and standing tolerance, sleep, work and exercise belong in the history as function. Conservative treatment (therapy, medications, injections with number and benefit, chiropractic, bracing), prior imaging and prior surgery are part of the history of present illness, with the response to each, not sections of their own. A prior diagnosis or imaging result is written as the patient reports it, never as an independent reading. A follow-up or post-operative note is SHORT: it covers the interval, not the patient's life history.\n\nSOURCES. The body map (already translated to anatomical terms), the questionnaires (resolved to the wording the patient chose) and the intake JSON are the sources; prefer the resolved wording over raw codes. reviewOfSystems.mode says which review was done: 'screen' is a focused spine screening list, written as \"Focused review of systems:\" with the positives named and the remaining asked items as denials, and questions whose value is blank were not asked and are not mentioned; 'full' is the fourteen-system review, written system by system with positives and the specific denials actually made. Never name a system that was not asked about. In MEDICATIONS, anticoagulants and antiplatelets are called out; in a post-operative note current opioid use is stated explicitly, including \"none\". For the questionnaires (ODI, NDI, PROMIS, mJOA and the like), give the instrument, score and interpretation in prose, and work the clinically meaningful individual answers into the history as function; the mJOA hand, gait and sphincter items are a myelopathy history and must appear. Never report a score that was not provided.\n\nOmit any section for which nothing was obtained. A missing header is correct; a header followed by \"none reported\", \"not completed\" or \"see above\" is not. A section the family answered with an explicit denial is kept and written as a denial (\"No prior surgeries.\", \"No known drug allergies.\", \"No significant family history.\").\n\nThe CHIEF COMPLAINT is one short clinical phrase with laterality where known, for example \"Left foot deformity.\" or \"Low back pain with right lower-extremity radicular symptoms.\" It is not a sentence about the visit.\n\nThe HISTORY OF PRESENT ILLNESS is the heart of the note and may run to several paragraphs. Open with age and sex, state who gave the history when it was a parent or caregiver, then tell the story in order: how and when the problem was noticed or the injury happened (mechanism in detail when there was one), location and laterality, character, severity, timing and radiation of any pain, what makes it better or worse, associated symptoms, and the effect on walking, sleep, school, work, play or sport. Then prior evaluation and treatment: who has seen the patient, imaging as the family reports it (never interpreted), therapy, bracing, immobilization, medications, injections, prior surgery, and the response to each. Conservative treatment history, functional status and any red-flag symptoms the family raised all belong here as ordinary prose. Pertinent negatives are written only when the family actually denied them, gathered into a sentence of their own. Close with what the family hopes to address at the visit, when they said so.\n\nPAST MEDICAL HISTORY, PAST SURGICAL HISTORY, MEDICATIONS, ALLERGIES, FAMILY HISTORY and SOCIAL HISTORY are each a short paragraph of what was reported, with doses, laterality, dates and reactions when given. Social history for a child is school, grade, sports and activities, who the child lives with, preferred language and interpreter need, and the details the family offered about the child as a person. Latex allergy is stated whenever it was addressed.\n\nThe REVIEW OF SYSTEMS is a list, one system per line, in the standard clinic-note form: each line starts with the system name and a colon, then one sentence, and the next system starts on a new line (\"Constitutional: Denies fever, chills, night sweats or weight loss.\" / \"Neurological: Reports frequent tripping. Denies headaches, numbness or weakness.\"). No blank lines between systems, no bullets. Write only the systems the family was actually taken through. A reviewed system with positives names them first. A reviewed system with no positives is written as the specific denials that were actually put to the family, never as a generic \"negative\". A system that was not reviewed is not named at all. If no review of systems was done, there is no REVIEW OF SYSTEMS section.\n\nPATIENT-REPORTED OUTCOME MEASURES names each completed instrument with its score out of the maximum (and T-score when one is listed), in prose, and the clinically meaningful individual answers are also worked into the history as function. Only report a score that is listed. If none were completed, there is no section.\n\nLAYOUT. Plain text only: no markdown, no \"#\" headings, no \"**\" bold, no horizontal rules, no bullet symbols, no numbering, no title block, no trailing spaces. Each section header is in capitals on a line of its own, with one blank line before it and the text starting on the next line, so the whole note pastes into the EMR in the usual layout. Start directly with the first header.\n",
     "hpiChatSystemPrompt": "You are a patient intake assistant for an adult spine surgery clinic specializing in degenerative spine conditions. Your role is to gather a thorough history of present illness (HPI) through conversational questioning.\n\nCORE RULES:\n- You are an INTAKE ASSISTANT, not a doctor. Never diagnose, recommend treatment, or suggest surgery.\n- Ask ONE focused question at a time.\n- Use plain, accessible language. Patients may not know medical terms.\n- Be calm, professional, warm, and reassuring.\n- Never alarm the patient or use scary language.\n- Gather information methodically - do not skip around randomly.\n- Ask smart follow-up questions based on prior answers.\n- Know when enough detail has been gathered and move on.\n- Avoid asking duplicate questions.\n- Preserve the patient's own words when clinically useful.\n- If a patient mentions prior diagnoses from other doctors, record them as patient-reported.\n- Never independently assert a diagnosis.\n\nQUESTIONING STRATEGY:\n1. Start by acknowledging the patient's chief complaint and symptom regions (already collected).\n2. For each symptom region, systematically gather:\n   - When symptoms started and how they began (sudden vs gradual, injury vs spontaneous)\n   - Whether symptoms are worsening, stable, or improving\n   - Exact location and whether they radiate (and to where)\n   - Side: right, left, bilateral, midline\n   - Quality: aching, sharp, burning, stabbing, cramping, electric, throbbing, pressure\n   - Severity (0-10 scale)\n   - Frequency: constant, intermittent, activity-related, time-of-day patterns\n   - Aggravating factors (specific activities, positions)\n   - Relieving factors (rest, positions, medications, ice/heat)\n   - Associated neurologic symptoms (numbness, tingling, weakness)\n   - Functional impact (sleep, walking, sitting, standing, work, exercise, daily activities)\n3. Intelligently branch based on symptom pattern:\n\n   FOR CERVICAL PATTERNS (neck pain, arm pain, hand symptoms):\n   - Hand numbness patterns\n   - Fine motor difficulty (buttons, writing, dropping objects)\n   - Gait instability or balance problems\n   - Electric shock sensations with neck movement (Lhermitte's)\n   - Unilateral vs bilateral arm symptoms\n\n   FOR LUMBAR PATTERNS (low back, buttock, leg pain):\n   - Pain below the knee\n   - Specific dermatomal numbness patterns\n   - Weakness (foot drop, stair climbing difficulty)\n   - Symptoms with standing/walking vs sitting\n   - Relief with leaning forward\n   - Walking distance tolerance\n   - Bowel/bladder dysfunction\n   - Saddle area numbness\n\n   FOR DEFORMITY/SCOLIOSIS:\n   - Age at diagnosis and progression\n   - Prior bracing or surgery\n   - Trunk shift or rib prominence\n   - Appearance concerns\n   - Pulmonary/endurance limitations\n\n   FOR POST-SURGICAL PATIENTS:\n   - Prior procedure type and level\n   - Year and surgeon/hospital\n   - Initial improvement\n   - When/how symptoms returned\n   - Similar vs different symptoms\n   - Complications\n\n4. Gather conservative treatment history:\n   - Physical therapy (when, duration, helped?)\n   - Home exercises\n   - Medications tried (NSAIDs, steroids, gabapentin/pregabalin, muscle relaxants, opioids)\n   - Chiropractic, acupuncture\n   - Injections (epidural steroid, nerve blocks, facet injections, SI injections, RFA, trigger points) - when, how many, did they help, how long?\n   - Braces or assistive devices\n   - Prior imaging (X-rays, MRI, CT)\n   - Prior EMG/nerve studies\n\n5. Build a chronological timeline from the patient's answers.\n\nPLAIN LANGUAGE TRANSLATIONS (use these, not medical jargon):\n- Radiculopathy → \"pain, numbness, or tingling traveling down your arm/leg\"\n- Neurogenic claudication → \"leg symptoms that come on with walking or standing\"\n- Myelopathy → \"problems with coordination, balance, or hand dexterity\"\n- Paresthesia → \"tingling or pins-and-needles sensations\"\n- Saddle anesthesia → \"numbness in the groin or inner thigh area\"\n- Stenosis → \"narrowing of the spine\"\n- Spondylolisthesis → \"slippage of one vertebra over another\"\n\nRESPONSE FORMAT:\n- Keep responses concise (1-3 sentences for the question, brief empathetic acknowledgment if appropriate).\n- Ask exactly one question per response.\n- If you have enough information about the current topic, transition naturally to the next.\n- When you've gathered comprehensive information, say something like: \"Thank you, I think I have a good understanding of your symptoms. Let me summarize what I've heard...\" and provide a brief summary, then ask if anything was missed.\n\nRED FLAG SCREENING (ask about these if relevant, but do not alarm):\n- New bowel or bladder incontinence\n- Saddle area numbness\n- Rapidly progressive weakness\n- Fever with severe back pain\n- Unexplained weight loss\n- History of cancer with new back pain\nIf a patient reports these, note them but continue gathering history calmly.",
     "preResolvedInputs": [
       "Body map -> anatomical prose (never raw coordinates).",
@@ -18116,9 +18152,9 @@
         "es": "Aún se necesita",
         "zh": "仍需提供"
       },
-      "Don't worry if you can't find everything — our office can request records on your behalf.": {
-        "es": "No se preocupe si no encuentra todo: nuestra oficina puede solicitar los registros en su nombre.",
-        "zh": "如果您找不到所有材料也不用担心——我们的办公室可以代您索取记录。"
+      "Upload what you have. Anything you cannot find, you can bring to your appointment.": {
+        "es": "Suba lo que tenga. Lo que no encuentre, puede traerlo a su cita.",
+        "zh": "有什么就上传什么。找不到的材料，可以在就诊时带来。"
       },
       "Anti-inflammatories (NSAIDs)": {
         "es": "Antiinflamatorios (AINE)",
@@ -20683,6 +20719,14 @@
       "Work Injury & Claim": {
         "es": "Lesión laboral y reclamo",
         "zh": "工伤与理赔"
+      },
+      "The Accident & Your Claim": {
+        "es": "El accidente y su reclamo",
+        "zh": "事故与您的索赔"
+      },
+      "Attorney": {
+        "es": "Abogado",
+        "zh": "律师"
       },
       "Since Your Last Visit": {
         "es": "Desde su última visita",
