@@ -3,6 +3,8 @@ import { limitOr429 } from '../../../lib/server/rateLimit';
 import { logError, logEvent } from '../../../lib/server/log';
 import { saveDraft, loadDraft, parseCode, MAX_DRAFT_BYTES } from '../../../lib/server/draftStore';
 import { emailConfigured, sendEmail, isEmail } from '../../../lib/server/email';
+import { getApiKey, practiceHubConfigured } from '../../../lib/server/practicehub';
+import crypto from 'node:crypto';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,8 +24,24 @@ function siteUrl(request) {
  * same). With `email`, the link is sent by Amazon SES when EMAIL_FROM is set;
  * the message holds the link only.
  */
+/** Practice Hub saves phone-intake drafts with the shared service key; those are not rate-limited by IP. */
+async function fromPracticeHub(request) {
+  const auth = request.headers.get('authorization') || '';
+  const presented = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!presented || !practiceHubConfigured()) return false;
+  try {
+    const key = await getApiKey();
+    const a = Buffer.from(presented);
+    const b = Buffer.from(key);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request) {
-  const limited = limitOr429(request, 'draft', 30, 60 * 60_000);
+  const trusted = await fromPracticeHub(request);
+  const limited = trusted ? null : limitOr429(request, 'draft', 30, 60 * 60_000);
   if (limited) return limited;
 
   const raw = await request.text();
@@ -62,7 +80,7 @@ export async function POST(request) {
         }
       }
     }
-    logEvent('draft.saved', { draftId: saved.id, refreshed: !!existing, emailed });
+    logEvent('draft.saved', { draftId: saved.id, refreshed: !!existing, emailed, source: trusted ? String(body.source || 'practicehub').slice(0, 20) : 'patient' });
     return NextResponse.json({ id: saved.id, token: saved.token, url, emailed, emailError, emailAvailable: emailConfigured() });
   } catch (err) {
     logError('draft.save_failed', err);

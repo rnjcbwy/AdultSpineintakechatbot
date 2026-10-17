@@ -1,6 +1,7 @@
 'use client';
 
 import { useIntake } from '../../lib/store';
+import { useState } from 'react';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
@@ -26,6 +27,10 @@ const T = {
     continue: 'Continue Where You Left Off',
     startNew: 'Start New Form',
     resetConfirm: 'This will start a new form and clear your previous answers. Continue?',
+    kioskStart: 'Start a new intake form',
+    kioskCode: 'Enter clinic code',
+    kioskOpen: 'Open the form',
+    kioskBad: 'That code did not work. Please ask the front desk.',
     hipaa: '🚧 This is a prototype — not HIPAA compliant',
     bannerProd: 'Your answers are sent securely to the care team and reviewed before your visit.',
   },
@@ -49,6 +54,10 @@ const T = {
     continue: 'Continuar Donde lo Dejó',
     startNew: 'Comenzar Nuevo Formulario',
     resetConfirm: 'Esto iniciará un formulario nuevo y borrará sus respuestas anteriores. ¿Continuar?',
+    kioskStart: 'Comenzar un formulario nuevo',
+    kioskCode: 'Ingresar el código de la clínica',
+    kioskOpen: 'Abrir el formulario',
+    kioskBad: 'Ese código no funcionó. Pregunte en la recepción.',
     hipaa: '🚧 Esto es un prototipo — no cumple con HIPAA',
     bannerProd: 'Sus respuestas se envían de forma segura al equipo de atención y se revisan antes de su cita.',
   },
@@ -72,6 +81,10 @@ const T = {
     continue: '从上次中断处继续',
     startNew: '开始新表格',
     resetConfirm: '这将开始一个新表格并清除您之前的答案。是否继续？',
+    kioskStart: '开始新的登记表',
+    kioskCode: '输入诊所代码',
+    kioskOpen: '打开表格',
+    kioskBad: '该代码无效，请咨询前台。',
     hipaa: '🚧 这是一个原型 — 不符合 HIPAA 标准',
     bannerProd: '您的回答将安全地发送给医疗团队，并在您就诊前审阅。',
   },
@@ -105,8 +118,27 @@ function SpineLogo() {
 }
 
 export default function Welcome({ onNext }) {
-  const { data, resetIntake, setLanguage } = useIntake();
+  const { data, resetIntake, setLanguage, kiosk } = useIntake();
   const hasExisting = data.lastUpdated && data.demographics?.firstName;
+  // The clinic tablet: a code the office read out opens a form sent from the chart.
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeState, setCodeState] = useState('');
+  const openCode = async () => {
+    if (!/^\d{6}$/.test(code)) return setCodeState('bad');
+    setCodeState('busy');
+    try {
+      const r = await fetch(`/api/invite?code=${code}`).then((x) => x.json());
+      if (r?.status === 'ok' && r.token) {
+        resetIntake();
+        window.location.href = `${window.location.pathname}?invite=${encodeURIComponent(r.token)}`;
+        return;
+      }
+      setCodeState('bad');
+    } catch {
+      setCodeState('bad');
+    }
+  };
   const lang = useLang();
   // Spanish and Chinese are written out below; the other languages come from
   // the loaded table, string by string, falling back to English.
@@ -183,12 +215,47 @@ export default function Welcome({ onNext }) {
           ))}
         </ul>
 
+        {kiosk && (
+          <div className="space-y-3 mb-3">
+            <button
+              onClick={() => { resetIntake(); setTimeout(onNext, 100); }}
+              className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block"
+            >
+              {t.kioskStart || 'Start a new intake form'}
+            </button>
+            {!codeOpen ? (
+              <button onClick={() => setCodeOpen(true)} className="btn-secondary text-base px-8 py-3 w-full max-w-xs mx-auto block">
+                {t.kioskCode || 'Enter clinic code'}
+              </button>
+            ) : (
+              <div className="max-w-xs mx-auto">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setCodeState(''); }}
+                  onKeyDown={(e) => e.key === 'Enter' && openCode()}
+                  placeholder="000000"
+                  autoFocus
+                  className="text-center text-2xl tracking-[0.4em] font-mono"
+                />
+                <button onClick={openCode} disabled={codeState === 'busy'} className="btn-secondary text-base px-8 py-3 w-full mt-2 disabled:opacity-50">
+                  {codeState === 'busy' ? '…' : t.kioskOpen || 'Open the form'}
+                </button>
+                {codeState === 'bad' && <p className="text-sm text-red-600 mt-2">{t.kioskBad || 'That code did not work. Please ask the front desk.'}</p>}
+              </div>
+            )}
+          </div>
+        )}
         <div className="space-y-3">
-          {hasExisting && (
+          {!kiosk && hasExisting && (
             <button onClick={onNext} className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block">
               {t.continue}
             </button>
           )}
+          {!kiosk && (
           <button
             onClick={() => {
               if (hasExisting) {
@@ -214,6 +281,7 @@ export default function Welcome({ onNext }) {
               </>
             )}
           </button>
+          )}
         </div>
 
         {!IS_PRODUCTION_TIER && (

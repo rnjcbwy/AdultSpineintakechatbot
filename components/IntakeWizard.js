@@ -98,7 +98,7 @@ const STEP_COMPONENTS = {
 };
 
 export default function IntakeWizard() {
-  const { data, setStep, completeStep } = useIntake();
+  const { data, setStep, completeStep, kiosk } = useIntake();
   const lang = useLang();
   const t = makeT(CHROME, lang);
   const [finishLater, setFinishLater] = useState(false);
@@ -176,6 +176,7 @@ export default function IntakeWizard() {
                   </p>
                 </div>
               </div>
+              {!kiosk && (
               <button
                 type="button"
                 onClick={() => setFinishLater(true)}
@@ -183,6 +184,7 @@ export default function IntakeWizard() {
               >
                 {t('Finish later')}
               </button>
+              )}
             </div>
             <ProgressBar
               current={currentStep}

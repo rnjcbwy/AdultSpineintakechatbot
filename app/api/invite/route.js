@@ -15,12 +15,16 @@ export const dynamic = 'force-dynamic';
 export async function GET(request) {
   const limited = limitOr429(request, 'invite', 30, 10 * 60_000);
   if (limited) return limited;
-  const token = new URL(request.url).searchParams.get('token') || '';
-  if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) return NextResponse.json({ status: 'unknown' });
+  const url = new URL(request.url);
+  const token = url.searchParams.get('token') || '';
+  // The clinic tablet: a six-digit code the office read out, instead of a link.
+  const code = url.searchParams.get('code') || '';
+  if (code ? !/^\d{6}$/.test(code) : !/^[A-Za-z0-9_-]{20,64}$/.test(token)) return NextResponse.json({ status: 'unknown' });
   if (!practiceHubConfigured()) return NextResponse.json({ status: 'unknown' });
   try {
     const key = await getApiKey();
-    const res = await fetch(`${practiceHubUrl()}/api/intake/invite?token=${encodeURIComponent(token)}`, {
+    const query = code ? `code=${encodeURIComponent(code)}` : `token=${encodeURIComponent(token)}`;
+    const res = await fetch(`${practiceHubUrl()}/api/intake/invite?${query}`, {
       headers: { Authorization: `Bearer ${key}` },
       cache: 'no-store',
       signal: AbortSignal.timeout(10_000),

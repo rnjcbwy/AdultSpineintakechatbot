@@ -709,7 +709,15 @@ function getPromsReviewItems(proms, t = (x) => x) {
 
 
 function SubmittedView({ data, onGoToStep }) {
-  const { resetIntake, setSummary } = useIntake();
+  const { resetIntake, setSummary, kiosk } = useIntake();
+  // The clinic tablet: after two minutes on the thank-you screen the form
+  // resets itself so the next patient never sees this one's answers.
+  useEffect(() => {
+    if (!kiosk) return undefined;
+    const timer = setTimeout(() => resetIntake(), 120_000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kiosk]);
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const [copied, setCopied] = useState(false);
