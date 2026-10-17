@@ -156,9 +156,9 @@ const LOCAL = {
     zh: '显示注射节段、日期以及缓解持续时间的操作记录。',
   },
   'Imaging reports (MRI, CT, X-ray)': { es: 'Informes de imágenes (RM, TC, radiografía)', zh: '影像报告（磁共振、CT、X光）' },
-  'The written radiology report is what matters most — not the images themselves.': {
-    es: 'Lo que más importa es el informe escrito de radiología, no las imágenes en sí.',
-    zh: '最重要的是书面放射科报告，而不是影像本身。',
+  "If you have pictures or screenshots of your X-rays or other imaging, feel free to upload them here. If the imaging was done at a facility outside our system, please also try to get the actual images on a CD and bring it to your appointment. If you have the radiologist's report, please upload that here too.": {
+    es: 'Si tiene fotos o capturas de pantalla de sus radiografías u otras imágenes, puede subirlas aquí. Si las imágenes se hicieron en un centro fuera de nuestro sistema, intente también conseguir las imágenes reales en un CD y tráigalo a su cita. Si tiene el informe del radiólogo, súbalo aquí también.',
+    zh: '如果您有 X 光或其他影像的照片或截图，欢迎在此上传。如果影像是在我们系统以外的机构做的，也请尽量取得刻录了实际影像的光盘并带到就诊时。如果您有放射科医生的报告，也请在此上传。',
   },
   'EMG / nerve conduction study': { es: 'EMG / estudio de conducción nerviosa', zh: '肌电图／神经传导检查' },
   'The full report from your nerve study.': { es: 'El informe completo de su estudio nervioso.', zh: '您神经检查的完整报告。' },
