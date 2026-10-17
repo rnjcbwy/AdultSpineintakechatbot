@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
-import UploadToFill from '../UploadToFill';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
@@ -136,8 +135,6 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
           {t("List any prior surgeries you've had, especially any spine surgeries.")}
         </p>
       </div>
-
-      <UploadToFill section="pastSurgicalHistory" />
 
       <div className="space-y-6">
         {/* Existing surgeries */}

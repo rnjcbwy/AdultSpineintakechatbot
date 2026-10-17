@@ -11,10 +11,10 @@ const LOCAL = {
     es: 'Tome una foto de su lista de medicamentos, de los frascos o de un impreso de la farmacia, o suba un PDF o un documento de Word, y lo completaremos para que usted lo revise.',
     zh: '拍下您的药物清单、药瓶或药房打印单，或上传 PDF 或 Word 文档，我们会帮您填好，供您核对。',
   },
-  'Have it written down?': { es: '¿Lo tiene por escrito?', zh: '已有书面记录？' },
-  'Take a photo of a list, a clinic letter or a discharge summary, or upload a PDF or Word document, and we will fill in what fits here for you to check.': {
-    es: 'Tome una foto de una lista, una carta de la clínica o un resumen de alta, o suba un PDF o un documento de Word, y completaremos lo que corresponda para que usted lo revise.',
-    zh: '拍下清单、诊所信件或出院小结，或上传 PDF 或 Word 文档，我们会把相关内容填入此处，供您核对。',
+  'Is your medical history written down somewhere?': { es: '¿Tiene su historial médico escrito en algún lugar?', zh: '您的病史是否已记录在某处？' },
+  'If you have a long list of conditions, it may be easier to take a photo of it or upload the document. We will read it and fill in what fits, and you just confirm it.': {
+    es: 'Si tiene una lista larga de afecciones, puede ser más fácil tomarle una foto o subir el documento. Lo leeremos, completaremos lo que corresponda y usted solo lo confirma.',
+    zh: '如果您的病史清单很长，拍照或上传文档可能更方便。我们会读取并填入相关内容，您只需确认即可。',
   },
   'Take a photo': { es: 'Tomar una foto', zh: '拍照' },
   'Upload a file': { es: 'Subir un archivo', zh: '上传文件' },
@@ -113,12 +113,12 @@ export default function UploadToFill({ section = 'medications' }) {
 
   const meds = section === 'medications';
   return (
-    <div className="rounded-2xl border border-dashed border-teal-200 bg-teal-50/40 px-5 py-4 mb-6">
-      <p className="text-base font-medium text-navy-600">{meds ? t('Have a list already?') : t('Have it written down?')}</p>
+    <div className={`rounded-2xl border border-dashed border-teal-200 bg-teal-50/40 px-5 py-4 ${meds ? 'mb-6' : 'mt-6'}`}>
+      <p className="text-base font-medium text-navy-600">{meds ? t('Have a list already?') : t('Is your medical history written down somewhere?')}</p>
       <p className="text-sm text-gray-500 mt-1 leading-relaxed">
         {meds
           ? t('Take a photo of your medication list, pill bottles or a pharmacy printout, or upload a PDF or Word document, and we will fill this in for you to check.')
-          : t('Take a photo of a list, a clinic letter or a discharge summary, or upload a PDF or Word document, and we will fill in what fits here for you to check.')}
+          : t('If you have a long list of conditions, it may be easier to take a photo of it or upload the document. We will read it and fill in what fits, and you just confirm it.')}
       </p>
       <div className="flex flex-wrap gap-2 mt-3">
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handle(e.target.files?.[0])} />

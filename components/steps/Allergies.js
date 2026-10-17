@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
-import UploadToFill from '../UploadToFill';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
@@ -97,8 +96,6 @@ export default function Allergies({ onNext, onBack }) {
           {t('List any known allergies, including medications, foods, and environmental allergies.')}
         </p>
       </div>
-
-      <UploadToFill section="allergies" />
 
       <div className="space-y-6">
         {/* NKDA toggle */}
