@@ -49,8 +49,8 @@ class SpineIntakeStack extends cdk.Stack {
     // A verified SES identity for emailing finish-later links; empty = not sent.
     const emailFrom = ctx('emailFrom', '');
     const allowedOrigins = ctx('allowedOrigins', ['http://localhost:3000']);
-    const noteModelId = ctx('noteModelId', 'us.anthropic.claude-opus-5-5');
-    const chatModelId = ctx('chatModelId', 'us.anthropic.claude-sonnet-5-5');
+    const noteModelId = ctx('noteModelId', 'us.anthropic.claude-opus-4-6-v1');
+    const chatModelId = ctx('chatModelId', 'us.anthropic.claude-sonnet-4-6');
     const createCloudTrail = ctx('createCloudTrail', true) !== false && ctx('createCloudTrail', true) !== 'false';
 
     cdk.Tags.of(this).add('Project', 'spine-intake');
