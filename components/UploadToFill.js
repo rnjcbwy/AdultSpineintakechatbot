@@ -113,7 +113,7 @@ export default function UploadToFill({ section = 'medications' }) {
 
   const meds = section === 'medications';
   return (
-    <div className={`rounded-2xl border border-dashed border-teal-200 bg-teal-50/40 px-5 py-4 ${meds ? 'mb-6' : 'mt-6'}`}>
+    <div className={`rounded-2xl border border-dashed border-teal-200 bg-teal-50/40 px-5 py-4 mb-6`}>
       <p className="text-base font-medium text-navy-600">{meds ? t('Have a list already?') : t('Is your medical history written down somewhere?')}</p>
       <p className="text-sm text-gray-500 mt-1 leading-relaxed">
         {meds

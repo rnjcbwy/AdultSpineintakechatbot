@@ -127,11 +127,10 @@ const LOCAL = {
     },
   'Received': { es: 'Recibido', zh: '已收到' },
   'Still needed': { es: 'Aún se necesita', zh: '仍需提供' },
-  "Don't worry if you can't find everything — our office can request records on your behalf.":
-    {
-      es: 'No se preocupe si no encuentra todo: nuestra oficina puede solicitar los registros en su nombre.',
-      zh: '如果您找不到所有材料也不用担心——我们的办公室可以代您索取记录。',
-    },
+  "Upload what you have. Anything you cannot find, you can bring to your appointment.": {
+    es: 'Suba lo que tenga. Lo que no encuentre, puede traerlo a su cita.',
+    zh: '有什么就上传什么。找不到的材料，可以在就诊时带来。',
+  },
 
   // Med classes
   'Anti-inflammatories (NSAIDs)': { es: 'Antiinflamatorios (AINE)', zh: '消炎药（非甾体抗炎药）' },
@@ -573,7 +572,7 @@ export default function RecordsUpload({ onNext, onBack }) {
             })}
           </ul>
           <p className="text-xs text-gray-500 mt-4">
-            {t("Don't worry if you can't find everything — our office can request records on your behalf.")}
+            {t("Upload what you have. Anything you cannot find, you can bring to your appointment.")}
           </p>
         </div>
       )}

@@ -162,6 +162,8 @@ export default function PastMedicalHistory({ onNext, onBack }) {
         </p>
       </div>
 
+      <UploadToFill section="pastMedicalHistory" />
+
       <div className="space-y-6">
         {/* Search */}
         <div className="card">
@@ -324,9 +326,6 @@ export default function PastMedicalHistory({ onNext, onBack }) {
           />
         </div>
       </div>
-
-      {/* The alternative to the checklist: a long list written down somewhere, read and filled in for the patient to confirm. */}
-      <UploadToFill section="pastMedicalHistory" />
 
       <StepNavigation
         onNext={onNext}
