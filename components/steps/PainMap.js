@@ -11,6 +11,10 @@ import {
 } from '../../lib/bodyMap';
 
 const LOCAL = {
+  'If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.': {
+    es: 'Si tiene más de un tipo de sensación, marque cada una: por ejemplo, un dolor sordo en la espalda baja y un dolor agudo y punzante por la parte posterior de la pierna derecha. Solo elija una sensación diferente antes de tocar cada punto.',
+    zh: '如果您有不止一种感觉，请分别标记：例如下背部的钝痛和右腿后侧的锐痛、刺痛。只需在点击每个部位前选择不同的感觉。',
+  },
   'Where Are Your Symptoms?': { es: '¿Dónde están sus síntomas?', zh: '您的症状在哪里？' },
   'Tap the body where you feel something. Pick the type of feeling first — you can mark as many places as you like, on the front and the back.':
     {
@@ -162,7 +166,8 @@ export default function PainMap({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Where Are Your Symptoms?')}</h2>
         <p className="section-subtitle">
-          {t('Tap the body where you feel something. Pick the type of feeling first — you can mark as many places as you like, on the front and the back.')}
+          {t('Tap the body where you feel something. Pick the type of feeling first — you can mark as many places as you like, on the front and the back.')}{' '}
+          {t('If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.')}
         </p>
       </div>
 
@@ -328,21 +333,21 @@ export default function PainMap({ onNext, onBack }) {
       <div className="card mb-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start justify-center">
           <BodyDiagram
-            view="anterior"
-            label={t('Front')}
-            data={painMap.anterior}
-            activeType={activeType}
-            mode={mode}
-            onChange={(next) => updateView('anterior', next)}
-            types={types}
-          />
-          <BodyDiagram
             view="posterior"
             label={t('Back')}
             data={painMap.posterior}
             activeType={activeType}
             mode={mode}
             onChange={(next) => updateView('posterior', next)}
+            types={types}
+          />
+          <BodyDiagram
+            view="anterior"
+            label={t('Front')}
+            data={painMap.anterior}
+            activeType={activeType}
+            mode={mode}
+            onChange={(next) => updateView('anterior', next)}
             types={types}
           />
         </div>

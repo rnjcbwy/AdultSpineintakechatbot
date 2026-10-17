@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useIntake } from '../../lib/store';
 import { COMMON_MEDICATIONS, ANTICOAGULANTS } from '../../lib/constants';
 import StepNavigation from '../ui/StepNavigation';
+import UploadToFill from '../UploadToFill';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
@@ -120,6 +121,8 @@ export default function Medications({ onNext, onBack }) {
           {t('List all medications you currently take, including over-the-counter medications and supplements.')}
         </p>
       </div>
+
+      <UploadToFill section="medications" />
 
       <div className="space-y-6">
         {/* Anticoagulant warning */}

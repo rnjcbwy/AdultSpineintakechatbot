@@ -7,9 +7,25 @@ import { US_STATES } from '../../lib/constants';
 const COUNTRY_SUGGESTIONS = ['United States', 'Canada', 'Mexico', 'United Kingdom', 'Ireland', 'Spain', 'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Argentina', 'Colombia', 'Dominican Republic', 'Puerto Rico', 'India', 'China', 'Taiwan', 'Hong Kong', 'Singapore', 'Philippines', 'South Korea', 'Japan', 'Australia', 'Israel', 'United Arab Emirates', 'Saudi Arabia', 'Nigeria', 'South Africa'];
 import StepNavigation from '../ui/StepNavigation';
 import Collapsible, { countFilled } from '../ui/Collapsible';
+import { useState } from 'react';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
+  'Been here before?': { es: '¿Ya ha estado aquí antes?', zh: '以前来过吗？' },
+  'If we already have you on file, we can send a private link to the email we have for you that opens this form with your history filled in.': {
+    es: 'Si ya lo tenemos en nuestros registros, podemos enviar un enlace privado al correo que tenemos de usted, que abre este formulario con su historial ya completado.',
+    zh: '如果我们已有您的记录，可以向我们存档的邮箱发送一个私密链接，打开后此表格会自动填入您的病史。',
+  },
+  'Send me my link': { es: 'Envíenme mi enlace', zh: '给我发送链接' },
+  'Checking…': { es: 'Comprobando…', zh: '正在核对……' },
+  'We sent a link to {hint}. Open it on any device to continue with your history filled in. Or simply carry on here.': {
+    es: 'Enviamos un enlace a {hint}. Ábralo en cualquier dispositivo para continuar con su historial ya completado. O simplemente continúe aquí.',
+    zh: '我们已向 {hint} 发送链接。在任何设备上打开即可继续，病史已填好。您也可以直接在这里继续。',
+  },
+  'We could not match you to a record with these details, or there is no email on file. Please carry on; the office will connect your form to your chart.': {
+    es: 'No pudimos encontrar un registro con estos datos, o no hay un correo electrónico archivado. Continúe; el consultorio vinculará su formulario a su expediente.',
+    zh: '我们无法根据这些信息匹配到您的记录，或者档案中没有邮箱。请继续填写，诊所会将您的表格关联到您的病历。',
+  },
   'Address, insurance and referral': { es: 'Dirección, seguro y referencia', zh: '地址、保险与转诊' },
   'If you already have an appointment, or you have been seen here before, we most likely have this on file and you can leave it blank. If this is your first time, please fill it in.': {
     es: 'Si ya tiene una cita, o ya ha sido atendido aquí antes, lo más probable es que ya tengamos esta información y puede dejarla en blanco. Si es su primera vez, por favor complétela.',
@@ -93,6 +109,22 @@ export default function Demographics({ onNext, onBack }) {
   };
 
   const isValid = d.firstName && d.lastName && d.dob && d.sex;
+
+  // A returning patient without a link from the office: once there is enough
+  // to recognise them, offer to send a link to the address on file. Nothing
+  // from the chart comes back here; the link does the loading.
+  const [recog, setRecog] = useState({ busy: false, status: '', hint: '' });
+  const canRecognize = !data.invite?.status && d.firstName && d.lastName && /^\d{4}-\d{2}-\d{2}$/.test(d.dob || '') && (d.phone || d.email);
+  const recognize = async () => {
+    setRecog({ busy: true, status: '', hint: '' });
+    try {
+      const res = await fetch('/api/recognize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demographics: d }) });
+      const r = await res.json();
+      setRecog({ busy: false, status: r.status || 'none', hint: r.hint || '' });
+    } catch {
+      setRecog({ busy: false, status: 'none', hint: '' });
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -182,6 +214,20 @@ export default function Demographics({ onNext, onBack }) {
             </div>
           </div>
         </div>
+
+        {canRecognize && (
+          <div className="rounded-2xl border border-dashed border-teal-200 bg-teal-50/40 px-5 py-4">
+            <p className="text-base font-medium text-navy-600">{t('Been here before?')}</p>
+            <p className="text-sm text-gray-500 mt-1 leading-relaxed">{t('If we already have you on file, we can send a private link to the email we have for you that opens this form with your history filled in.')}</p>
+            {recog.status === 'sent' ? (
+              <p className="text-sm text-teal-800 mt-3">{t('We sent a link to {hint}. Open it on any device to continue with your history filled in. Or simply carry on here.').replace('{hint}', recog.hint)}</p>
+            ) : recog.status ? (
+              <p className="text-sm text-gray-600 mt-3">{t('We could not match you to a record with these details, or there is no email on file. Please carry on; the office will connect your form to your chart.')}</p>
+            ) : (
+              <button type="button" onClick={recognize} disabled={recog.busy} className="btn-secondary text-sm mt-3 disabled:opacity-50">{recog.busy ? t('Checking…') : t('Send me my link')}</button>
+            )}
+          </div>
+        )}
 
         <div className="pt-2">
           <h3 className="text-base font-semibold text-navy-600">{t('Address, insurance and referral')}</h3>

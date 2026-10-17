@@ -132,10 +132,6 @@ const LOCAL = {
       es: 'No se preocupe si no encuentra todo: nuestra oficina puede solicitar los registros en su nombre.',
       zh: '如果您找不到所有材料也不用担心——我们的办公室可以代您索取记录。',
     },
-  'These files stay on this device only and are not uploaded to a server.': {
-    es: 'Estos archivos permanecen solo en este dispositivo y no se suben a ningún servidor.',
-    zh: '这些文件仅保存在本设备上，不会上传到服务器。',
-  },
 
   // Med classes
   'Anti-inflammatories (NSAIDs)': { es: 'Antiinflamatorios (AINE)', zh: '消炎药（非甾体抗炎药）' },
@@ -466,9 +462,6 @@ export default function RecordsUpload({ onNext, onBack }) {
         <h3 className="text-base font-medium text-navy-600 mb-1">{t('Upload Your Records')}</h3>
         <p className="text-sm text-gray-400 mb-2">
           {t('Add any documents you have. Photos of paper records are fine — just make sure the text is readable.')}
-        </p>
-        <p className="text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2 mb-4">
-          🔒 {t('These files stay on this device only and are not uploaded to a server.')}
         </p>
 
         {error && (

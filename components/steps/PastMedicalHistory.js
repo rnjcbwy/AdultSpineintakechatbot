@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useIntake } from '../../lib/store';
 import { COMMON_CONDITIONS, IMPLANTED_DEVICES } from '../../lib/constants';
 import StepNavigation from '../ui/StepNavigation';
+import UploadToFill from '../UploadToFill';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 // Display-only translations. Stored condition/device values stay the canonical
@@ -160,6 +161,8 @@ export default function PastMedicalHistory({ onNext, onBack }) {
           {t('Select any medical conditions you have been diagnosed with. This helps your surgeon plan your care safely.')}
         </p>
       </div>
+
+      <UploadToFill section="pastMedicalHistory" />
 
       <div className="space-y-6">
         {/* Search */}

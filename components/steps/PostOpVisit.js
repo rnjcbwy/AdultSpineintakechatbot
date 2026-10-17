@@ -7,7 +7,7 @@ import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextField, TextArea, PainScale } from '../ui/Fields';
 import {
   OPERATION_KINDS, OPERATION_WHERE, PROCEDURE_OPTIONS, LEVEL_OPTIONS, MONTHS,
-  emptyOperation, operationDate, operationsFromChart, regionsForOperation, mostRecentOperation, sortOperations,
+  emptyOperation, operationDate, operationTime, operationsFromChart, regionsForOperation, mostRecentOperation, sortOperations,
 } from '../../lib/operations';
 
 const WOUND = ['Healing well', 'Redness around the incision', 'Drainage or fluid', 'The incision has opened', 'Fever or chills', 'Not sure'];
@@ -66,14 +66,20 @@ export default function PostOpVisit({ onNext, onBack }) {
   const complete = (o) => !!(o.procedure && operationDate(o));
   const canGoNext = ops.length > 0 && ops.every(complete);
   const ordered = sortOperations(ops);
-  const recentId = mostRecentOperation(ops)?.id;
+  const recentOp = mostRecentOperation(ops);
+  const recentId = recentOp?.id;
+  // The incision, the recovery and the rehabilitation questions belong to a
+  // recent operation. Years later they are not asked; the operation is still
+  // recorded and the symptoms-now questions still compare with before it.
+  const daysSince = recentOp ? Math.round((Date.now() - operationTime(recentOp)) / 86_400_000) : NaN;
+  const recent = Number.isNaN(daysSince) || daysSince <= 548;
 
   return (
     <div className="animate-fade-in">
       <div className="mb-8">
-        <h2 className="section-title">{t('Your Surgery & Recovery')}</h2>
+        <h2 className="section-title">{t('Your Spine Surgery')}</h2>
         <p className="section-subtitle">
-          {t('A few questions about the operation and how the recovery is going. If you have had more than one spine operation, add each one. The month and year are enough if you do not remember the exact date. Fields marked with * are required.')}
+          {t('Tell us about each spine operation you have had. The month and year are enough if you do not remember the exact date, and anything already on file is shown for you to check. Fields marked with * are required.')}
         </p>
       </div>
 
@@ -154,6 +160,7 @@ export default function PostOpVisit({ onNext, onBack }) {
           </p>
         )}
 
+        {recent && (
         <div className="card space-y-4">
           <h3 className="text-lg font-medium text-navy-600">{t('The incision and the recovery')}</h3>
           <CheckChips label="How does the incision look? (choose all that apply)" options={WOUND} value={p.wound || []} onChange={(v) => set('wound', v)} exclusive="Healing well" />
@@ -162,6 +169,7 @@ export default function PostOpVisit({ onNext, onBack }) {
             <TextArea label="Tell us what happened" value={p.complicationDetails} onChange={(v) => set('complicationDetails', v)} rows={2} />
           )}
         </div>
+        )}
 
         <div className="card space-y-4">
           <h3 className="text-lg font-medium text-navy-600">{t('Your symptoms now')}</h3>
@@ -175,6 +183,7 @@ export default function PostOpVisit({ onNext, onBack }) {
           <Chips label="Any new trouble controlling your bladder or bowels?" options={YES_NO} value={p.bowelBladder} onChange={(v) => set('bowelBladder', v)} />
         </div>
 
+        {recent && (
         <div className="card space-y-4">
           <h3 className="text-lg font-medium text-navy-600">{t('Activity and medicines')}</h3>
           <Chips label="How far can you walk comfortably?" options={WALKING} value={p.walking} onChange={(v) => set('walking', v)} />
@@ -187,6 +196,7 @@ export default function PostOpVisit({ onNext, onBack }) {
           )}
           <TextField label="Any other new medicine since the surgery?" value={p.newMedicines} onChange={(v) => set('newMedicines', v)} placeholder="e.g., Gabapentin 300 mg at night; a blood thinner" />
         </div>
+        )}
 
         <div className="card space-y-4">
           <TextArea

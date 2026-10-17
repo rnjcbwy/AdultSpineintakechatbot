@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-16T16:21:37.951Z",
+    "generatedAt": "2026-10-17T14:58:19.098Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -28,6 +28,9 @@
       "draft": null,
       "visit": {
         "type": "",
+        "choice": "",
+        "workInjury": "",
+        "hadSurgery": "",
         "wc": {},
         "followup": {},
         "postop": {}
@@ -311,7 +314,7 @@
       "label": "Type of Visit",
       "component": "VisitType",
       "title": "What kind of visit is this?",
-      "subtitle": "This shapes the questions that follow, so you are only asked what matters for this visit. If you are not sure, choose the first one."
+      "subtitle": "This shapes the questions that follow, so you are only asked what matters for this visit."
     },
     {
       "order": 2,
@@ -524,8 +527,8 @@
       "id": "postop",
       "label": "Your Surgery & Recovery",
       "component": "PostOpVisit",
-      "title": "Your Surgery & Recovery",
-      "subtitle": "A few questions about the operation and how the recovery is going. If you have had more than one spine operation, add each one. The month and year are enough if you do not remember the exact date. Fields marked with * are required."
+      "title": "Your Spine Surgery",
+      "subtitle": "Tell us about each spine operation you have had. The month and year are enough if you do not remember the exact date, and anything already on file is shown for you to check. Fields marked with * are required."
     },
     {
       "order": 6,
@@ -585,7 +588,7 @@
       "label": "Pain Map",
       "component": "PainMap",
       "title": "Where Are Your Symptoms?",
-      "subtitle": "Tap the body where you feel something. Pick the type of feeling first — you can mark as many places as you like, on the front and the back.",
+      "subtitle": "If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.",
       "definedIn": "bodyMap"
     },
     {
@@ -16509,6 +16512,30 @@
         "es": "Lesión o traumatismo reciente",
         "zh": "近期受伤或外伤"
       },
+      "Been here before?": {
+        "es": "¿Ya ha estado aquí antes?",
+        "zh": "以前来过吗？"
+      },
+      "If we already have you on file, we can send a private link to the email we have for you that opens this form with your history filled in.": {
+        "es": "Si ya lo tenemos en nuestros registros, podemos enviar un enlace privado al correo que tenemos de usted, que abre este formulario con su historial ya completado.",
+        "zh": "如果我们已有您的记录，可以向我们存档的邮箱发送一个私密链接，打开后此表格会自动填入您的病史。"
+      },
+      "Send me my link": {
+        "es": "Envíenme mi enlace",
+        "zh": "给我发送链接"
+      },
+      "Checking…": {
+        "es": "Comprobando…",
+        "zh": "正在核对……"
+      },
+      "We sent a link to {hint}. Open it on any device to continue with your history filled in. Or simply carry on here.": {
+        "es": "Enviamos un enlace a {hint}. Ábralo en cualquier dispositivo para continuar con su historial ya completado. O simplemente continúe aquí.",
+        "zh": "我们已向 {hint} 发送链接。在任何设备上打开即可继续，病史已填好。您也可以直接在这里继续。"
+      },
+      "We could not match you to a record with these details, or there is no email on file. Please carry on; the office will connect your form to your chart.": {
+        "es": "No pudimos encontrar un registro con estos datos, o no hay un correo electrónico archivado. Continúe; el consultorio vinculará su formulario a su expediente.",
+        "zh": "我们无法根据这些信息匹配到您的记录，或者档案中没有邮箱。请继续填写，诊所会将您的表格关联到您的病历。"
+      },
       "Address, insurance and referral": {
         "es": "Dirección, seguro y referencia",
         "zh": "地址、保险与转诊"
@@ -16800,6 +16827,10 @@
       "Continue to Symptom Details": {
         "es": "Continuar a los detalles de los síntomas",
         "zh": "继续填写症状详情"
+      },
+      "If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.": {
+        "es": "Si tiene más de un tipo de sensación, marque cada una: por ejemplo, un dolor sordo en la espalda baja y un dolor agudo y punzante por la parte posterior de la pierna derecha. Solo elija una sensación diferente antes de tocar cada punto.",
+        "zh": "如果您有不止一种感觉，请分别标记：例如下背部的钝痛和右腿后侧的锐痛、刺痛。只需在点击每个部位前选择不同的感觉。"
       },
       "Where Are Your Symptoms?": {
         "es": "¿Dónde están sus síntomas?",
@@ -18088,10 +18119,6 @@
       "Don't worry if you can't find everything — our office can request records on your behalf.": {
         "es": "No se preocupe si no encuentra todo: nuestra oficina puede solicitar los registros en su nombre.",
         "zh": "如果您找不到所有材料也不用担心——我们的办公室可以代您索取记录。"
-      },
-      "These files stay on this device only and are not uploaded to a server.": {
-        "es": "Estos archivos permanecen solo en este dispositivo y no se suben a ningún servidor.",
-        "zh": "这些文件仅保存在本设备上，不会上传到服务器。"
       },
       "Anti-inflammatories (NSAIDs)": {
         "es": "Antiinflamatorios (AINE)",
