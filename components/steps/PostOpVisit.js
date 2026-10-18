@@ -6,7 +6,7 @@ import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextField, TextArea, PainScale } from '../ui/Fields';
 import {
-  OPERATION_KINDS, OPERATION_WHERE, PROCEDURE_OPTIONS, LEVEL_OPTIONS, MONTHS,
+  OPERATION_KINDS, SURGEON_SHORTCUTS, whereFor, PROCEDURE_OPTIONS, LEVEL_OPTIONS, MONTHS,
   emptyOperation, operationDate, operationTime, operationsFromChart, regionsForOperation, mostRecentOperation, sortOperations,
 } from '../../lib/operations';
 
@@ -106,7 +106,6 @@ export default function PostOpVisit({ onNext, onBack }) {
               required
               value={o.procedure}
               onChange={(v) => updateOp(o.id, { procedure: v })}
-              placeholder="As written on your discharge papers, if you have them"
               suggestions={PROCEDURE_OPTIONS}
             />
 
@@ -144,10 +143,31 @@ export default function PostOpVisit({ onNext, onBack }) {
             </div>
 
             <Chips label="Was this a first operation or a follow-on to an earlier one?" options={OPERATION_KINDS} value={o.kind} onChange={(v) => updateOp(o.id, { kind: v })} />
-            <Chips label="Where was it done?" options={OPERATION_WHERE} value={o.where} onChange={(v) => updateOp(o.id, { where: v })} />
-            {o.where === 'With another surgeon' && (
-              <TextField label="Surgeon and hospital" value={o.surgeon} onChange={(v) => updateOp(o.id, { surgeon: v })} placeholder="e.g., Dr. Smith, Hackensack" />
-            )}
+            <div>
+              <label className="form-label">{t('Who did it, and where?')}</label>
+              <input
+                type="text"
+                value={o.surgeon || ''}
+                onChange={(e) => updateOp(o.id, { surgeon: e.target.value, where: whereFor(e.target.value) })}
+                placeholder={t('e.g., Dr. Smith, Valley Hospital, Ridgewood, NJ')}
+              />
+              <p className="text-xs text-gray-400 mt-1.5">{t("The surgeon's name and the hospital, or the city and state, so we know where to find the records.")}</p>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {SURGEON_SHORTCUTS.filter((s) => !(o.surgeon || '').includes(s)).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      const next = [(o.surgeon || '').trim(), s].filter(Boolean).join(', ');
+                      updateOp(o.id, { surgeon: next, where: whereFor(next) });
+                    }}
+                    className="px-3 py-1.5 rounded-full text-sm border border-gray-200 bg-white text-gray-700 hover:border-teal-300"
+                  >
+                    + {s}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         ))}
 
