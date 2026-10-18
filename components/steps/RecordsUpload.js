@@ -33,16 +33,27 @@ const LOCAL = {
 
   // Imaging
   'Your Imaging': { es: 'Sus estudios de imagen', zh: '您的影像检查' },
-  'You told us you have had the studies below. Insurers need the date and where it was done.':
-    {
-      es: 'Nos indicó que se realizó los estudios siguientes. Las aseguradoras necesitan la fecha y el lugar donde se realizaron.',
-      zh: '您告诉我们您做过以下检查。保险公司需要知道检查日期和地点。',
-    },
-  'You have not told us about any imaging yet. You can go back and add it, or upload reports below.':
-    {
-      es: 'Aún no nos ha informado sobre ningún estudio de imagen. Puede volver atrás y agregarlo, o subir los informes abajo.',
-      zh: '您尚未告诉我们任何影像检查。您可以返回添加，或在下方上传报告。',
-    },
+  'If you have had X-rays, an MRI, a CT or an ultrasound for this problem, we would like to see it. Add the written report, a photo or a screenshot of the images here: upload a file, take a picture with your phone, choose from your camera roll, or paste a screenshot with Ctrl+V.': {
+    es: 'Si se ha hecho radiografías, una resonancia, una tomografía o una ecografía por este problema, nos gustaría verlas. Agregue aquí el informe escrito, una foto o una captura de pantalla de las imágenes: suba un archivo, tome una foto con su teléfono, elija de su carrete de fotos o pegue una captura con Ctrl+V.',
+    zh: '如果您曾因这个问题做过X光、核磁、CT或超声检查，我们希望看到它们。请在此添加书面报告、影像的照片或截图：上传文件、用手机拍照、从相册中选择，或用 Ctrl+V 粘贴截图。',
+  },
+  'Upload files': { es: 'Subir archivos', zh: '上传文件' },
+  'Take a photo': { es: 'Tomar una foto', zh: '拍照' },
+  'Camera roll': { es: 'Carrete de fotos', zh: '相册' },
+  'Pasted image': { es: 'Imagen pegada', zh: '粘贴的图片' },
+  'If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.': {
+    es: 'Si no indicó sus estudios de imagen en la página anterior, vuelva una página atrás y agréguelos, con la fecha y el lugar donde se hicieron.',
+    zh: '如果您在上一页没有列出您的影像检查，请返回上一页添加，并注明日期和检查地点。',
+  },
+  'Go back one page': { es: 'Volver una página', zh: '返回上一页' },
+  'Please add the date and where each study was done below.': {
+    es: 'Agregue abajo la fecha y el lugar donde se hizo cada estudio.',
+    zh: '请在下方填写每项检查的日期和地点。',
+  },
+  "If you can get a copy of the actual images on a CD, or through the imaging center's patient portal, bringing them to your visit would be greatly appreciated.": {
+    es: 'Si puede conseguir una copia de las imágenes reales en un CD, o a través del portal de pacientes del centro de imágenes, le agradeceríamos mucho que las trajera a su cita.',
+    zh: '如果您能取得实际影像的光盘副本，或通过影像中心的患者门户获取，恳请您就诊时带来，我们将非常感谢。',
+  },
   'Approximate date': { es: 'Fecha aproximada', zh: '大约日期' },
   'Where was it done?': { es: '¿Dónde se realizó?', zh: '在哪里做的？' },
   'e.g., June 2025': { es: 'p. ej., junio de 2025', zh: '例如 2025年6月' },
@@ -218,9 +229,7 @@ export default function RecordsUpload({ onNext, onBack }) {
 
   const updateEv = (field, value) => setNested(`authEvidence.${field}`, value);
 
-  const handleFiles = async (e, category) => {
-    const files = Array.from(e.target.files || []);
-    e.target.value = ''; // allow re-picking the same file
+  const addFiles = async (files, category) => {
     if (!files.length || !category) return;
     setError('');
 
@@ -239,6 +248,34 @@ export default function RecordsUpload({ onNext, onBack }) {
       setBusy(false);
     }
   };
+
+  const handleFiles = (e, category) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = ''; // allow re-picking the same file
+    return addFiles(files, category);
+  };
+
+  // A screenshot pasted anywhere on this page goes in with the imaging.
+  useEffect(() => {
+    const onPaste = (e) => {
+      const items = Array.from(e.clipboardData?.items || []);
+      const files = items
+        .filter((it) => it.kind === 'file' && /^image\//.test(it.type))
+        .map((it, i) => {
+          const f = it.getAsFile();
+          if (!f) return null;
+          const ext = (f.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+          return new File([f], `pasted-image-${Date.now()}-${i + 1}.${ext}`, { type: f.type });
+        })
+        .filter(Boolean);
+      if (!files.length) return;
+      e.preventDefault();
+      addFiles(files, 'imaging_reports');
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.sessionId]);
 
   const removeDoc = async (id) => {
     await deleteDocument(id);
@@ -288,16 +325,59 @@ export default function RecordsUpload({ onNext, onBack }) {
         </p>
       </div>
 
-      {/* ---------------- Imaging details ---------------- */}
+      {/* ---------------- Imaging ---------------- */}
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">{t('Your Imaging')}</h3>
-        <p className="text-sm text-gray-400 mb-4">
-          {selectedImaging.length
-            ? t('You told us you have had the studies below. Insurers need the date and where it was done.')
-            : t('You have not told us about any imaging yet. You can go back and add it, or upload reports below.')}
+        <p className="text-sm text-gray-500 mb-3">
+          {t('If you have had X-rays, an MRI, a CT or an ultrasound for this problem, we would like to see it. Add the written report, a photo or a screenshot of the images here: upload a file, take a picture with your phone, choose from your camera roll, or paste a screenshot with Ctrl+V.')}
         </p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <input id="imaging-files" type="file" multiple accept={ACCEPTED_TYPES} onChange={(e) => handleFiles(e, 'imaging_reports')} className="hidden" />
+          <label htmlFor="imaging-files" className={`btn-secondary text-sm py-2 px-4 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+            + {t('Upload files')}
+          </label>
+          <input id="imaging-camera" type="file" accept="image/*" capture="environment" onChange={(e) => handleFiles(e, 'imaging_reports')} className="hidden" />
+          <label htmlFor="imaging-camera" className={`btn-secondary text-sm py-2 px-4 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+            {t('Take a photo')}
+          </label>
+          <input id="imaging-roll" type="file" multiple accept="image/*" onChange={(e) => handleFiles(e, 'imaging_reports')} className="hidden" />
+          <label htmlFor="imaging-roll" className={`btn-secondary text-sm py-2 px-4 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+            {t('Camera roll')}
+          </label>
+        </div>
+        {docsIn('imaging_reports').length > 0 && (
+          <ul className="mb-3 space-y-2">
+            {docsIn('imaging_reports').map((d) => (
+              <li key={d.id} className="flex items-center gap-2 bg-white border border-gray-100 rounded-lg px-3 py-2">
+                <svg className="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="flex-1 text-sm text-gray-700 truncate">{d.name}</span>
+                <span className="text-xs text-gray-400 flex-shrink-0">{formatBytes(d.size)}</span>
+                <button onClick={() => removeDoc(d.id)} className="text-gray-400 hover:text-red-500 flex-shrink-0" title={t('Remove')}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600 space-y-2">
+          {selectedImaging.length === 0 ? (
+            <p>
+              {t('If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.')}{' '}
+              <button type="button" onClick={onBack} className="text-teal-600 font-medium hover:underline">{t('Go back one page')}</button>
+            </p>
+          ) : (
+            <p>{t('Please add the date and where each study was done below.')}</p>
+          )}
+          <p>{t("If you can get a copy of the actual images on a CD, or through the imaging center's patient portal, bringing them to your visit would be greatly appreciated.")}</p>
+        </div>
 
-        <div className="space-y-4">
+        {selectedImaging.length > 0 && (
+        <div className="space-y-4 mt-4">
           {selectedImaging.map((study) => {
             const entry = imagingEntry(study);
             return (
@@ -333,6 +413,7 @@ export default function RecordsUpload({ onNext, onBack }) {
             );
           })}
         </div>
+        )}
       </div>
 
       {/* ---------------- Medication trials ---------------- */}
@@ -470,7 +551,7 @@ export default function RecordsUpload({ onNext, onBack }) {
         )}
 
         <div className="space-y-3">
-          {DOCUMENT_CATEGORIES.map((cat) => {
+          {DOCUMENT_CATEGORIES.filter((cat) => cat.id !== 'imaging_reports').map((cat) => {
             const catDocs = docsIn(cat.id);
             const isSuggested = suggested.has(cat.id);
             return (
