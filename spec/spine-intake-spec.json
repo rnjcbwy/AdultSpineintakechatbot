@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-18T13:36:59.704Z",
+    "generatedAt": "2026-10-18T13:48:59.032Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -95,7 +95,8 @@
           "marks": [],
           "paths": []
         },
-        "customTypes": []
+        "customTypes": [],
+        "noPain": false
       },
       "hpiData": {
         "conversationHistory": [],
@@ -594,7 +595,7 @@
     {
       "order": 8,
       "id": "pain-map",
-      "label": "Pain Map",
+      "label": "Symptom Map",
       "component": "PainMap",
       "title": "Where Are Your Symptoms?",
       "subtitle": "If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.",
@@ -16883,6 +16884,22 @@
         "es": "Borrar todo",
         "zh": "清除全部"
       },
+      "No pain": {
+        "es": "Sin dolor",
+        "zh": "没有疼痛"
+      },
+      "Nothing to mark today. Tap it, then continue.": {
+        "es": "Nada que marcar hoy. Tóquelo y luego continúe.",
+        "zh": "今天没有需要标记的地方。点一下，然后继续。"
+      },
+      "You told us you have no pain. If that changes, just tap the body to mark it.": {
+        "es": "Nos indicó que no tiene dolor. Si eso cambia, toque el cuerpo para marcarlo.",
+        "zh": "您告诉我们您没有疼痛。如有变化，直接点击身体图进行标记即可。"
+      },
+      "This clears the marks you made. Continue?": {
+        "es": "Esto borra las marcas que hizo. ¿Continuar?",
+        "zh": "这将清除您做的标记。是否继续？"
+      },
       "Nothing marked yet": {
         "es": "Aún no hay marcas",
         "zh": "尚未标记"
@@ -20954,6 +20971,10 @@
       "Body diagram you drew": {
         "es": "Diagrama corporal que dibujó",
         "zh": "您绘制的身体图示"
+      },
+      "No pain. Nothing marked on the body diagram.": {
+        "es": "Sin dolor. No marcó nada en el diagrama corporal.",
+        "zh": "没有疼痛。身体图上未作任何标记。"
       },
       "Clinical Summary (Preview)": {
         "es": "Resumen clínico (vista previa)",

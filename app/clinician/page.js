@@ -8,7 +8,7 @@ import { ROS_SECTIONS, countReviewedSystems } from '../../lib/rosSystems';
 import PainMapSummary from '../../components/PainMapFigure';
 import { promDetail } from '../../lib/promSummary';
 import { defaultIntakeData } from '../../lib/store';
-import { countMarks } from '../../lib/bodyMap';
+import { countMarks, reportsNoPain } from '../../lib/bodyMap';
 
 const STORAGE_KEY = 'spine-intake-data';
 
@@ -358,6 +358,11 @@ function StructuredTab({ data }) {
       {countMarks(data.painMap) > 0 && (
         <DataSection title="Body Diagram (drawn by the patient)">
           <PainMapSummary painMap={data.painMap} />
+        </DataSection>
+      )}
+      {reportsNoPain(data.painMap) && (
+        <DataSection title="Body Diagram (drawn by the patient)">
+          <DataRow label="Symptom map" value="No pain (the patient chose No pain; nothing marked)" />
         </DataSection>
       )}
 

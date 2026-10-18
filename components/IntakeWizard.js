@@ -24,7 +24,7 @@ const CHROME = {
   'Your Surgery & Recovery': { es: 'Su cirugía y recuperación', zh: '您的手术与康复' },
   'Demographics': { es: 'Datos demográficos', zh: '基本信息' },
   'Chief Complaint': { es: 'Motivo de consulta', zh: '主诉' },
-  'Pain Map': { es: 'Mapa del dolor', zh: '疼痛图' },
+  'Symptom Map': { es: 'Mapa de síntomas', zh: '症状图' },
   'Symptom Details': { es: 'Detalles de los síntomas', zh: '症状详情' },
   'Prior Treatments': { es: 'Tratamientos previos', zh: '既往治疗' },
   'Records & Documents': { es: 'Registros y documentos', zh: '记录与文件' },

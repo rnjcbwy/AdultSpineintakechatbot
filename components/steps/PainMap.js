@@ -6,7 +6,7 @@ import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import BodyDiagram, { MarkerGlyph } from '../BodyDiagram';
 import {
-  SYMPTOM_TYPES, EMPTY_PAIN_MAP, countMarks, summarizePainMap,
+  SYMPTOM_TYPES, EMPTY_PAIN_MAP, countMarks, summarizePainMap, reportsNoPain,
   CUSTOM_MARKER_STYLES, MAX_CUSTOM_TYPES, allTypes, customTypes,
 } from '../../lib/bodyMap';
 
@@ -46,6 +46,10 @@ const LOCAL = {
   },
 
   'Clear everything': { es: 'Borrar todo', zh: '清除全部' },
+  'No pain': { es: 'Sin dolor', zh: '没有疼痛' },
+  'Nothing to mark today. Tap it, then continue.': { es: 'Nada que marcar hoy. Tóquelo y luego continúe.', zh: '今天没有需要标记的地方。点一下，然后继续。' },
+  'You told us you have no pain. If that changes, just tap the body to mark it.': { es: 'Nos indicó que no tiene dolor. Si eso cambia, toque el cuerpo para marcarlo.', zh: '您告诉我们您没有疼痛。如有变化，直接点击身体图进行标记即可。' },
+  'This clears the marks you made. Continue?': { es: 'Esto borra las marcas que hizo. ¿Continuar?', zh: '这将清除您做的标记。是否继续？' },
   'Nothing marked yet': { es: 'Aún no hay marcas', zh: '尚未标记' },
   'mark': { es: 'marca', zh: '个标记' },
   'marks': { es: 'marcas', zh: '个标记' },
@@ -148,7 +152,17 @@ export default function PainMap({ onNext, onBack }) {
 
   const total = countMarks(painMap);
 
-  const updateView = (view, next) => setNested(`painMap.${view}`, next);
+  const updateView = (view, next) => {
+    setNested(`painMap.${view}`, next);
+    // Drawing something means there is something to report after all.
+    if (painMap.noPain) setNested('painMap.noPain', false);
+  };
+  const noPain = reportsNoPain(painMap);
+  const chooseNoPain = () => {
+    if (painMap.noPain) return setNested('painMap.noPain', false);
+    if (total > 0 && !window.confirm(t('This clears the marks you made. Continue?'))) return;
+    setNested('painMap', { ...JSON.parse(JSON.stringify(EMPTY_PAIN_MAP)), customTypes: custom, noPain: true });
+  };
   // Clears the drawing but keeps the symptoms the patient named — having to
   // retype them to redo one mark would be its own small punishment.
   const clearAll = () =>
@@ -170,6 +184,22 @@ export default function PainMap({ onNext, onBack }) {
           {t('If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.')}
         </p>
       </div>
+
+      {/* No pain: one tap, especially for a follow-up that is going well */}
+      <button
+        type="button"
+        onClick={chooseNoPain}
+        aria-pressed={noPain}
+        className={`w-full text-left flex items-center gap-4 p-4 mb-4 rounded-2xl border-2 transition-all ${noPain ? 'border-teal-400 bg-teal-50' : 'border-gray-200 bg-white hover:border-teal-200'}`}
+      >
+        <span className="text-3xl leading-none" aria-hidden="true">🙂</span>
+        <span>
+          <span className="block text-base font-semibold text-navy-600">{t('No pain')}</span>
+          <span className="block text-sm text-gray-500 mt-0.5">
+            {noPain ? t('You told us you have no pain. If that changes, just tap the body to mark it.') : t('Nothing to mark today. Tap it, then continue.')}
+          </span>
+        </span>
+      </button>
 
       {/* 1 — symptom type */}
       <div className="card mb-4">
@@ -380,7 +410,7 @@ export default function PainMap({ onNext, onBack }) {
         onNext={onNext}
         onBack={onBack}
         canGoNext
-        nextLabel={t('Continue to Symptom Details')}
+        nextLabel={t('Continue')}
         showSkip
         skipLabel={t('Skip — I would rather not draw')}
       />

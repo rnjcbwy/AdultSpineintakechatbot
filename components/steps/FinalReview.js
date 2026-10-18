@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useIntake } from '../../lib/store';
 import NoteReview from '../NoteReview';
 import PainMapSummary from '../PainMapFigure';
-import { countMarks } from '../../lib/bodyMap';
+import { countMarks, reportsNoPain } from '../../lib/bodyMap';
 import { fingerprintAnswers, isNoteStale } from '../../lib/noteFingerprint';
 import { SYMPTOM_REGIONS } from '../../lib/constants';
 import { stepsForVisit, stepIndex, VISIT_LABEL } from '../../lib/flows';
@@ -175,6 +175,7 @@ const LOCAL = {
   'Important Reminders': { es: 'Recordatorios importantes', zh: '重要提醒' },
   'Your Clinical Summary': { es: 'Su resumen clínico', zh: '您的临床摘要' },
   'Body diagram you drew': { es: 'Diagrama corporal que dibujó', zh: '您绘制的身体图示' },
+  'No pain. Nothing marked on the body diagram.': { es: 'Sin dolor. No marcó nada en el diagrama corporal.', zh: '没有疼痛。身体图上未作任何标记。' },
   'Clinical Summary (Preview)': { es: 'Resumen clínico (vista previa)', zh: '临床摘要（预览）' },
   'Copied!': { es: '¡Copiado!', zh: '已复制！' },
   'Copy Note': { es: 'Copiar nota', zh: '复制病历' },
@@ -846,6 +847,9 @@ function SubmittedView({ data, onGoToStep }) {
             </p>
             <PainMapSummary painMap={data.painMap} />
           </div>
+        )}
+        {reportsNoPain(data.painMap) && (
+          <p className="mb-5 pb-5 border-b border-gray-100 text-sm text-gray-600">🙂 {t('No pain. Nothing marked on the body diagram.')}</p>
         )}
 
         {/* The note is generated prose, so it can misread an answer. The
