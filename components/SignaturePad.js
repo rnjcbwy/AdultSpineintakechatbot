@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const INK = '#1E4D2B';
+const INK = '#0E3F31';
 const TEAL = '#7E756E';
 
 const S = {

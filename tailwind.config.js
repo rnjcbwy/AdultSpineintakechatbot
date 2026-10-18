@@ -12,16 +12,16 @@ module.exports = {
         // teal-400 the same hue darkened enough to read as text on white.
         // Holy Name Medical Center's navy, as the ink colour.
         navy: {
-          50: '#E8EFE9',
-          100: '#CFDDD2',
-          200: '#A9C2AF',
-          300: '#7DA389',
-          400: '#4F8460',
-          500: '#2A6A3C',
-          600: '#1E4D2B',
-          700: '#163A20',
-          800: '#10301C',
-          900: '#0B2014',
+          50: '#E6EFEA',
+          100: '#CDDFD6',
+          200: '#A4C6B8',
+          300: '#6FA38F',
+          400: '#2E7A5E',
+          500: '#155842',
+          600: '#0E3F31',
+          700: '#0B352A',
+          800: '#082B22',
+          900: '#06201A',
         },
         teal: {
           50: '#F0ECE6',

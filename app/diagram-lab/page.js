@@ -196,7 +196,7 @@ function SpineLevels() {
               <rect x={xAt(i) - w / 2} y={y} width={w} height={14} rx={4}
                 fill={on ? '#7E756E' : '#ECE8E1'} stroke={on ? '#574F49' : '#A9A197'} strokeWidth={1.4} />
               <text x={xAt(i) + w / 2 + 6} y={y + 11} fontSize={9}
-                fill={on ? '#1E4D2B' : '#9CA3AF'} fontWeight={on ? 700 : 400}>{lv.id}</text>
+                fill={on ? '#0E3F31' : '#9CA3AF'} fontWeight={on ? 700 : 400}>{lv.id}</text>
             </g>
           );
         })}

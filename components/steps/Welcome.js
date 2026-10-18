@@ -96,8 +96,8 @@ function SpineLogo() {
     <svg viewBox="0 0 100 120" className="spine-logo mx-auto" aria-hidden="true">
       <defs>
         <linearGradient id="spineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#2A6A3C" />
-          <stop offset="100%" stopColor="#1E4D2B" />
+          <stop offset="0%" stopColor="#155842" />
+          <stop offset="100%" stopColor="#0E3F31" />
         </linearGradient>
       </defs>
       {vertebrae.map((y, i) => (
