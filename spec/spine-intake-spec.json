@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-18T13:48:59.032Z",
+    "generatedAt": "2026-10-18T13:54:36.657Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -1846,7 +1846,6 @@
         "demographics",
         "postop",
         "pain-map",
-        "records",
         "additional",
         "ros",
         "proms",

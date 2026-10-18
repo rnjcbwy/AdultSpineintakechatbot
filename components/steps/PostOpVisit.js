@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
+import ImagingUpload from '../ImagingUpload';
 import { Chips, CheckChips, TextField, TextArea, PainScale } from '../ui/Fields';
 import {
   OPERATION_KINDS, SURGEON_SHORTCUTS, whereFor, PROCEDURE_OPTIONS, LEVEL_OPTIONS, MONTHS,
@@ -217,6 +218,8 @@ export default function PostOpVisit({ onNext, onBack }) {
           <TextField label="Any other new medicine since the surgery?" value={p.newMedicines} onChange={(v) => set('newMedicines', v)} placeholder="e.g., Gabapentin 300 mg at night; a blood thinner" />
         </div>
         )}
+
+        <ImagingUpload interval />
 
         <div className="card space-y-4">
           <TextArea

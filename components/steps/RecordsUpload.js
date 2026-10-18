@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
+import ImagingUpload from '../ImagingUpload';
 import {
   DOCUMENT_CATEGORIES,
   ACCEPTED_TYPES,
@@ -206,6 +207,8 @@ export default function RecordsUpload({ onNext, onBack }) {
   const ev = data.authEvidence || {};
   const tx = data.hpiData?.conservativeTreatments || {};
   const selectedImaging = (tx.priorImaging || []).filter((i) => i && i !== 'None');
+  // A follow-up is asked about new imaging since the last visit.
+  const interval = ['followup', 'postop'].includes(data.visit?.type);
   const suggested = suggestedCategories(data);
 
   const [docs, setDocs] = useState([]);
@@ -253,28 +256,6 @@ export default function RecordsUpload({ onNext, onBack }) {
     e.target.value = ''; // allow re-picking the same file
     return addFiles(files, category);
   };
-
-  // A screenshot pasted anywhere on this page goes in with the imaging.
-  useEffect(() => {
-    const onPaste = (e) => {
-      const items = Array.from(e.clipboardData?.items || []);
-      const files = items
-        .filter((it) => it.kind === 'file' && /^image\//.test(it.type))
-        .map((it, i) => {
-          const f = it.getAsFile();
-          if (!f) return null;
-          const ext = (f.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
-          return new File([f], `pasted-image-${Date.now()}-${i + 1}.${ext}`, { type: f.type });
-        })
-        .filter(Boolean);
-      if (!files.length) return;
-      e.preventDefault();
-      addFiles(files, 'imaging_reports');
-    };
-    window.addEventListener('paste', onPaste);
-    return () => window.removeEventListener('paste', onPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.sessionId]);
 
   const removeDoc = async (id) => {
     await deleteDocument(id);
@@ -325,53 +306,8 @@ export default function RecordsUpload({ onNext, onBack }) {
       </div>
 
       {/* ---------------- Imaging ---------------- */}
-      <div className="card mb-4">
-        <h3 className="text-base font-medium text-navy-600 mb-1">{t('Your Imaging')}</h3>
-        <p className="text-sm text-gray-500 mb-3">
-          {t('If you have had X-rays, an MRI, a CT or an ultrasound for this problem, we would like to see it. Add the written report, a photo or a screenshot of the images here: upload a file, take a picture with your phone, choose from your camera roll, or paste a screenshot with Ctrl+V.')}
-        </p>
-        <div className="flex flex-wrap gap-2 mb-3">
-          <input id="imaging-files" type="file" multiple accept={ACCEPTED_TYPES} onChange={(e) => handleFiles(e, 'imaging_reports')} className="hidden" />
-          <label htmlFor="imaging-files" className={`btn-secondary text-sm py-2 px-4 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
-            + {t('Upload files')}
-          </label>
-          <input id="imaging-camera" type="file" accept="image/*" capture="environment" onChange={(e) => handleFiles(e, 'imaging_reports')} className="hidden" />
-          <label htmlFor="imaging-camera" className={`btn-secondary text-sm py-2 px-4 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
-            {t('Take a photo')}
-          </label>
-        </div>
-        {docsIn('imaging_reports').length > 0 && (
-          <ul className="mb-3 space-y-2">
-            {docsIn('imaging_reports').map((d) => (
-              <li key={d.id} className="flex items-center gap-2 bg-white border border-gray-100 rounded-lg px-3 py-2">
-                <svg className="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="flex-1 text-sm text-gray-700 truncate">{d.name}</span>
-                <span className="text-xs text-gray-400 flex-shrink-0">{formatBytes(d.size)}</span>
-                <button onClick={() => removeDoc(d.id)} className="text-gray-400 hover:text-red-500 flex-shrink-0" title={t('Remove')}>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600 space-y-2">
-          {selectedImaging.length === 0 ? (
-            <p>
-              {t('If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.')}{' '}
-              <button type="button" onClick={onBack} className="text-teal-600 font-medium hover:underline">{t('Go back one page')}</button>
-            </p>
-          ) : (
-            <p>{t('Please add the date and where each study was done below.')}</p>
-          )}
-          <p>{t("If you can get a copy of the actual images on a CD, or through the imaging center's patient portal, bringing them to your visit would be greatly appreciated.")}</p>
-        </div>
-
-        {selectedImaging.length > 0 && (
+      <ImagingUpload interval={interval} onBack={onBack} hasListedImaging={selectedImaging.length > 0}>
+        {!interval && selectedImaging.length > 0 && (
         <div className="space-y-4 mt-4">
           {selectedImaging.map((study) => {
             const entry = imagingEntry(study);
@@ -409,7 +345,7 @@ export default function RecordsUpload({ onNext, onBack }) {
           })}
         </div>
         )}
-      </div>
+      </ImagingUpload>
 
       {/* ---------------- Medication trials ---------------- */}
       <div className="card mb-4">
