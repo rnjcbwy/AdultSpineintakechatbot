@@ -39,7 +39,6 @@ const LOCAL = {
   },
   'Upload files': { es: 'Subir archivos', zh: '上传文件' },
   'Take a photo': { es: 'Tomar una foto', zh: '拍照' },
-  'Camera roll': { es: 'Carrete de fotos', zh: '相册' },
   'Pasted image': { es: 'Imagen pegada', zh: '粘贴的图片' },
   'If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.': {
     es: 'Si no indicó sus estudios de imagen en la página anterior, vuelva una página atrás y agréguelos, con la fecha y el lugar donde se hicieron.',
@@ -339,10 +338,6 @@ export default function RecordsUpload({ onNext, onBack }) {
           <input id="imaging-camera" type="file" accept="image/*" capture="environment" onChange={(e) => handleFiles(e, 'imaging_reports')} className="hidden" />
           <label htmlFor="imaging-camera" className={`btn-secondary text-sm py-2 px-4 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
             {t('Take a photo')}
-          </label>
-          <input id="imaging-roll" type="file" multiple accept="image/*" onChange={(e) => handleFiles(e, 'imaging_reports')} className="hidden" />
-          <label htmlFor="imaging-roll" className={`btn-secondary text-sm py-2 px-4 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
-            {t('Camera roll')}
           </label>
         </div>
         {docsIn('imaging_reports').length > 0 && (
