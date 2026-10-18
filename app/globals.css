@@ -7,10 +7,10 @@
    ============================================================================ */
 
 :root {
-  --navy-600: #123559;
-  --navy-500: #1B4A7A;
-  --teal-400: #0E8482;
-  --cream-100: #FAF8F5;
+  --navy-600: #1E4D2B;
+  --navy-500: #2A6A3C;
+  --teal-400: #7E756E;
+  --cream-100: #F1F0EC;
 }
 
 * {
@@ -69,7 +69,7 @@ textarea::placeholder {
 input[type="checkbox"],
 input[type="radio"] {
   @apply w-5 h-5 text-teal-400 border-gray-300 rounded cursor-pointer;
-  accent-color: #0E8482;
+  accent-color: #7E756E;
 }
 
 /* Typing animation for chat */

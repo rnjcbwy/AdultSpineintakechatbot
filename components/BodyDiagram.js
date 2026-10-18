@@ -6,8 +6,8 @@ import { VIEW_BOX, FIGURE_SRC, LATERAL_DX, ZONES, SYMPTOM_TYPES, getType, zoneAt
 const W = VIEW_BOX.width;
 const H = VIEW_BOX.height;
 
-const SKIN = '#F3EFE9';
-const OUTLINE = '#8C9BAA';
+const SKIN = '#ECE8E1';
+const OUTLINE = '#A9A197';
 
 /**
  * Side profile. Both lateral views face the same way so a single zone set
@@ -88,7 +88,7 @@ function LateralFigure({ view }) {
        </g>
       </g>
       <text x={mirror ? 14 : W - 14} y={26} textAnchor={mirror ? 'start' : 'end'}
-        fontSize={13} fill="#8C9BAA">
+        fontSize={13} fill="#A9A197">
         {mirror ? '◀ front' : 'front ▶'}
       </text>
     </g>

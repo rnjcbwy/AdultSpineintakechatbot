@@ -2,16 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const INK = '#123559';
-const TEAL = '#0e8482';
+const INK = '#1E4D2B';
+const TEAL = '#7E756E';
 
 const S = {
   head: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.4rem' },
   label: { fontSize: '0.9rem', fontWeight: 600, color: INK },
   clear: { font: 'inherit', fontSize: '0.85rem', color: TEAL, background: 'none', border: `1px solid ${TEAL}`, borderRadius: 8, padding: '0.3rem 0.75rem', cursor: 'pointer' },
-  box: { position: 'relative', width: '100%', background: '#fff', border: '1.5px dashed #9fb3c8', borderRadius: 10, overflow: 'hidden' },
+  box: { position: 'relative', width: '100%', background: '#fff', border: '1.5px dashed #A9A197', borderRadius: 10, overflow: 'hidden' },
   canvas: { width: '100%', height: '100%', touchAction: 'none', display: 'block', cursor: 'crosshair' },
-  line: { position: 'absolute', left: '6%', right: '6%', bottom: '26%', borderBottom: '1px solid #c9d3de', pointerEvents: 'none' },
+  line: { position: 'absolute', left: '6%', right: '6%', bottom: '26%', borderBottom: '1px solid #D9D2C7', pointerEvents: 'none' },
 };
 
 /**

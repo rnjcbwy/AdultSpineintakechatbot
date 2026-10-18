@@ -67,7 +67,7 @@ function StaticView({ view, data, types }) {
 /** Only the traced views have artwork; the laterals fall back to a plain box. */
 function StaticFigure({ view }) {
   if (view === 'left' || view === 'right') {
-    return <rect x={0} y={0} width={W} height={H} fill="#FAFAF8" />;
+    return <rect x={0} y={0} width={W} height={H} fill="#F7F5F1" />;
   }
   return (
     <image

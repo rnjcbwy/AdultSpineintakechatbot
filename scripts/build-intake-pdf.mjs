@@ -89,14 +89,14 @@ async function loadLib() {
 // ---------------------------------------------------------------------------
 const hex = (h) => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255);
 const C = {
-  navy: hex('#123559'),
-  teal: hex('#38BFBD'),
+  navy: hex('#1E4D2B'),
+  teal: hex('#A9A197'),
   tealDark: hex('#1F8F8D'),
   intro: hex('#27557D'),
   ink: hex('#1D2C3C'),
   gray: hex('#5B6770'),
   rule: hex('#D5DDE2'),
-  tint: hex('#E3F3F3'),
+  tint: hex('#F0ECE6'),
   fieldBg: hex('#EFF8F7'),
   fieldBorder: hex('#A3D6D2'),
   red: hex('#B3261E'),

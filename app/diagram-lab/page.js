@@ -194,9 +194,9 @@ function SpineLevels() {
           return (
             <g key={lv.id} onClick={() => toggle(lv.id)} style={{ cursor: 'pointer' }}>
               <rect x={xAt(i) - w / 2} y={y} width={w} height={14} rx={4}
-                fill={on ? '#0E8482' : '#F3EFE9'} stroke={on ? '#095E5C' : '#8C9BAA'} strokeWidth={1.4} />
+                fill={on ? '#7E756E' : '#ECE8E1'} stroke={on ? '#574F49' : '#A9A197'} strokeWidth={1.4} />
               <text x={xAt(i) + w / 2 + 6} y={y + 11} fontSize={9}
-                fill={on ? '#0F2B46' : '#9CA3AF'} fontWeight={on ? 700 : 400}>{lv.id}</text>
+                fill={on ? '#1E4D2B' : '#9CA3AF'} fontWeight={on ? 700 : 400}>{lv.id}</text>
             </g>
           );
         })}
@@ -359,8 +359,8 @@ function PainTimeline() {
           </g>
         ))}
         <polyline points={pts.map((v, i) => `${xOf(i)},${yOf(v)}`).join(' ')}
-          fill="none" stroke="#0E8482" strokeWidth="2.5" strokeLinejoin="round" />
-        {pts.map((v, i) => <circle key={i} cx={xOf(i)} cy={yOf(v)} r="4" fill="#0E8482" />)}
+          fill="none" stroke="#7E756E" strokeWidth="2.5" strokeLinejoin="round" />
+        {pts.map((v, i) => <circle key={i} cx={xOf(i)} cy={yOf(v)} r="4" fill="#7E756E" />)}
         <text x={PAD} y={H - 4} fontSize="9" fill="#9CA3AF">12 mo ago</text>
         <text x={W - PAD - 20} y={H - 4} fontSize="9" fill="#9CA3AF">now</text>
       </svg>
@@ -387,7 +387,7 @@ function DermatomeOverlay() {
   return (
     <div className="flex gap-5 items-start flex-wrap">
       <svg viewBox="0 0 260 560" className="w-[190px] h-auto bg-white border border-gray-200 rounded-xl">
-        <g fill="#F3EFE9" stroke="#8C9BAA" strokeWidth="2">
+        <g fill="#ECE8E1" stroke="#A9A197" strokeWidth="2">
           <ellipse cx="130" cy="42" rx="25" ry="30" />
           <rect x="86" y="98" width="88" height="222" rx="20" />
           <rect x="88" y="300" width="36" height="230" rx="18" />
@@ -440,8 +440,8 @@ function PosturePicker() {
             className={`p-3 rounded-xl border text-center ${sel === p.id ? 'border-teal-400 bg-teal-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
             <svg viewBox="0 0 60 110" className="w-14 h-24 mx-auto">
               <line x1="6" y1="104" x2="54" y2="104" stroke="#D1D5DB" strokeWidth="2" />
-              <circle cx="30" cy="10" r="7" fill="#F3EFE9" stroke="#8C9BAA" strokeWidth="2" />
-              <path d={p.d} fill="none" stroke="#8C9BAA" strokeWidth="7" strokeLinecap="round" />
+              <circle cx="30" cy="10" r="7" fill="#ECE8E1" stroke="#A9A197" strokeWidth="2" />
+              <path d={p.d} fill="none" stroke="#A9A197" strokeWidth="7" strokeLinecap="round" />
             </svg>
             <span className={`text-xs font-medium ${sel === p.id ? 'text-teal-700' : 'text-gray-600'}`}>{p.label}</span>
           </button>
