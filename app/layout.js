@@ -25,6 +25,7 @@ export default function RootLayout({ children }) {
               ? 'Take your time. You can pause and come back whenever you like.'
               : '🚧 Prototype for demonstration purposes only — not a medical device and not HIPAA compliant. Do not enter real patient information.'}
           </p>
+          <p className="mt-1 text-[11px] text-gray-400">© 2026 Northfield Advisory Group, LLC</p>
         </footer>
       </body>
     </html>
