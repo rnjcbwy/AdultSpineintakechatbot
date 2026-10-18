@@ -8,6 +8,10 @@ import UploadToFill from '../UploadToFill';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
+  'Please check your current medication list. Add anything new, remove anything you have stopped, and update any dose that has changed.': {
+    es: 'Revise su lista actual de medicamentos. Agregue lo nuevo, quite lo que haya dejado de tomar y actualice cualquier dosis que haya cambiado.',
+    zh: '请核对您目前的用药清单。添加新的药物，删除已停用的药物，并更新任何剂量变化。',
+  },
   'Medications': { es: 'Medicamentos', zh: '药物' },
   'List all medications you currently take, including over-the-counter medications and supplements.': {
     es: 'Enumere todos los medicamentos que toma actualmente, incluidos los medicamentos de venta libre y los suplementos.',
@@ -60,6 +64,8 @@ export default function Medications({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const { data, setSection } = useIntake();
+  // A follow-up or post-operative visit reconciles the list rather than taking it fresh.
+  const reconcile = ['followup', 'postop'].includes(data.visit?.type);
   const meds = data.medications;
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
@@ -118,7 +124,9 @@ export default function Medications({ onNext, onBack }) {
       <div className="mb-8">
         <h2 className="section-title">{t('Medications')}</h2>
         <p className="section-subtitle">
-          {t('List all medications you currently take, including over-the-counter medications and supplements.')}
+          {reconcile
+            ? t('Please check your current medication list. Add anything new, remove anything you have stopped, and update any dose that has changed.')
+            : t('List all medications you currently take, including over-the-counter medications and supplements.')}
         </p>
       </div>
 
@@ -303,7 +311,7 @@ export default function Medications({ onNext, onBack }) {
         onNext={onNext}
         onBack={onBack}
         canGoNext={true}
-        nextLabel={t('Continue to Allergies')}
+        nextLabel={reconcile ? t('Continue') : t('Continue to Allergies')}
         showSkip={true}
       />
     </div>

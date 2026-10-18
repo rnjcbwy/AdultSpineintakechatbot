@@ -7,7 +7,7 @@ import StepNavigation from '../ui/StepNavigation';
 import ImagingUpload from '../ImagingUpload';
 import { Chips, CheckChips, TextField, TextArea, PainScale } from '../ui/Fields';
 import {
-  OPERATION_KINDS, SURGEON_SHORTCUTS, whereFor, PROCEDURE_OPTIONS, LEVEL_OPTIONS, MONTHS,
+  OPERATION_KINDS, SURGEON_SHORTCUTS, whereFor, PROCEDURE_OPTIONS, PROCEDURE_SUBOPTIONS, composeProcedure, LEVEL_OPTIONS, MONTHS,
   emptyOperation, operationDate, operationTime, operationsFromChart, regionsForOperation, mostRecentOperation, sortOperations,
 } from '../../lib/operations';
 
@@ -24,6 +24,8 @@ const OPIOIDS = ['None', 'Occasionally', 'Daily'];
 const COMPLICATIONS = ['Emergency room visit', 'Readmitted to the hospital', 'Infection treated with antibiotics', 'Blood clot', 'A fall', 'None of these'];
 
 const THIS_YEAR = new Date().getFullYear();
+const VISIT_REASONS = ['Routine post-op visit', 'A new concern: pain, deformity, weakness, a wound concern, or something else'];
+
 const YEARS = Array.from({ length: 40 }, (_, i) => String(THIS_YEAR - i));
 
 /**
@@ -85,6 +87,15 @@ export default function PostOpVisit({ onNext, onBack }) {
       </div>
 
       <div className="space-y-6">
+        <div className="card">
+          <TextField
+            label="What brings you in for this visit?"
+            value={p.reason}
+            onChange={(v) => set('reason', v)}
+            suggestions={VISIT_REASONS}
+          />
+        </div>
+
         {ops.map((o, idx) => (
           <div key={o.id} className="card space-y-4">
             <div className="flex items-start justify-between gap-3">
@@ -102,13 +113,7 @@ export default function PostOpVisit({ onNext, onBack }) {
               </div>
             </div>
 
-            <TextField
-              label="What operation was it?"
-              required
-              value={o.procedure}
-              onChange={(v) => updateOp(o.id, { procedure: v })}
-              suggestions={PROCEDURE_OPTIONS}
-            />
+            <ProcedurePicker t={t} op={o} update={(patch) => updateOp(o.id, patch)} />
 
             <CheckChips
               label="Which levels? (tap all that apply, or Not sure)"
@@ -233,6 +238,63 @@ export default function PostOpVisit({ onNext, onBack }) {
       </div>
 
       <StepNavigation onNext={onNext} onBack={onBack} canGoNext={canGoNext} />
+    </div>
+  );
+}
+
+/**
+ * The operation, picked from chips: tap every one that applies; a procedure
+ * with kinds (lumbar fusion) opens a second row. A free-text box takes
+ * anything not listed, or the name as written on the discharge papers.
+ */
+function ProcedurePicker({ t, op, update }) {
+  const list = op.procedureList || [];
+  const subs = op.procedureSubs || {};
+  // An older draft, or an operation from the chart, holds only the text.
+  const other = op.procedureOther ?? (op.procedureList ? '' : op.procedure || '');
+  const commit = (nextList, nextSubs, nextOther) =>
+    update({ procedureList: nextList, procedureSubs: nextSubs, procedureOther: nextOther, procedure: composeProcedure(nextList, nextSubs, nextOther) });
+  const toggle = (label) => {
+    const on = list.includes(label);
+    const nextSubs = { ...subs };
+    if (on) delete nextSubs[label];
+    commit(on ? list.filter((x) => x !== label) : [...list, label], nextSubs, other);
+  };
+  const toggleSub = (label, sub) => {
+    const cur = subs[label] || [];
+    commit(list, { ...subs, [label]: cur.includes(sub) ? cur.filter((x) => x !== sub) : [...cur, sub] }, other);
+  };
+  const chip = (on) => `px-3.5 py-2 rounded-full text-sm border transition-colors ${on ? 'bg-navy-600 text-white border-navy-600' : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'}`;
+  return (
+    <div>
+      <label className="form-label">{t('What operation was it?')} *</label>
+      <p className="text-xs text-gray-400 mb-2">{t('Tap every one that applies.')}</p>
+      <div className="flex flex-wrap gap-2">
+        {PROCEDURE_OPTIONS.map((label) => (
+          <button key={label} type="button" onClick={() => toggle(label)} aria-pressed={list.includes(label)} className={chip(list.includes(label))}>
+            {t(label)}
+          </button>
+        ))}
+      </div>
+      {list.filter((l) => PROCEDURE_SUBOPTIONS[l]).map((l) => (
+        <div key={l} className="mt-3 pl-3 border-l-2 border-teal-200">
+          <p className="text-sm text-gray-600 mb-2">{t(l)}: {t('which kind? Tap all that apply, or skip if you are not sure.')}</p>
+          <div className="flex flex-wrap gap-2">
+            {PROCEDURE_SUBOPTIONS[l].map((sub) => (
+              <button key={sub} type="button" onClick={() => toggleSub(l, sub)} aria-pressed={(subs[l] || []).includes(sub)} className={chip((subs[l] || []).includes(sub))}>
+                {t(sub)}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      <input
+        type="text"
+        className="mt-3"
+        value={other}
+        onChange={(e) => commit(list, subs, e.target.value)}
+        placeholder={t('Something else, or the name on your discharge papers')}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-18T13:54:36.657Z",
+    "generatedAt": "2026-10-18T14:07:27.035Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -1283,7 +1283,6 @@
       "label": "Medications",
       "component": "Medications",
       "title": "Medications",
-      "subtitle": "List all medications you currently take, including over-the-counter medications and supplements.",
       "fields": [
         {
           "path": "medications.current[].name",
@@ -1835,6 +1834,7 @@
         "pain-map",
         "symptom-details",
         "records",
+        "medications",
         "additional",
         "ros",
         "proms",
@@ -1846,6 +1846,7 @@
         "demographics",
         "postop",
         "pain-map",
+        "medications",
         "additional",
         "ros",
         "proms",
@@ -18710,6 +18711,10 @@
       "Continue to Medications": {
         "es": "Continuar a medicamentos",
         "zh": "继续填写药物"
+      },
+      "Please check your current medication list. Add anything new, remove anything you have stopped, and update any dose that has changed.": {
+        "es": "Revise su lista actual de medicamentos. Agregue lo nuevo, quite lo que haya dejado de tomar y actualice cualquier dosis que haya cambiado.",
+        "zh": "请核对您目前的用药清单。添加新的药物，删除已停用的药物，并更新任何剂量变化。"
       },
       "Medications": {
         "es": "Medicamentos",

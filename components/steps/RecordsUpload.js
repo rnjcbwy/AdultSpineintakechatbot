@@ -347,7 +347,8 @@ export default function RecordsUpload({ onNext, onBack }) {
         )}
       </ImagingUpload>
 
-      {/* ---------------- Medication trials ---------------- */}
+      {/* ---------------- Medication trials (a new problem only) ---------------- */}
+      {!interval && (
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">
           {t('Medications You Have Tried for This Problem')}
@@ -388,6 +389,7 @@ export default function RecordsUpload({ onNext, onBack }) {
           })}
         </div>
       </div>
+      )}
 
       {/* ---------------- Conservative care window ---------------- */}
       <div className="card mb-4">
