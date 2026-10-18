@@ -6,6 +6,7 @@
     "practiceHubKmsKeyArn": "arn:aws:kms:us-east-1:933164653563:key/b14343e1-5a51-404e-b3d5-c1aaa46d982c",
     "allowedOrigins": [
       "https://feature-adult-spine-intake-app.d1i6bgjzjkpt0h.amplifyapp.com",
+      "https://intake.aaronweymd.com",
       "http://localhost:3000"
     ],
     "noteModelId": "us.anthropic.claude-opus-4-6-v1",
