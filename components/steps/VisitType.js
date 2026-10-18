@@ -2,17 +2,17 @@
 
 import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
-import { VISIT_CHOICES, VISIT_LABEL } from '../../lib/flows';
+import { VISIT_CHOICES, VISIT_LABEL, visitTypeFor } from '../../lib/flows';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips } from '../ui/Fields';
 
 const YES_NO = ['Yes', 'No'];
-const CLAIM = ['No', "Yes, a workers' compensation claim", 'Yes, an accident or injury with an attorney or insurance claim'];
 
 /**
- * Two choices: a new patient or a new problem, or a follow-up visit. One
- * follow-up question under each decides the exact set of steps: a work
- * injury with a compensation claim adds the claim step; a follow-up after
+ * Two choices: a new patient or a new problem, or a follow-up visit. A
+ * follow-up asks one more question here; a new problem's claim question is
+ * asked on the demographics step, just before insurance. A work injury or a
+ * legal claim adds the claim step after demographics; a follow-up after
  * spine surgery adds the operation and recovery step. The patient never
  * sees those internal kinds; the office does.
  */
@@ -21,19 +21,14 @@ export default function VisitType({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT(COMMON, lang);
   const v = data.visit || {};
-  const choice = v.choice || (v.type === 'workers_comp' || v.type === 'new' ? 'new' : v.type === 'postop' || v.type === 'followup' ? 'followup' : '');
+  const choice = v.choice || (['new', 'workers_comp', 'personal_injury'].includes(v.type) ? 'new' : v.type === 'postop' || v.type === 'followup' ? 'followup' : '');
 
   // The internal kind (lib/flows.js) follows the two answers.
   const apply = (next) => {
     const c = next.choice ?? choice;
-    const work = next.workInjury ?? v.workInjury ?? '';
-    const surgery = next.hadSurgery ?? v.hadSurgery ?? '';
-    let type = '';
-    if (c === 'new') type = work === CLAIM[1] ? 'workers_comp' : work === CLAIM[2] ? 'personal_injury' : work === 'No' || work === CLAIM[0] ? 'new' : '';
-    if (c === 'followup') type = surgery === 'Yes' ? 'postop' : surgery === 'No' ? 'followup' : '';
+    const type = visitTypeFor({ choice: c, workInjury: v.workInjury || '', hadSurgery: next.hadSurgery ?? v.hadSurgery ?? '' });
     const changed = type && type !== v.type;
     if (next.choice !== undefined) setNested('visit.choice', next.choice);
-    if (next.workInjury !== undefined) setNested('visit.workInjury', next.workInjury);
     if (next.hadSurgery !== undefined) setNested('visit.hadSurgery', next.hadSurgery);
     if (type) {
       setNested('visit.type', type);
@@ -47,7 +42,7 @@ export default function VisitType({ onNext, onBack }) {
     }
   };
 
-  const canGoNext = (choice === 'new' && !!v.workInjury) || (choice === 'followup' && !!v.hadSurgery);
+  const canGoNext = choice === 'new' || (choice === 'followup' && !!v.hadSurgery);
 
   return (
     <div className="animate-fade-in">
@@ -80,18 +75,6 @@ export default function VisitType({ onNext, onBack }) {
           );
         })}
       </div>
-
-      {choice === 'new' && (
-        <div className="card mt-4 animate-fade-in">
-          <Chips
-            label="Is this problem the result of an injury with a claim?"
-            options={CLAIM}
-            value={v.workInjury === 'Yes' ? CLAIM[1] : v.workInjury || ''}
-            onChange={(x) => apply({ workInjury: x })}
-            hint="If so, we will ask about the injury and the claim before the rest of your history."
-          />
-        </div>
-      )}
 
       {choice === 'followup' && (
         <div className="card mt-4 animate-fade-in">

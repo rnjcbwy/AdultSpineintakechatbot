@@ -6,6 +6,8 @@ import { US_STATES } from '../../lib/constants';
 // Offered as suggestions only; any country can be typed.
 const COUNTRY_SUGGESTIONS = ['United States', 'Canada', 'Mexico', 'United Kingdom', 'Ireland', 'Spain', 'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Argentina', 'Colombia', 'Dominican Republic', 'Puerto Rico', 'India', 'China', 'Taiwan', 'Hong Kong', 'Singapore', 'Philippines', 'South Korea', 'Japan', 'Australia', 'Israel', 'United Arab Emirates', 'Saudi Arabia', 'Nigeria', 'South Africa'];
 import StepNavigation from '../ui/StepNavigation';
+import { Chips } from '../ui/Fields';
+import { CLAIM_OPTIONS, VISIT_LABEL, visitTypeFor } from '../../lib/flows';
 import Collapsible, { countFilled } from '../ui/Collapsible';
 import { useState } from 'react';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
@@ -81,8 +83,24 @@ const LOCAL = {
 };
 
 export default function Demographics({ onNext, onBack }) {
-  const { data, setField } = useIntake();
+  const { data, setField, setNested } = useIntake();
   const d = data.demographics;
+  const v = data.visit || {};
+  // The claim question belongs to a new problem; a follow-up is not asked it.
+  const asksClaim = (v.choice || (['new', 'workers_comp', 'personal_injury'].includes(v.type) ? 'new' : '')) === 'new';
+  const claimValue = v.workInjury === 'Yes' ? CLAIM_OPTIONS[1] : v.workInjury || '';
+  const setClaim = (answer) => {
+    const type = visitTypeFor({ choice: 'new', workInjury: answer, hadSurgery: '' });
+    setNested('visit.workInjury', answer);
+    if (type !== v.type) {
+      setNested('visit.type', type);
+      setField('demographics', 'visitReason', VISIT_LABEL[type]);
+      // The steps after this one differ by kind, so "completed" marks
+      // beyond it no longer refer to the same steps.
+      const here = data.currentStep || 0;
+      setNested('completedSteps', (data.completedSteps || []).filter((i) => i <= here));
+    }
+  };
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
 
@@ -108,7 +126,7 @@ export default function Demographics({ onNext, onBack }) {
     }
   };
 
-  const isValid = d.firstName && d.lastName && d.dob && d.sex;
+  const isValid = d.firstName && d.lastName && d.dob && d.sex && (!asksClaim || !!v.workInjury);
 
   // A returning patient without a link from the office: once there is enough
   // to recognise them, offer to send a link to the address on file. Nothing
@@ -302,6 +320,19 @@ export default function Demographics({ onNext, onBack }) {
             </div>
           </div>
         </div>
+
+        {/* Injury with a claim: picks the claim step that follows */}
+        {asksClaim && (
+          <div className="card">
+            <Chips
+              label="Is this problem the result of an injury with a claim?"
+              options={CLAIM_OPTIONS}
+              value={claimValue}
+              onChange={setClaim}
+              hint="If so, we will ask about the injury and the claim before the rest of your history."
+            />
+          </div>
+        )}
 
         {/* Insurance & Referral */}
         <div className="card">

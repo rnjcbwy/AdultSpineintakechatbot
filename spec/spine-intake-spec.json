@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-18T13:13:21.123Z",
+    "generatedAt": "2026-10-18T13:36:59.704Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -17963,13 +17963,37 @@
         "es": "Sus estudios de imagen",
         "zh": "您的影像检查"
       },
-      "You told us you have had the studies below. Insurers need the date and where it was done.": {
-        "es": "Nos indicó que se realizó los estudios siguientes. Las aseguradoras necesitan la fecha y el lugar donde se realizaron.",
-        "zh": "您告诉我们您做过以下检查。保险公司需要知道检查日期和地点。"
+      "If you have had X-rays, an MRI, a CT or an ultrasound for this problem, we would like to see it. Add the written report, a photo or a screenshot of the images here: upload a file, take a picture with your phone, choose from your camera roll, or paste a screenshot with Ctrl+V.": {
+        "es": "Si se ha hecho radiografías, una resonancia, una tomografía o una ecografía por este problema, nos gustaría verlas. Agregue aquí el informe escrito, una foto o una captura de pantalla de las imágenes: suba un archivo, tome una foto con su teléfono, elija de su carrete de fotos o pegue una captura con Ctrl+V.",
+        "zh": "如果您曾因这个问题做过X光、核磁、CT或超声检查，我们希望看到它们。请在此添加书面报告、影像的照片或截图：上传文件、用手机拍照、从相册中选择，或用 Ctrl+V 粘贴截图。"
       },
-      "You have not told us about any imaging yet. You can go back and add it, or upload reports below.": {
-        "es": "Aún no nos ha informado sobre ningún estudio de imagen. Puede volver atrás y agregarlo, o subir los informes abajo.",
-        "zh": "您尚未告诉我们任何影像检查。您可以返回添加，或在下方上传报告。"
+      "Upload files": {
+        "es": "Subir archivos",
+        "zh": "上传文件"
+      },
+      "Take a photo": {
+        "es": "Tomar una foto",
+        "zh": "拍照"
+      },
+      "Pasted image": {
+        "es": "Imagen pegada",
+        "zh": "粘贴的图片"
+      },
+      "If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.": {
+        "es": "Si no indicó sus estudios de imagen en la página anterior, vuelva una página atrás y agréguelos, con la fecha y el lugar donde se hicieron.",
+        "zh": "如果您在上一页没有列出您的影像检查，请返回上一页添加，并注明日期和检查地点。"
+      },
+      "Go back one page": {
+        "es": "Volver una página",
+        "zh": "返回上一页"
+      },
+      "Please add the date and where each study was done below.": {
+        "es": "Agregue abajo la fecha y el lugar donde se hizo cada estudio.",
+        "zh": "请在下方填写每项检查的日期和地点。"
+      },
+      "If you can get a copy of the actual images on a CD, or through the imaging center's patient portal, bringing them to your visit would be greatly appreciated.": {
+        "es": "Si puede conseguir una copia de las imágenes reales en un CD, o a través del portal de pacientes del centro de imágenes, le agradeceríamos mucho que las trajera a su cita.",
+        "zh": "如果您能取得实际影像的光盘副本，或通过影像中心的患者门户获取，恳请您就诊时带来，我们将非常感谢。"
       },
       "Approximate date": {
         "es": "Fecha aproximada",
