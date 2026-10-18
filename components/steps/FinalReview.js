@@ -504,7 +504,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
             title="Social History"
             onEdit={() => go('social')}
             items={[
-              { label: 'Tobacco', value: data.socialHistory.tobaccoUse || t('Not specified') },
+              { label: 'Nicotine', value: [data.authEvidence?.nicotineCurrent, data.authEvidence?.nicotineProduct].filter(Boolean).join(' · ') || t('Not specified') },
               { label: 'Occupation', value: data.socialHistory.occupation || t('Not specified') },
               { label: 'Work status', value: data.socialHistory.workStatus || t('Not specified') },
             ]}

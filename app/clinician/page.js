@@ -332,7 +332,7 @@ function StructuredTab({ data }) {
 
       {/* Social History */}
       <DataSection title="Social History">
-        <DataRow label="Tobacco" value={data.socialHistory.tobaccoUse || '—'} />
+        <DataRow label="Nicotine" value={[data.authEvidence?.nicotineCurrent, data.authEvidence?.nicotineProduct].filter(Boolean).join(' · ') || '—'} />
         <DataRow label="Alcohol" value={data.socialHistory.alcoholUse || '—'} />
         <DataRow label="Drugs" value={data.socialHistory.drugUse || '—'} />
         <DataRow label="Occupation" value={data.socialHistory.occupation || '—'} />
@@ -340,7 +340,6 @@ function StructuredTab({ data }) {
         <DataRow label="Living Situation" value={data.socialHistory.livingSituation || '—'} />
         <DataRow label="Mobility Aids" value={data.socialHistory.mobilityAids || '—'} />
         <DataRow label="Exercise Level" value={data.socialHistory.exerciseLevel || '—'} />
-        <DataRow label="Compensation/Legal" value={data.socialHistory.compensationCase || '—'} />
       </DataSection>
 
       {/* Family History */}

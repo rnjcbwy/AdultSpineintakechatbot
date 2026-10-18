@@ -3,39 +3,13 @@
 import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
-import Collapsible, { countFilled } from '../ui/Collapsible';
 
 const LOCAL = {
-  'Alcohol, other substances and legal context (optional)': { es: 'Alcohol, otras sustancias y contexto legal (opcional)', zh: '酒精、其他物质和法律背景（可选）' },
-  'Only if you want to add them. They do not change the care you receive.': {
-    es: 'Solo si desea agregarlos. No cambian la atención que recibe.',
-    zh: '仅在您愿意时填写。这不会改变您获得的治疗。',
-  },
   // Section header
   'Social History': { es: 'Historia social', zh: '社会史' },
   'This information helps your surgeon understand your overall health and lifestyle. All responses are confidential.': {
     es: 'Esta información ayuda a su cirujano a comprender su salud general y su estilo de vida. Todas las respuestas son confidenciales.',
     zh: '这些信息有助于您的外科医生了解您的整体健康和生活方式。所有回答均保密。',
-  },
-
-  // Tobacco
-  'Tobacco Use': { es: 'Consumo de tabaco', zh: '烟草使用' },
-  'Never': { es: 'Nunca', zh: '从不' },
-  'Former smoker': { es: 'Exfumador', zh: '曾经吸烟' },
-  'Current smoker': { es: 'Fumador actual', zh: '目前吸烟' },
-  'Current vaping/e-cigarette': { es: 'Vapeo/cigarrillo electrónico actual', zh: '目前使用电子烟' },
-  'Smokeless tobacco': { es: 'Tabaco sin humo', zh: '无烟烟草' },
-  'How long did you smoke? When did you quit?': {
-    es: '¿Cuánto tiempo fumó? ¿Cuándo lo dejó?',
-    zh: '您吸烟多久了？何时戒烟的？',
-  },
-  'How much and for how long?': {
-    es: '¿Cuánto y por cuánto tiempo?',
-    zh: '吸多少，吸了多久？',
-  },
-  'Note: Tobacco use is an important factor in spine surgery healing and outcomes. Your surgeon may discuss this with you.': {
-    es: 'Nota: El consumo de tabaco es un factor importante en la curación y los resultados de la cirugía de columna. Su cirujano podría hablar de esto con usted.',
-    zh: '注意：烟草使用是脊柱手术愈合和效果的重要因素。您的外科医生可能会与您讨论这一点。',
   },
 
   // Alcohol
@@ -52,10 +26,6 @@ const LOCAL = {
 
   // Recreational drugs
   'Recreational Drug Use': { es: 'Consumo de drogas recreativas', zh: '娱乐性药物使用' },
-  'This is asked for your safety during medical care. Your responses are confidential.': {
-    es: 'Esto se pregunta por su seguridad durante la atención médica. Sus respuestas son confidenciales.',
-    zh: '询问此项是为了在医疗过程中保障您的安全。您的回答将保密。',
-  },
   'Marijuana/cannabis': { es: 'Marihuana/cannabis', zh: '大麻' },
   'Other': { es: 'Otro', zh: '其他' },
   'Prefer not to answer': { es: 'Prefiero no responder', zh: '不愿回答' },
@@ -116,21 +86,6 @@ const LOCAL = {
     zh: '例如：高尔夫、园艺、徒步',
   },
 
-  // Additional Context / Compensation
-  'Additional Context': { es: 'Contexto adicional', zh: '补充背景' },
-  'This information helps your care team understand the full picture. Your answers do not affect the quality of your care.': {
-    es: 'Esta información ayuda a su equipo de atención a comprender el panorama completo. Sus respuestas no afectan la calidad de su atención.',
-    zh: '这些信息有助于您的医疗团队全面了解情况。您的回答不会影响您所获得的医疗质量。',
-  },
-  'Is your condition related to any of the following?': {
-    es: '¿Su afección está relacionada con alguno de los siguientes?',
-    zh: '您的病情是否与以下任何情况相关？',
-  },
-  'Not applicable': { es: 'No aplica', zh: '不适用' },
-  "Workers' compensation claim": { es: 'Reclamo de compensación laboral', zh: '工伤赔偿申请' },
-  'Motor vehicle accident': { es: 'Accidente de vehículo motorizado', zh: '机动车事故' },
-  'Personal injury case': { es: 'Caso de lesiones personales', zh: '人身伤害案件' },
-
   // Navigation
   'Continue to Family History': { es: 'Continuar a la historia familiar', zh: '继续填写家族史' },
 };
@@ -153,36 +108,7 @@ export default function SocialHistory({ onNext, onBack }) {
       </div>
 
       <div className="space-y-6">
-        {/* Tobacco */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Tobacco Use')}</h3>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {['Never', 'Former smoker', 'Current smoker', 'Current vaping/e-cigarette', 'Smokeless tobacco'].map((opt) => (
-              <button
-                key={opt}
-                onClick={() => update('tobaccoUse', opt)}
-                className={`chip ${sh.tobaccoUse === opt ? 'chip-selected' : 'chip-unselected'}`}
-              >
-                {t(opt)}
-              </button>
-            ))}
-          </div>
-          {(sh.tobaccoUse === 'Former smoker' || sh.tobaccoUse === 'Current smoker' || sh.tobaccoUse === 'Current vaping/e-cigarette') && (
-            <input
-              type="text"
-              value={sh.tobaccoDetails || ''}
-              onChange={(e) => update('tobaccoDetails', e.target.value)}
-              placeholder={sh.tobaccoUse === 'Former smoker' ? t('How long did you smoke? When did you quit?') : t('How much and for how long?')}
-            />
-          )}
-          {(sh.tobaccoUse === 'Current smoker' || sh.tobaccoUse === 'Current vaping/e-cigarette') && (
-            <p className="text-xs text-amber-600 mt-2">
-              {t('Note: Tobacco use is an important factor in spine surgery healing and outcomes. Your surgeon may discuss this with you.')}
-            </p>
-          )}
-        </div>
-
-        {/* Alcohol */}
+        {/* Work & Occupation */}
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Work & Occupation')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -289,13 +215,7 @@ export default function SocialHistory({ onNext, onBack }) {
           </div>
         </div>
 
-        {/* Compensation/Legal */}
-        <Collapsible
-          title={t('Alcohol, other substances and legal context (optional)')}
-          hint={t('Only if you want to add them. They do not change the care you receive.')}
-          filled={countFilled([sh.alcoholUse, sh.drugUse, sh.compensationCase])}
-          total={3}
-        >
+        {/* Alcohol */}
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Alcohol Use')}</h3>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -322,9 +242,6 @@ export default function SocialHistory({ onNext, onBack }) {
         {/* Recreational drugs */}
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Recreational Drug Use')}</h3>
-          <p className="text-sm text-gray-400 mb-3">
-            {t('This is asked for your safety during medical care. Your responses are confidential.')}
-          </p>
           <div className="flex flex-wrap gap-2 mb-3">
             {['None', 'Marijuana/cannabis', 'Other', 'Prefer not to answer'].map((opt) => (
               <button
@@ -346,28 +263,6 @@ export default function SocialHistory({ onNext, onBack }) {
           )}
         </div>
 
-        {/* Occupation & Work */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Additional Context')}</h3>
-          <p className="text-sm text-gray-400 mb-3">
-            {t('This information helps your care team understand the full picture. Your answers do not affect the quality of your care.')}
-          </p>
-          <div>
-            <label className="form-label">{t('Is your condition related to any of the following?')}</label>
-            <div className="flex flex-wrap gap-2">
-              {['Not applicable', 'Workers\' compensation claim', 'Motor vehicle accident', 'Personal injury case', 'Prefer not to answer'].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => update('compensationCase', opt)}
-                  className={`chip ${sh.compensationCase === opt ? 'chip-selected' : 'chip-unselected'}`}
-                >
-                  {t(opt)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        </Collapsible>
       </div>
 
       <StepNavigation

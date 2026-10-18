@@ -2,7 +2,7 @@
   "meta": {
     "name": "Comprehensive Spine & Scoliosis Center — Adult Spine Intake",
     "specVersion": "1.0.0",
-    "generatedAt": "2026-10-17T18:08:36.002Z",
+    "generatedAt": "2026-10-18T13:13:21.123Z",
     "generatedFrom": "scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.",
     "sourceRepository": "https://github.com/rnjcbwy/AdultSpineintakechatbot",
     "prototype": "https://adult-spine-intake.vercel.app",
@@ -1383,26 +1383,6 @@
       "subtitle": "This information helps your surgeon understand your overall health and lifestyle. All responses are confidential.",
       "fields": [
         {
-          "path": "socialHistory.tobaccoUse",
-          "type": "single_choice",
-          "label": "Tobacco Use",
-          "placeholder": null,
-          "options": [
-            "Never",
-            "Former smoker",
-            "Current smoker",
-            "Current vaping/e-cigarette",
-            "Smokeless tobacco"
-          ]
-        },
-        {
-          "path": "socialHistory.tobaccoDetails",
-          "type": "text",
-          "label": null,
-          "placeholder": null,
-          "showWhen": "(sh.tobaccoUse === 'Former smoker' || sh.tobaccoUse === 'Current smoker' || sh.tobaccoUse === 'Current vaping/e-cigarette')"
-        },
-        {
           "path": "socialHistory.occupation",
           "type": "text",
           "label": "Occupation",
@@ -1522,19 +1502,6 @@
           "label": null,
           "placeholder": "Details (optional)",
           "showWhen": "(sh.drugUse === 'Marijuana/cannabis' || sh.drugUse === 'Other')"
-        },
-        {
-          "path": "socialHistory.compensationCase",
-          "type": "single_choice",
-          "label": "Is your condition related to any of the following?",
-          "placeholder": null,
-          "options": [
-            "Not applicable",
-            "Workers' compensation claim",
-            "Motor vehicle accident",
-            "Personal injury case",
-            "Prefer not to answer"
-          ]
         }
       ]
     },
@@ -18892,14 +18859,6 @@
         "es": "Continuar a Historia social",
         "zh": "继续到社会史"
       },
-      "Alcohol, other substances and legal context (optional)": {
-        "es": "Alcohol, otras sustancias y contexto legal (opcional)",
-        "zh": "酒精、其他物质和法律背景（可选）"
-      },
-      "Only if you want to add them. They do not change the care you receive.": {
-        "es": "Solo si desea agregarlos. No cambian la atención que recibe.",
-        "zh": "仅在您愿意时填写。这不会改变您获得的治疗。"
-      },
       "Social History": {
         "es": "Historia social",
         "zh": "社会史"
@@ -18907,42 +18866,6 @@
       "This information helps your surgeon understand your overall health and lifestyle. All responses are confidential.": {
         "es": "Esta información ayuda a su cirujano a comprender su salud general y su estilo de vida. Todas las respuestas son confidenciales.",
         "zh": "这些信息有助于您的外科医生了解您的整体健康和生活方式。所有回答均保密。"
-      },
-      "Tobacco Use": {
-        "es": "Consumo de tabaco",
-        "zh": "烟草使用"
-      },
-      "Never": {
-        "es": "Nunca",
-        "zh": "从不"
-      },
-      "Former smoker": {
-        "es": "Exfumador",
-        "zh": "曾经吸烟"
-      },
-      "Current smoker": {
-        "es": "Fumador actual",
-        "zh": "目前吸烟"
-      },
-      "Current vaping/e-cigarette": {
-        "es": "Vapeo/cigarrillo electrónico actual",
-        "zh": "目前使用电子烟"
-      },
-      "Smokeless tobacco": {
-        "es": "Tabaco sin humo",
-        "zh": "无烟烟草"
-      },
-      "How long did you smoke? When did you quit?": {
-        "es": "¿Cuánto tiempo fumó? ¿Cuándo lo dejó?",
-        "zh": "您吸烟多久了？何时戒烟的？"
-      },
-      "How much and for how long?": {
-        "es": "¿Cuánto y por cuánto tiempo?",
-        "zh": "吸多少，吸了多久？"
-      },
-      "Note: Tobacco use is an important factor in spine surgery healing and outcomes. Your surgeon may discuss this with you.": {
-        "es": "Nota: El consumo de tabaco es un factor importante en la curación y los resultados de la cirugía de columna. Su cirujano podría hablar de esto con usted.",
-        "zh": "注意：烟草使用是脊柱手术愈合和效果的重要因素。您的外科医生可能会与您讨论这一点。"
       },
       "Alcohol Use": {
         "es": "Consumo de alcohol",
@@ -18967,10 +18890,6 @@
       "Recreational Drug Use": {
         "es": "Consumo de drogas recreativas",
         "zh": "娱乐性药物使用"
-      },
-      "This is asked for your safety during medical care. Your responses are confidential.": {
-        "es": "Esto se pregunta por su seguridad durante la atención médica. Sus respuestas son confidenciales.",
-        "zh": "询问此项是为了在医疗过程中保障您的安全。您的回答将保密。"
       },
       "Marijuana/cannabis": {
         "es": "Marihuana/cannabis",
@@ -19139,30 +19058,6 @@
       "e.g., Golf, gardening, hiking": {
         "es": "p. ej., golf, jardinería, senderismo",
         "zh": "例如：高尔夫、园艺、徒步"
-      },
-      "Additional Context": {
-        "es": "Contexto adicional",
-        "zh": "补充背景"
-      },
-      "This information helps your care team understand the full picture. Your answers do not affect the quality of your care.": {
-        "es": "Esta información ayuda a su equipo de atención a comprender el panorama completo. Sus respuestas no afectan la calidad de su atención.",
-        "zh": "这些信息有助于您的医疗团队全面了解情况。您的回答不会影响您所获得的医疗质量。"
-      },
-      "Is your condition related to any of the following?": {
-        "es": "¿Su afección está relacionada con alguno de los siguientes?",
-        "zh": "您的病情是否与以下任何情况相关？"
-      },
-      "Workers' compensation claim": {
-        "es": "Reclamo de compensación laboral",
-        "zh": "工伤赔偿申请"
-      },
-      "Motor vehicle accident": {
-        "es": "Accidente de vehículo motorizado",
-        "zh": "机动车事故"
-      },
-      "Personal injury case": {
-        "es": "Caso de lesiones personales",
-        "zh": "人身伤害案件"
       },
       "Continue to Family History": {
         "es": "Continuar a la historia familiar",
@@ -20491,6 +20386,10 @@
       "4–5 months": {
         "es": "4 a 5 meses",
         "zh": "4至5个月"
+      },
+      "Never": {
+        "es": "Nunca",
+        "zh": "从不"
       },
       "Rarely": {
         "es": "Rara vez",
