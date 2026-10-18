@@ -33,6 +33,11 @@ const nextConfig = {
   reactStrictMode: true,
   // No `env:` block. The old config inlined OPENAI_API_KEY into the client
   // bundle; secrets never belong there. Server code reads process.env directly.
+  // The printed cards link to /es, /ko and so on: serve the form there, in
+  // that language (lib/store.js reads the code from the path).
+  async rewrites() {
+    return [{ source: '/:lang(es|zh|pt|ru|pl|ar|he|ko|ja|hi|ne)', destination: '/' }];
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },
