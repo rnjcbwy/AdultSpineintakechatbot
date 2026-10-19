@@ -48,6 +48,7 @@ const STEP_OF = {
 };
 import ProgressBar from './ProgressBar';
 import FinishLater from './FinishLater';
+import KioskGuard from './KioskGuard';
 import Welcome from './steps/Welcome';
 import VisitType from './steps/VisitType';
 import WorkInjury from './steps/WorkInjury';
@@ -199,6 +200,7 @@ export default function IntakeWizard() {
       )}
 
       {finishLater && <FinishLater onClose={() => setFinishLater(false)} />}
+      {kiosk && <KioskGuard />}
 
       {/* Main content area */}
       <main className="max-w-4xl mx-auto px-4 py-6">
