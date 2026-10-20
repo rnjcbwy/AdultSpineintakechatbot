@@ -130,8 +130,11 @@ export default function Welcome({ onNext }) {
     try {
       const r = await fetch(`/api/invite?code=${code}`).then((x) => x.json());
       if (r?.status === 'ok' && r.token) {
+        // The reset wipes the chosen language with everything else; carry it
+        // across the reload on the address (the store applies ?lang= on load).
+        const lang = data.language && data.language !== 'en' ? `&lang=${encodeURIComponent(data.language)}` : '';
         resetIntake();
-        window.location.href = `${window.location.pathname}?invite=${encodeURIComponent(r.token)}`;
+        window.location.href = `${window.location.pathname}?invite=${encodeURIComponent(r.token)}${lang}`;
         return;
       }
       setCodeState('bad');
@@ -218,7 +221,14 @@ export default function Welcome({ onNext }) {
         {kiosk && (
           <div className="space-y-3 mb-3">
             <button
-              onClick={() => { resetIntake(); setTimeout(onNext, 100); }}
+              onClick={() => {
+                // A new form, but in the language the patient just picked:
+                // the reset would otherwise put the next page back in English.
+                const lang = data.language;
+                resetIntake();
+                if (lang && lang !== 'en') setLanguage(lang);
+                setTimeout(onNext, 100);
+              }}
               className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block"
             >
               {t.kioskStart || 'Start a new intake form'}
