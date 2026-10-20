@@ -21,7 +21,7 @@ console.log(`GET /:        HTTP ${home.status}; X-Frame-Options=${home.headers.g
 // 2. One express chat turn.
 const chat = await fetch(`${base}/api/chat`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ mode: 'express', messages: [], context: 'EXPRESS APPOINTMENT REQUEST\nLANGUAGE TO WRITE IN: English\n\nTHIS TURN (question 1 of 5): Ask for the patient\'s full name and date of birth (both, in one question). This is the first message: greet the patient in one short sentence first.' }),
+  body: JSON.stringify({ mode: 'express', messages: [], context: 'EXPRESS APPOINTMENT REQUEST\nLANGUAGE TO WRITE IN: English\n\nTHIS TURN (question 1 of 6): Ask for the patient\'s full name and date of birth (both, in one question). This is the first message: greet the patient in one short sentence first.' }),
 });
 const c = await j(chat);
 console.log(`POST /api/chat (express): HTTP ${chat.status} ${c.reply ? `-> "${c.reply.slice(0, 160)}"` : `-> ${c.error || JSON.stringify(c).slice(0, 160)} (the page falls back to its fixed wording)`}`);
@@ -30,12 +30,12 @@ console.log(`POST /api/chat (express): HTTP ${chat.status} ${c.reply ? `-> "${c.
 const now = new Date().toISOString();
 const lead = {
   sessionId: 'e2e-express', createdAt: now, lastUpdated: now, currentStep: 0, completedSteps: [], language: 'en',
-  demographics: { firstName: 'Test', lastName: 'Expresslead', dob: '1980-03-05', phone: '(201) 555-0142', email: '', visitReason: 'Express request from the website chat' },
+  demographics: { firstName: 'Test', lastName: 'Expresslead', dob: '1980-03-05', phone: '(201) 555-0142', email: 'test.expresslead@example.com', insuranceProvider: 'Aetna', memberId: 'W123456789', visitReason: 'Express request from the website chat' },
   chiefComplaint: { mainReason: 'Neck pain with tingling into my left hand for six weeks. (fictional e2e)', symptomRegions: [], duration: '' },
   consent: { accurate: true, contact: true, signatureName: 'Test Expresslead', signedAt: now },
   express: {
-    startedAt: now, completedAt: now, phase: 'done', safety: 'none', callLanguage: 'en',
-    answers: { who: 'Test Expresslead 3/5/1980', contact: '201-555-0142', problem: 'Neck pain with tingling into my left hand for six weeks.', safety: 'No, none of these', language: 'English' },
+    startedAt: now, completedAt: now, phase: 'done', safety: 'none', callLanguage: 'en', linkEmailed: false, linkEmailError: 'not-configured',
+    answers: { who: 'Test Expresslead 3/5/1980', contact: '201-555-0142 test.expresslead@example.com', insurance: 'Aetna, member ID W123456789', problem: 'Neck pain with tingling into my left hand for six weeks.', safety: 'No, none of these', language: 'English' },
     transcript: [
       { role: 'assistant', content: 'Hello! To start, what is your full name and date of birth?', slot: 'who' },
       { role: 'user', content: 'Test Expresslead 3/5/1980', slot: 'who' },
@@ -43,6 +43,10 @@ const lead = {
   },
   documents: [],
 };
+// 2b. The pre-visit questionnaire link, as the card requests it before sending the lead.
+const draft = await fetch(`${base}/api/draft`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intakeData: { ...lead, submittedAt: null }, email: lead.demographics.email, purpose: 'express' }) });
+const dr = await j(draft);
+console.log(`POST /api/draft (express): HTTP ${draft.status} url=${dr.url ? 'yes' : 'no'} emailed=${dr.emailed} emailError=${dr.emailError || '-'} (EMAIL_FROM ${dr.emailAvailable ? 'set' : 'unset'})`);
 const t0 = Date.now();
 const submit = await fetch(`${base}/api/intake/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intakeData: lead }) });
 const s = await j(submit);
@@ -72,6 +76,6 @@ for (let i = 0; i < 40; i++) {
   if (st.note && (st.delivered || !st.handoffConfigured || st.error)) break;
 }
 if (last?.note) console.log('\n--- lead note ---\n' + last.note.narrative + '\n---');
-const ok = !!last?.note && last.note.narrative.startsWith('EXPRESS APPOINTMENT REQUEST') && bad.status === 422 && notLead.status === 422;
+const ok = !!last?.note && last.note.narrative.startsWith('EXPRESS APPOINTMENT REQUEST') && last.note.narrative.includes('Insurance: Aetna, member ID W123456789') && bad.status === 422 && notLead.status === 422 && draft.ok && !!dr.url;
 console.log(ok ? 'OK' : 'FAILED', `in ${Math.round((Date.now() - t0) / 1000)}s`);
 process.exit(ok ? 0 : 1);

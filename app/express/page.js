@@ -2,7 +2,7 @@ import ExpressApp from './ExpressApp';
 
 export const metadata = {
   title: 'Request an appointment',
-  description: "A short chat with Dr. Aaron Wey's office: five questions, then the office calls you to schedule.",
+  description: "A short chat with Dr. Aaron Wey's office: six questions, then the office contacts you within 24 to 48 hours to schedule.",
 };
 
 /**

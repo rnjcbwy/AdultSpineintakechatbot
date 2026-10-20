@@ -55,6 +55,17 @@ check('contact: email', X.parseContact('jane.doe@example.com'), { phone: '', ema
 check('contact: both', X.parseContact('2015550142 or jane@example.com'), { phone: '(201) 555-0142', email: 'jane@example.com' });
 check('contact: nothing usable', X.parseContact('later'), { phone: '', email: '' });
 
+// --- insurance ---------------------------------------------------------------
+check('slots: six turns, insurance after contact', X.EXPRESS_SLOTS, ['who', 'contact', 'insurance', 'problem', 'safety', 'language']);
+check('insurance: plan only', X.parseInsurance('Horizon BCBS'), { provider: 'Horizon BCBS', memberId: '' });
+check('insurance: plan and member id', X.parseInsurance('Aetna, member ID W123456789'), { provider: 'Aetna', memberId: 'W123456789' });
+check('insurance: phrased', X.parseInsurance('I have UnitedHealthcare through my job, ID 98765432101'), { provider: 'UnitedHealthcare through my job', memberId: '98765432101' });
+check('insurance: bare id', X.parseInsurance('Medicare 1EG4-TE5-MK72'), { provider: 'Medicare', memberId: '1EG4-TE5-MK72' });
+check('insurance: none', X.parseInsurance('none'), { provider: 'None (self-pay)', memberId: '' });
+check('insurance: spanish none', X.parseInsurance('No tengo seguro'), { provider: 'None (self-pay)', memberId: '' });
+check('insurance: not sure', X.parseInsurance("I'm not sure, my wife handles it"), { provider: 'Not sure', memberId: '' });
+check('insurance: chinese', X.parseInsurance('没有'), { provider: 'None (self-pay)', memberId: '' });
+
 // --- safety and language -----------------------------------------------------
 check('safety: chip', X.classifySafety('No, none of these'), 'none');
 check('safety: no', X.classifySafety('no'), 'none');
@@ -77,11 +88,11 @@ check('express consent is not full consent', consentComplete({ accurate: true, c
 // --- a lead, end to end through the shared pieces ---------------------------
 const lead = {
   language: 'en',
-  demographics: { firstName: 'Jane', lastName: 'Doe', dob: '1980-03-05', phone: '(201) 555-0142', email: '' },
+  demographics: { firstName: 'Jane', lastName: 'Doe', dob: '1980-03-05', phone: '(201) 555-0142', email: 'jane@example.com', insuranceProvider: 'Aetna', memberId: 'W123456789' },
   chiefComplaint: { mainReason: 'Low back pain going down my right leg for two months, worse sitting. Some days I can\'t hold urine.' },
   express: {
-    startedAt: '2026-10-20T14:00:00.000Z', completedAt: '2026-10-20T14:04:00.000Z', phase: 'done', safety: 'yes', callLanguage: 'es',
-    answers: { who: 'Jane Doe 3/5/1980', contact: '201-555-0142', problem: 'Low back pain...', safety: 'Yes, one or more of these', language: 'Español' },
+    startedAt: '2026-10-20T14:00:00.000Z', completedAt: '2026-10-20T14:04:00.000Z', phase: 'done', safety: 'yes', callLanguage: 'es', linkEmailed: true,
+    answers: { who: 'Jane Doe 3/5/1980', contact: '201-555-0142 jane@example.com', insurance: 'Aetna, member ID W123456789', problem: 'Low back pain...', safety: 'Yes, one or more of these', language: 'Español' },
     transcript: [{ role: 'assistant', content: 'Hello! What is your full name and date of birth?' }, { role: 'user', content: 'Jane Doe 3/5/1980' }],
   },
 };
@@ -94,6 +105,11 @@ check('note: title', note.startsWith('EXPRESS APPOINTMENT REQUEST'), true);
 check('note: names the patient and DOB', note.includes('Doe, Jane, DOB 5 Mar 1980'), true);
 check('note: phone', note.includes('phone (201) 555-0142'), true);
 check('note: call language', note.includes('Language for the call: Spanish'), true);
+check('note: insurance', note.includes('Insurance: Aetna, member ID W123456789'), true);
+check('note: questionnaire link emailed', note.includes('The link to it was emailed to the patient.'), true);
+const calm = X.expressLeadNarrative({ ...lead, chiefComplaint: { mainReason: 'Neck pain for a month.' }, express: { ...lead.express, safety: 'none', linkEmailed: false, linkEmailError: 'not-configured' } }, []);
+check('note: promises 24 to 48 hours when not urgent', calm.includes('within 24 to 48 hours'), true);
+check('note: says when the link was not emailed', calm.includes('could not be emailed (not-configured)'), true);
 check('note: safety yes is loud', note.includes('PATIENT REPORTS ONE OR MORE'), true);
 check('note: asks for a call today', note.includes('Call to schedule a new-patient visit today'), true);
 check('note: says it is not an intake', note.includes('not a completed intake'), true);

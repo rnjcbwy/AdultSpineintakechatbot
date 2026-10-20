@@ -231,10 +231,11 @@ function StructuredTab({ data }) {
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <div><dt className="text-gray-500">Reach by</dt><dd className="text-gray-800">{[data.demographics?.phone, data.demographics?.email].filter(Boolean).join(' · ') || '—'}</dd></div>
             <div><dt className="text-gray-500">Language for the call</dt><dd className="text-gray-800">{LANGUAGE_NAMES[x.callLanguage || data.language] || x.callLanguage || '—'}</dd></div>
+            <div className="sm:col-span-2"><dt className="text-gray-500">Insurance</dt><dd className="text-gray-800">{[data.demographics?.insuranceProvider, data.demographics?.memberId && `ID ${data.demographics.memberId}`].filter(Boolean).join(' · ') || '—'}</dd></div>
             <div className="sm:col-span-2"><dt className="text-gray-500">In the patient's words</dt><dd className="text-gray-800 whitespace-pre-wrap">{data.chiefComplaint?.mainReason || '—'}</dd></div>
             <div className="sm:col-span-2"><dt className="text-gray-500">Safety screen</dt><dd className={x.safety === 'yes' ? 'text-red-700 font-medium' : 'text-gray-800'}>{SAFETY_SUMMARY[x.safety] || SAFETY_SUMMARY['']}</dd></div>
             <div><dt className="text-gray-500">Received</dt><dd className="text-gray-800">{x.completedAt ? new Date(x.completedAt).toLocaleString() : '—'}</dd></div>
-            <div><dt className="text-gray-500">Full intake</dt><dd className="text-gray-800">{x.continuedAt ? 'Started by the patient' : 'Not started; offered'}</dd></div>
+            <div><dt className="text-gray-500">Pre-visit questionnaire</dt><dd className="text-gray-800">{x.continuedAt ? 'Started by the patient' : 'Not started; offered'}{x.linkEmailed ? ' · link emailed' : x.linkEmailError ? ` · link not emailed (${x.linkEmailError})` : ''}</dd></div>
           </dl>
         </div>
       )}

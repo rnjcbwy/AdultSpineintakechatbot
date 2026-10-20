@@ -19,11 +19,22 @@ function siteUrl(request) {
 /**
  * POST /api/draft — save the answers so far and get a link to finish later.
  *
- * Body: { intakeData, draft?: { id, token }, email? }
+ * Body: { intakeData, draft?: { id, token }, email?, purpose? }
  * A `draft` from an earlier save overwrites that draft (the link stays the
  * same). With `email`, the link is sent by Amazon SES when EMAIL_FROM is set;
- * the message holds the link only.
+ * the message holds the link only. `purpose: 'express'` words the message as
+ * the pre-visit questionnaire that follows the website chat.
  */
+const MESSAGES = {
+  draft: {
+    subject: 'Your link to finish your spine intake form',
+    text: (url) => `Here is the link to pick up your spine intake form where you left off:\n\n${url}\n\nIt works for 30 days and opens the answers you have given so far, so please do not forward it. Any records you attached stay on the device you added them from; you can attach them again or bring them to your visit.\n\nIf you did not ask for this link, you can ignore this message.`,
+  },
+  express: {
+    subject: "Your pre-visit questionnaire for Dr. Wey's office",
+    text: (url) => `Thank you for contacting Dr. Aaron Wey's office. The office will contact you within 24 to 48 hours to schedule your appointment.\n\nIn the meantime, here is the link to your pre-visit questionnaire. It takes about 15 minutes and really helps our team prepare for your visit:\n\n${url}\n\nIt works for 30 days and opens the answers you have already given, so please do not forward it.\n\nIf you did not ask for this link, you can ignore this message.\n\nDr. Aaron Wey's office\n(201) 836-1663`,
+  },
+};
 /** Practice Hub saves phone-intake drafts with the shared service key; those are not rate-limited by IP. */
 async function fromPracticeHub(request) {
   const auth = request.headers.get('authorization') || '';
@@ -68,11 +79,8 @@ export async function POST(request) {
       else if (!emailConfigured()) emailError = 'not-configured';
       else {
         try {
-          await sendEmail({
-            to,
-            subject: 'Your link to finish your spine intake form',
-            text: `Here is the link to pick up your spine intake form where you left off:\n\n${url}\n\nIt works for 30 days and opens the answers you have given so far, so please do not forward it. Any records you attached stay on the device you added them from; you can attach them again or bring them to your visit.\n\nIf you did not ask for this link, you can ignore this message.`,
-          });
+          const message = MESSAGES[body.purpose === 'express' ? 'express' : 'draft'];
+          await sendEmail({ to, subject: message.subject, text: message.text(url) });
           emailed = true;
         } catch (err) {
           logError('draft.email_failed', err);

@@ -186,15 +186,23 @@ points to the structured record, because its fonts cover Latin only.
 
 ## The express request (website chat)
 
-`/express` is the short appointment request behind the "Chat with us" launcher
-on aaronweymd.com (`components/ExpressIntake.js`, `lib/express.js`). Five turns,
-phrased by the same Claude model through the same `/api/chat` route
-(`mode: 'express'`): name and date of birth, phone or email, what is going on in
-the patient's words, the safety question (bladder or bowel control, saddle
-numbness, rapidly worsening weakness, fever with back pain) and the language
-for the call. The answers are kept by slot, shown on a card the patient
-corrects and sends, and then go through the ordinary path
-(`/api/intake/submit`, worker, Practice Hub) marked `express`. The lead note is
+`/express` is the self-referral behind every "Request an Appointment" button
+and the "Chat with us" launcher on aaronweymd.com (`components/ExpressIntake.js`,
+`lib/express.js`). Six turns, phrased by the same Claude model through the same
+`/api/chat` route (`mode: 'express'`): name and date of birth, phone and email
+(both required: the email receives the questionnaire link), health insurance
+(plan name, member ID if handy; "none" and "not sure" are fine), what brings
+them in, the safety question (bladder or bowel control, saddle numbness,
+rapidly worsening weakness, fever with back pain) and the language for the
+call. The answers are kept by slot, shown on a card the patient corrects and
+sends. On send, the card first saves the pre-visit questionnaire (the full
+intake, pre-filled from the lead) under a private link through `/api/draft`
+(`purpose: 'express'`) and emails that link to the patient; then the lead goes
+through the ordinary path (`/api/intake/submit`, worker, Practice Hub) marked
+`express`, carrying `express.linkEmailed` / `linkEmailError` so the lead note
+says whether the email went out. The thank-you screen promises contact within
+24 to 48 hours, shows the link (and whether it was emailed) and offers to
+continue the questionnaire now. The lead note is
 written without the model (`expressLeadNarrative`), the transcript PDF opens
 with an "Express appointment request" section, and the hand-off carries
 `express: true`, the language name for the call and `summary.visitReason`. The
@@ -209,6 +217,19 @@ server; the chat turn needs Bedrock credentials).
 
 **What the deploy needs beyond a push:**
 
+0. **Outbound email (not yet set up).** The questionnaire link is emailed by
+   `lib/server/email.js` through Amazon SES, and only when `EMAIL_FROM` is set.
+   Until it is, `/api/draft` answers `emailError: 'not-configured'`, the
+   thank-you screen says the link could not be emailed and shows it to copy,
+   and the lead note records "could not be emailed (not-configured)". To turn
+   it on: verify a sender identity in SES (us-east-1; a domain identity for
+   `aaronweymd.com` with its DKIM CNAMEs added at GoDaddy, or a single
+   address), request SES production access (new accounts start in the sandbox
+   and can only send to verified addresses), allow `ses:SendEmail` for the
+   Amplify SSR compute role, then set `EMAIL_FROM` on the Amplify app (e.g.
+   `Dr. Aaron Wey's office <office@aaronweymd.com>`) and redeploy the branch.
+   The messages carry the link and the practice phone number only, never the
+   patient's name or anything they wrote.
 1. **Framing.** `next.config.js` lets `/express` alone be framed, by
    `https://aaronweymd.com`, `https://www.aaronweymd.com` and
    `https://aaronweymd-2026.netlify.app` (`EXPRESS_FRAME_ANCESTORS` overrides

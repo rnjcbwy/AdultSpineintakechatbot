@@ -6,7 +6,7 @@ import { useLang, makeT, tx, COMMON, LANGUAGES, LANGUAGE_NAMES, isRtl } from '..
 import { buildExpressChatContext } from '../lib/prompts';
 import {
   EXPRESS_SLOTS, EXPRESS_QUESTIONS, SAFETY_CHOICES, classifySafety, classifyLanguage,
-  parseWho, parseContact, isExpress, isExpressLead,
+  parseWho, parseContact, parseInsurance, isExpress, isExpressLead,
 } from '../lib/express';
 import { CONSENT_ITEMS, consentTextVia } from '../lib/consent';
 import { detectRedFlags } from '../lib/redFlags';
@@ -19,10 +19,28 @@ import FinishLater from './FinishLater';
 const LOCAL = {
   'Request an appointment': { es: 'Solicitar una cita', zh: '预约就诊' },
   "Dr. Aaron Wey's office": { es: 'Consultorio del Dr. Aaron Wey', zh: 'Aaron Wey 医生诊室' },
-  'A short chat, about five questions. The office then calls you to schedule.': {
-    es: 'Una conversación corta, de unas cinco preguntas. Después, el consultorio le llama para programar la cita.',
-    zh: '一次简短的对话，大约五个问题。之后诊室会给您打电话安排就诊。',
+  'A short chat, about six questions. The office then contacts you within 24 to 48 hours to schedule.': {
+    es: 'Una conversación corta, de unas seis preguntas. Después, el consultorio se comunica con usted en un plazo de 24 a 48 horas para programar la cita.',
+    zh: '一次简短的对话，大约六个问题。之后诊室会在 24 到 48 小时内与您联系安排就诊。',
   },
+  'Insurance': { es: 'Seguro médico', zh: '医疗保险' },
+  'Member ID': { es: 'Número de miembro', zh: '会员编号' },
+  'Plan name, or "none"': { es: 'Nombre del plan, o "ninguno"', zh: '保险计划名称，或“没有”' },
+  'Please give both a phone number and an email address.': { es: 'Indique un número de teléfono y un correo electrónico.', zh: '请同时提供电话号码和电子邮箱。' },
+  'Please enter a valid email address.': { es: 'Ingrese un correo electrónico válido.', zh: '请输入有效的电子邮箱。' },
+  'Thank you for contacting us, {name}.': { es: 'Gracias por comunicarse con nosotros, {name}.', zh: '{name}，感谢您与我们联系。' },
+  'The office will contact you for an appointment within 24 to 48 hours.': { es: 'El consultorio se comunicará con usted en un plazo de 24 a 48 horas para programar su cita.', zh: '诊室将在 24 到 48 小时内与您联系安排就诊。' },
+  'We emailed your questionnaire link to {email}.': { es: 'Le enviamos el enlace de su cuestionario a {email}.', zh: '我们已将问卷链接发送至 {email}。' },
+  'We could not email the link; keep it from here instead.': { es: 'No pudimos enviar el enlace por correo; guárdelo desde aquí.', zh: '链接无法通过邮件发送，请在此保存。' },
+  'Your questionnaire link': { es: 'El enlace de su cuestionario', zh: '您的问卷链接' },
+  'Copy link': { es: 'Copiar enlace', zh: '复制链接' },
+  'Copied': { es: 'Copiado', zh: '已复制' },
+  'Finish your pre-visit questionnaire': { es: 'Complete su cuestionario previo a la visita', zh: '完成您的就诊前问卷' },
+  'It takes about 15 minutes and really helps our team prepare for your visit. You can continue right now, or later from the link on any device.': {
+    es: 'Toma unos 15 minutos y ayuda mucho a nuestro equipo a prepararse para su visita. Puede continuar ahora mismo, o más tarde desde el enlace en cualquier dispositivo.',
+    zh: '大约需要 15 分钟，能切实帮助我们的团队为您的就诊做好准备。您可以现在继续，也可以稍后在任何设备上通过链接继续。',
+  },
+  'Continue the questionnaire': { es: 'Continuar el cuestionario', zh: '继续填写问卷' },
   'Language': { es: 'Idioma', zh: '语言' },
   'Front desk assistant': { es: 'Asistente de recepción', zh: '前台助手' },
   'Question {n} of {total}': { es: 'Pregunta {n} de {total}', zh: '第 {n} 题，共 {total} 题' },
@@ -250,7 +268,7 @@ function ExpressChat({ data, t, lang, setNested, setLanguage, embedded }) {
 
   return (
     <div className="animate-fade-in">
-      {!embedded && <p className="text-sm text-gray-500 mb-3">{t('A short chat, about five questions. The office then calls you to schedule.')}</p>}
+      {!embedded && <p className="text-sm text-gray-500 mb-3">{t('A short chat, about six questions. The office then contacts you within 24 to 48 hours to schedule.')}</p>}
       <ChatPanel
         title={t('Front desk assistant')}
         subtitle={t('Question {n} of {total}').replace('{n}', String(Math.min(slotIndex < 0 ? EXPRESS_SLOTS.length : slotIndex + 1, EXPRESS_SLOTS.length))).replace('{total}', String(EXPRESS_SLOTS.length))}
@@ -281,12 +299,15 @@ function ConfirmCard({ data, t, lang, setNested, setSection, setRedFlags, setSum
   const [form, setForm] = useState(() => {
     const who = parseWho(answers.who);
     const contact = parseContact(answers.contact);
+    const insurance = parseInsurance(answers.insurance);
     return {
       firstName: d.firstName || who.firstName,
       lastName: d.lastName || who.lastName,
       dob: d.dob || who.dob,
       phone: d.phone || contact.phone,
       email: d.email || contact.email,
+      insuranceProvider: d.insuranceProvider || insurance.provider,
+      memberId: d.memberId || insurance.memberId,
       problem: data.chiefComplaint?.mainReason || answers.problem || '',
       safety: x.safety || classifySafety(answers.safety) || '',
       callLanguage: x.callLanguage || classifyLanguage(answers.language, LANGUAGES) || lang,
@@ -315,19 +336,22 @@ function ConfirmCard({ data, t, lang, setNested, setSection, setRedFlags, setSum
     const phone = form.phone.trim();
     const email = form.email.trim();
     const problem = form.problem.trim();
+    const insuranceProvider = form.insuranceProvider.trim();
+    const memberId = form.memberId.trim();
     if (!firstName || !lastName) return setError(t('Please enter your first and last name.'));
     if (!/^\d{4}-\d{2}-\d{2}$/.test(form.dob)) return setError(t('Please enter your date of birth.'));
-    if (!phone && !email) return setError(t('Please give a phone number or an email address.'));
+    if (!phone || !email) return setError(t('Please give both a phone number and an email address.'));
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError(t('Please enter a valid email address.'));
     if (!problem) return setError(t('Please tell us, in a few words, what is going on.'));
     if (!form.accurate || !form.contact) return setError(t('Please check both boxes.'));
 
     setSending(true);
     const now = new Date().toISOString();
-    const demographics = { ...d, firstName, lastName, dob: form.dob, phone, email, visitReason: 'Express request from the website chat' };
+    const demographics = { ...d, firstName, lastName, dob: form.dob, phone, email, insuranceProvider, memberId, visitReason: 'Express request from the website chat' };
     const chiefComplaint = { ...(data.chiefComplaint || {}), mainReason: problem };
     const consent = { ...(data.consent || {}), accurate: true, contact: true, signatureName: `${firstName} ${lastName}`, signedAt: now };
-    const express = { ...x, safety: form.safety, callLanguage: form.callLanguage, completedAt: now, phase: 'done' };
-    const intake = { ...data, demographics, chiefComplaint, consent, express, language: lang };
+    let express = { ...x, safety: form.safety, callLanguage: form.callLanguage, completedAt: now, phase: 'done' };
+    let intake = { ...data, demographics, chiefComplaint, consent, express, language: lang };
     setSection('demographics', demographics);
     setSection('chiefComplaint', chiefComplaint);
     setSection('consent', consent);
@@ -336,10 +360,27 @@ function ConfirmCard({ data, t, lang, setNested, setSection, setRedFlags, setSum
     setRedFlags(redFlags);
     try {
       let sub = data.submission;
+      let draft = data.draft?.id ? { id: data.draft.id, token: data.draft.token } : null;
       if (!sub?.id) {
+        // The pre-visit questionnaire link first, emailed to the patient, so
+        // the lead note can say whether the email went out. The link only
+        // ever travels to the patient: the submission carries the outcome,
+        // never the link itself.
+        const sent = await saveQuestionnaireLink(continuationOf(intake, null), draft, email).catch(() => null);
+        if (sent) {
+          draft = { id: sent.id, token: sent.token };
+          setNested('draft', { id: sent.id, token: sent.token, url: sent.url, savedAt: now });
+          express = { ...express, linkEmailed: !!sent.emailed, linkEmailError: sent.emailed ? '' : (sent.emailError || '') };
+        } else {
+          express = { ...express, linkEmailed: false, linkEmailError: 'save-failed' };
+        }
+        intake = { ...intake, express };
+        setNested('express', express);
         const r = await submitIntake(intake);
         sub = { id: r.id, token: r.token, submittedAt: now };
         setNested('submission', sub);
+        // The saved questionnaire now knows which lead it belongs to.
+        if (draft) saveQuestionnaireLink(continuationOf(intake, sub.id), draft).catch(() => {});
       } else {
         await finalizeSubmission(sub.id, sub.token).catch(() => {});
       }
@@ -393,6 +434,14 @@ function ConfirmCard({ data, t, lang, setNested, setSection, setRedFlags, setSum
           <div>
             <label className="form-label" htmlFor="x-email">{t('Email')}</label>
             <input id="x-email" type="email" value={form.email} onChange={set('email')} autoComplete="email" inputMode="email" />
+          </div>
+          <div>
+            <label className="form-label" htmlFor="x-insurance">{t('Insurance')}</label>
+            <input id="x-insurance" type="text" value={form.insuranceProvider} onChange={set('insuranceProvider')} placeholder={t('Plan name, or "none"')} />
+          </div>
+          <div>
+            <label className="form-label" htmlFor="x-member">{t('Member ID')}</label>
+            <input id="x-member" type="text" value={form.memberId} onChange={set('memberId')} autoComplete="off" />
           </div>
           <div className="sm:col-span-2">
             <label className="form-label" htmlFor="x-problem">{t('In your words')}</label>
@@ -449,18 +498,13 @@ function UrgentNotice({ t }) {
 // ---------------------------------------------------------------------------
 // "We will call you", and the way into the full intake.
 // ---------------------------------------------------------------------------
-function DoneScreen({ data, t, lang, embedded, setNested, dispatch, resetIntake }) {
-  const x = data.express || {};
-  const d = data.demographics || {};
-  const [finishLater, setFinishLater] = useState(false);
-  const [opening, setOpening] = useState(false);
-  const [error, setError] = useState('');
-  const urgent = x.safety === 'yes' || (data.redFlags || []).some((f) => f.severity === 'urgent');
-
-  // The full intake, starting from what the lead already holds. The lead
-  // itself stays on this device as submitted; the continuation is what a
-  // finish-later link opens, and what "Continue" opens in the full form.
-  const continuation = () => ({
+/**
+ * The pre-visit questionnaire (the full intake), starting from what the lead
+ * already holds. The lead itself stays on this device as submitted; the
+ * continuation is what the emailed link opens, and what "Continue" opens.
+ */
+function continuationOf(data, leadId) {
+  return {
     ...data,
     submittedAt: null,
     submission: undefined,
@@ -470,23 +514,53 @@ function DoneScreen({ data, t, lang, embedded, setNested, dispatch, resetIntake 
     completedSteps: [],
     draft: null,
     consent: { ...defaultIntakeData.consent },
-    express: { ...x, leadId: data.submission?.id || null, continuedAt: new Date().toISOString() },
+    express: { ...(data.express || {}), leadId: leadId || data.submission?.id || null },
+  };
+}
+
+/**
+ * Saves the questionnaire under a private link (the same one when `draft` is
+ * given) and, with `email`, sends the link to the patient. Resolves to the
+ * draft route's answer: { id, token, url, emailed, emailError }.
+ */
+async function saveQuestionnaireLink(intake, draft, email) {
+  const res = await fetch('/api/draft', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ intakeData: intake, draft: draft || undefined, email: email || undefined, purpose: 'express' }),
   });
+  const r = await res.json();
+  if (!res.ok || !r.url) throw new Error(r.error || 'save failed');
+  return r;
+}
+
+function DoneScreen({ data, t, lang, embedded, setNested, dispatch, resetIntake }) {
+  const x = data.express || {};
+  const d = data.demographics || {};
+  const [finishLater, setFinishLater] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState('');
+  const urgent = x.safety === 'yes' || (data.redFlags || []).some((f) => f.severity === 'urgent');
+  const link = data.draft?.url || '';
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* the link is visible to select by hand */ }
+  };
 
   const continueNow = async () => {
     setError('');
     setOpening(true);
     try {
-      const next = continuation();
-      const res = await fetch('/api/draft', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intakeData: next, draft: data.draft ? { id: data.draft.id, token: data.draft.token } : undefined }),
-      });
-      const r = await res.json();
-      if (!res.ok || !r.url) throw new Error(r.error || 'save failed');
-      setNested('draft', { id: r.id, token: r.token, url: r.url, savedAt: new Date().toISOString() });
-      setNested('express.continuedAt', next.express.continuedAt);
+      const continuedAt = new Date().toISOString();
+      const next = { ...continuationOf(data, null), express: { ...continuationOf(data, null).express, continuedAt } };
+      const r = await saveQuestionnaireLink(next, data.draft?.id ? { id: data.draft.id, token: data.draft.token } : null);
+      setNested('draft', { id: r.id, token: r.token, url: r.url, savedAt: continuedAt });
+      setNested('express.continuedAt', continuedAt);
       if (embedded) {
         // Inside the website's panel the full form needs the whole window:
         // the finish-later link carries the answers into a new tab.
@@ -511,26 +585,40 @@ function DoneScreen({ data, t, lang, embedded, setNested, dispatch, resetIntake 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="font-serif text-[1.7rem] font-semibold text-navy-600 mb-2 leading-tight">{t('Thank you, {name}.').replace('{name}', d.firstName || '')}</h2>
+        <h2 className="font-serif text-[1.7rem] font-semibold text-navy-600 mb-2 leading-tight">{t('Thank you for contacting us, {name}.').replace('{name}', d.firstName || '')}</h2>
         <p className="text-gray-600">{t('Your request has reached the office.')}</p>
-        <p className="text-navy-600 font-medium mt-2">{t('Our office will contact you within two business days to schedule your consultation.')}</p>
+        <p className="text-navy-600 font-medium mt-2">{t('The office will contact you for an appointment within 24 to 48 hours.')}</p>
         {reach && <p className="text-sm text-gray-500 mt-1">{reach}</p>}
         {urgent && <UrgentNotice t={t} />}
       </div>
 
       <div className="card mt-4">
-        <h3 className="font-semibold text-navy-600 mb-1">{t('Save time at your visit')}</h3>
-        <p className="text-sm text-gray-500 mb-4">{t('The full intake form takes about 15 minutes and lets Dr. Wey read your whole story before you arrive. You can do it now or later, on any device.')}</p>
+        <h3 className="font-semibold text-navy-600 mb-1">{t('Finish your pre-visit questionnaire')}</h3>
+        <p className="text-sm text-gray-500 mb-4">{t('It takes about 15 minutes and really helps our team prepare for your visit. You can continue right now, or later from the link on any device.')}</p>
+        {link && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-700 mb-2">
+              {x.linkEmailed && d.email
+                ? t('We emailed your questionnaire link to {email}.').replace('{email}', d.email)
+                : t('We could not email the link; keep it from here instead.')}
+            </p>
+            <label className="form-label" htmlFor="x-link">{t('Your questionnaire link')}</label>
+            <div className="flex gap-2">
+              <input id="x-link" type="text" readOnly value={link} onFocus={(e) => e.target.select()} className="flex-1 text-xs" />
+              <button type="button" onClick={copy} className="btn-secondary text-sm whitespace-nowrap">{copied ? t('Copied') : t('Copy link')}</button>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row gap-3">
           <button type="button" onClick={continueNow} disabled={opening} className="btn-primary flex-1 disabled:opacity-60">
-            {opening ? t('Opening…') : t('Continue to the full form')}
+            {opening ? t('Opening…') : t('Continue the questionnaire')}
           </button>
           <button type="button" onClick={() => setFinishLater(true)} className="btn-secondary flex-1">{t('Get a link to finish later')}</button>
         </div>
         {error && <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>}
       </div>
 
-      {finishLater && <FinishLater onClose={() => setFinishLater(false)} intake={continuation()} />}
+      {finishLater && <FinishLater onClose={() => setFinishLater(false)} intake={continuationOf(data, null)} />}
 
       <p className="text-center mt-6">
         <button type="button" onClick={() => { if (confirm(t('This will clear all data and start a new patient intake form. Are you sure?'))) resetIntake(); }} className="text-xs text-gray-400 hover:text-gray-600">
