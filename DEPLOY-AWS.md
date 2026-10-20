@@ -184,6 +184,61 @@ regardless of the language the patient wrote in. Known limit: the transcript
 PDF prints free-text answers written in non-Latin scripts as a marker and
 points to the structured record, because its fonts cover Latin only.
 
+## The express request (website chat)
+
+`/express` is the short appointment request behind the "Chat with us" launcher
+on aaronweymd.com (`components/ExpressIntake.js`, `lib/express.js`). Five turns,
+phrased by the same Claude model through the same `/api/chat` route
+(`mode: 'express'`): name and date of birth, phone or email, what is going on in
+the patient's words, the safety question (bladder or bowel control, saddle
+numbness, rapidly worsening weakness, fever with back pain) and the language
+for the call. The answers are kept by slot, shown on a card the patient
+corrects and sends, and then go through the ordinary path
+(`/api/intake/submit`, worker, Practice Hub) marked `express`. The lead note is
+written without the model (`expressLeadNarrative`), the transcript PDF opens
+with an "Express appointment request" section, and the hand-off carries
+`express: true`, the language name for the call and `summary.visitReason`. The
+thank-you screen offers the full intake now (a finish-later draft opened at
+`/?resume=…`, in a new tab when inside the website's panel) or a link for
+later; a full intake started that way carries `express.leadId`, the lead's
+submission id.
+
+Checks: `node scripts/test-express.mjs` (offline) and
+`node scripts/e2e-express-submit.mjs http://localhost:3000` (against a dev
+server; the chat turn needs Bedrock credentials).
+
+**What the deploy needs beyond a push:**
+
+1. **Framing.** `next.config.js` lets `/express` alone be framed, by
+   `https://aaronweymd.com`, `https://www.aaronweymd.com` and
+   `https://aaronweymd-2026.netlify.app` (`EXPRESS_FRAME_ANCESTORS` overrides
+   the list; set it on the Amplify app and re-run
+   `scripts/aws/amplify-configure.mjs` if the website moves). Every other page
+   keeps `X-Frame-Options: DENY`. After the deploy, check that
+   `curl -sI https://intake.aaronweymd.com/express` shows the
+   `frame-ancestors` list and no `X-Frame-Options`, and that `/` still shows
+   `DENY`.
+2. **The worker.** The lead note, the PDF section and the hand-off fields run in
+   the Lambda worker, so this change needs `npx cdk deploy` as well as the
+   Amplify build (see "Two deploys, not one").
+3. **Practice Hub.** The hand-off already fits the hub's schema (it requires a
+   date of birth, which the express card requires too). Unknown fields
+   (`express`, `expressLeadId`, `summary.express`, `summary.safetyScreen`) are
+   dropped by the hub until it learns them; the lead is still filed with
+   `visitReason` "Express request from the website chat: please call to
+   schedule" and the lead note. Showing an "express" badge and the safety
+   answer in the hub's inbox is a Practice Hub change.
+4. **Translations.** The express strings have inline Spanish and Chinese; run
+   `node scripts/translate-ui.mjs` for the other nine languages (the model
+   already asks in the chosen language; the fixed wording is the fallback when
+   the model is unavailable).
+5. **Rate limits.** The express chat uses the existing `/api/chat` limit (60
+   calls per IP per minute) and submit limit (6 per IP per hour); the website
+   launcher adds no traffic until a visitor opens it.
+6. **Privacy notice.** The intake site's notice should mention that the chat
+   can be opened from aaronweymd.com inside a panel; the website's privacy
+   policy already says the conversation runs here.
+
 ## Local development
 
 Nothing AWS-side is required: without `SPINE_SUBMISSIONS_BUCKET` submissions

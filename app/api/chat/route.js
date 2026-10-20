@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { HPI_CHAT_SYSTEM_PROMPT } from '../../../lib/prompts';
+import { HPI_CHAT_SYSTEM_PROMPT, EXPRESS_CHAT_SYSTEM_PROMPT } from '../../../lib/prompts';
 import { complete } from '../../../lib/server/llm';
 import { limitOr429 } from '../../../lib/server/rateLimit';
 import { logError } from '../../../lib/server/log';
@@ -26,13 +26,19 @@ export async function POST(request) {
   } catch {
     return NextResponse.json({ error: 'Expected JSON body.' }, { status: 400 });
   }
-  const { messages, context } = body || {};
+  const { messages, context, mode } = body || {};
   if (!Array.isArray(messages) || messages.length > MAX_MESSAGES) {
     return NextResponse.json({ error: 'Invalid conversation.' }, { status: 400 });
   }
+  // 'express': the five-turn appointment request (lib/express.js). Same model,
+  // same route, a different system prompt; the context names the question.
+  const express = mode === 'express';
 
   const turns = [];
-  if (context) {
+  if (context && express) {
+    turns.push({ role: 'user', content: `[SYSTEM CONTEXT]\n${String(context).slice(0, 4000)}` });
+    turns.push({ role: 'assistant', content: 'Understood. I will ask only the question named for this turn, in the language given.' });
+  } else if (context) {
     turns.push({ role: 'user', content: `[SYSTEM CONTEXT - Patient data already collected]\n${String(context).slice(0, 20_000)}` });
     turns.push({ role: 'assistant', content: "I have the patient's information. I'll now ask targeted follow-up questions to complete the history." });
   }
@@ -42,7 +48,7 @@ export async function POST(request) {
   }
 
   try {
-    const r = await complete({ purpose: 'chat', system: HPI_CHAT_SYSTEM_PROMPT, messages: turns, maxTokens: 500, temperature: 0.7 });
+    const r = await complete({ purpose: 'chat', system: express ? EXPRESS_CHAT_SYSTEM_PROMPT : HPI_CHAT_SYSTEM_PROMPT, messages: turns, maxTokens: express ? 300 : 500, temperature: express ? 0.5 : 0.7 });
     return NextResponse.json({ reply: r.text });
   } catch (err) {
     logError('chat.failed', err);

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { detectRedFlags } from '../../../../lib/redFlags';
-import { consentComplete } from '../../../../lib/consent';
+import { cleanCampaign } from '../../../../lib/campaign';
+import { consentComplete, expressConsentComplete } from '../../../../lib/consent';
+import { isExpressLead } from '../../../../lib/express';
 import { deleteDraft, isDraftId } from '../../../../lib/server/draftStore';
 import { limitOr429 } from '../../../../lib/server/rateLimit';
 import { logError, logEvent } from '../../../../lib/server/log';
@@ -41,10 +43,18 @@ export async function POST(request) {
   if (!intake || typeof intake !== 'object') return NextResponse.json({ error: 'Missing intake data.' }, { status: 400 });
 
   const d = intake.demographics || {};
+  // An express request (lib/express.js) is a lead, not a completed intake:
+  // name, date of birth and a way to reach the patient, with the two
+  // acknowledgments the card shows. Practice Hub needs the date of birth to
+  // find or open the chart.
+  const express = isExpressLead(intake);
   if (!String(d.firstName || '').trim() || !String(d.lastName || '').trim() || !/^\d{4}-\d{2}-\d{2}$/.test(String(d.dob || ''))) {
     return NextResponse.json({ error: 'Please enter your first name, last name and date of birth before submitting.' }, { status: 422 });
   }
-  if (!consentComplete(intake.consent)) {
+  if (express && !String(d.phone || '').trim() && !String(d.email || '').trim()) {
+    return NextResponse.json({ error: 'Please give a phone number or an email address so the office can reach you.' }, { status: 422 });
+  }
+  if (express ? !expressConsentComplete(intake.consent) : !consentComplete(intake.consent)) {
     return NextResponse.json({ error: 'Please check each acknowledgment and type your name as your signature before submitting.' }, { status: 422 });
   }
 
@@ -64,6 +74,8 @@ export async function POST(request) {
       uploadedAt: doc.uploadedAt || null,
     }));
   clean.documents = documents;
+  // Campaign tags are slugs the practice chose; anything else the browser sent is dropped.
+  clean.campaign = cleanCampaign(clean.campaign);
 
   const id = newSubmissionId();
   const token = newAccessToken();
@@ -79,6 +91,7 @@ export async function POST(request) {
     uploadsExpected: documents.filter((doc) => doc.size <= MAX_ATTACHMENT_BYTES).length,
     redFlagCount: redFlags.length,
     language: clean.language || 'en',
+    ...(express ? { express: true } : {}),
   };
 
   try {
@@ -100,6 +113,12 @@ export async function POST(request) {
     else uploads.push({ docId: doc.id, skipped: 'upload unavailable' });
   }
 
-  logEvent('submit.received', { submissionId: id, attachments: uploads.length, redFlags: redFlags.length, store: storeKind() });
+  // The campaign fields are cleaned slugs, so they are safe to log; counting
+  // submit.received lines by campaign gives completed intakes per ad.
+  const c = clean.campaign || {};
+  logEvent('submit.received', {
+    submissionId: id, attachments: uploads.length, redFlags: redFlags.length, store: storeKind(), express,
+    ...(clean.campaign ? { utmSource: c.source || '', utmMedium: c.medium || '', utmCampaign: c.campaign || '', utmContent: c.content || '' } : {}),
+  });
   return NextResponse.json({ id, token, uploads, redFlags }, { status: 201 });
 }

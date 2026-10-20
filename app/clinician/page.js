@@ -9,6 +9,8 @@ import PainMapSummary from '../../components/PainMapFigure';
 import { promDetail } from '../../lib/promSummary';
 import { defaultIntakeData } from '../../lib/store';
 import { countMarks, reportsNoPain } from '../../lib/bodyMap';
+import { isExpressLead, SAFETY_SUMMARY } from '../../lib/express';
+import { LANGUAGE_NAMES } from '../../lib/i18n';
 
 const STORAGE_KEY = 'spine-intake-data';
 
@@ -124,9 +126,15 @@ export default function ClinicianDashboard() {
                   {redFlags.filter(f => f.severity === 'urgent').length} Red Flag(s)
                 </span>
               )}
+              {isExpressLead(data) ? (
+                <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+                  Express request · call to schedule
+                </span>
+              ) : (
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                 Intake Complete
               </span>
+              )}
             </div>
           </div>
         </div>
@@ -212,9 +220,24 @@ function SummaryTab({ summary, onCopy, copied }) {
 // ===========================================================================
 function StructuredTab({ data }) {
   const redFlags = data.redFlags || [];
+  const x = data.express;
 
   return (
     <div className="space-y-6">
+      {/* The express request from the website chat: what the office needs to make the call. */}
+      {isExpressLead(data) && (
+        <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-amber-400">
+          <h3 className="font-semibold text-navy-600 mb-3">Express request (website chat)</h3>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <div><dt className="text-gray-500">Reach by</dt><dd className="text-gray-800">{[data.demographics?.phone, data.demographics?.email].filter(Boolean).join(' · ') || '—'}</dd></div>
+            <div><dt className="text-gray-500">Language for the call</dt><dd className="text-gray-800">{LANGUAGE_NAMES[x.callLanguage || data.language] || x.callLanguage || '—'}</dd></div>
+            <div className="sm:col-span-2"><dt className="text-gray-500">In the patient's words</dt><dd className="text-gray-800 whitespace-pre-wrap">{data.chiefComplaint?.mainReason || '—'}</dd></div>
+            <div className="sm:col-span-2"><dt className="text-gray-500">Safety screen</dt><dd className={x.safety === 'yes' ? 'text-red-700 font-medium' : 'text-gray-800'}>{SAFETY_SUMMARY[x.safety] || SAFETY_SUMMARY['']}</dd></div>
+            <div><dt className="text-gray-500">Received</dt><dd className="text-gray-800">{x.completedAt ? new Date(x.completedAt).toLocaleString() : '—'}</dd></div>
+            <div><dt className="text-gray-500">Full intake</dt><dd className="text-gray-800">{x.continuedAt ? 'Started by the patient' : 'Not started; offered'}</dd></div>
+          </dl>
+        </div>
+      )}
       {/* Red Flags */}
       {redFlags.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-6">

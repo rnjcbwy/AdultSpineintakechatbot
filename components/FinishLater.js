@@ -46,8 +46,11 @@ const LOCAL = {
  * link to copy, and can email it (through the practice's own mail service
  * when that is set up, otherwise through the patient's mail app).
  */
-export default function FinishLater({ onClose }) {
+export default function FinishLater({ onClose, intake: override = null }) {
   const { data, setNested } = useIntake();
+  // What the link opens: the answers on this device, or, from the express
+  // request's final screen, the continuation into the full intake.
+  const intake = override || data;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const [link, setLink] = useState(data.draft?.url || '');
@@ -63,7 +66,7 @@ export default function FinishLater({ onClose }) {
     const res = await fetch('/api/draft', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ intakeData: data, draft: data.draft ? { id: data.draft.id, token: data.draft.token } : undefined, email: withEmail || undefined }),
+      body: JSON.stringify({ intakeData: intake, draft: data.draft ? { id: data.draft.id, token: data.draft.token } : undefined, email: withEmail || undefined }),
     });
     const r = await res.json();
     if (!res.ok || !r.url) throw new Error(r.error || 'save failed');

@@ -20,6 +20,18 @@ const csp = [
   "object-src 'none'",
 ].join('; ');
 
+// The express request (/express) is opened inside a slide-over panel on the
+// practice website, so that page alone may be framed, and only by those
+// origins. Everything else stays unframeable. EXPRESS_FRAME_ANCESTORS
+// overrides the list (space-separated origins).
+const expressFrameAncestors = (process.env.EXPRESS_FRAME_ANCESTORS || [
+  'https://aaronweymd.com',
+  'https://www.aaronweymd.com',
+  'https://aaronweymd-2026.netlify.app',
+  ...(isProd ? [] : ['http://localhost:*', 'http://127.0.0.1:*']),
+].join(' ')).trim();
+const expressCsp = csp.replace("frame-ancestors 'none'", `frame-ancestors 'self' ${expressFrameAncestors}`);
+
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -39,7 +51,17 @@ const nextConfig = {
     return [{ source: '/:lang(es|zh|pt|ru|pl|ar|he|ko|ja|hi|ne)', destination: '/' }];
   },
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    // Headers on /express replace the general ones key by key; X-Frame-Options
+    // cannot carry an allow-list, so it is left off that page and the CSP's
+    // frame-ancestors does the work (every current browser honours it).
+    const expressHeaders = securityHeaders
+      .filter((h) => h.key !== 'X-Frame-Options')
+      .map((h) => (h.key === 'Content-Security-Policy' ? { key: h.key, value: expressCsp } : h));
+    return [
+      { source: '/((?!express$|express/).*)', headers: securityHeaders },
+      { source: '/express', headers: expressHeaders },
+      { source: '/express/:rest*', headers: expressHeaders },
+    ];
   },
 };
 
