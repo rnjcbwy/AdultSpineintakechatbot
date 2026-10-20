@@ -133,11 +133,14 @@ export default function ExpressIntake() {
   return (
     <div className="min-h-screen bg-cream-100">
       <header className="bg-white/95 border-b border-gray-100">
-        <div className={`mx-auto px-4 py-3 flex items-center justify-between gap-3 ${embedded ? 'max-w-xl' : 'max-w-2xl'}`}>
-          <div>
-            <h1 className="text-base font-semibold text-navy-600 leading-tight">{t('Request an appointment')}</h1>
-            <p className="text-xs text-gray-400">{t("Dr. Aaron Wey's office")} · {PRACTICE.surgeon}</p>
-          </div>
+        <div className={`mx-auto px-4 py-3 flex items-center gap-3 ${embedded ? 'justify-end max-w-xl py-2' : 'justify-between max-w-2xl'}`}>
+          {/* Inside the website panel the panel's own header carries the title; only the language picker is kept. */}
+          {embedded
+            ? <h1 className="sr-only">{t('Request an appointment')}</h1>
+            : <div>
+                <h1 className="text-base font-semibold text-navy-600 leading-tight">{t('Request an appointment')}</h1>
+                <p className="text-xs text-gray-400">{t("Dr. Aaron Wey's office")} · {PRACTICE.surgeon}</p>
+              </div>}
           <label className="text-xs text-gray-500 flex items-center gap-2">
             <span className="sr-only">{t('Language')}</span>
             <select
@@ -247,7 +250,7 @@ function ExpressChat({ data, t, lang, setNested, setLanguage, embedded }) {
 
   return (
     <div className="animate-fade-in">
-      <p className="text-sm text-gray-500 mb-3">{t('A short chat, about five questions. The office then calls you to schedule.')}</p>
+      {!embedded && <p className="text-sm text-gray-500 mb-3">{t('A short chat, about five questions. The office then calls you to schedule.')}</p>}
       <ChatPanel
         title={t('Front desk assistant')}
         subtitle={t('Question {n} of {total}').replace('{n}', String(Math.min(slotIndex < 0 ? EXPRESS_SLOTS.length : slotIndex + 1, EXPRESS_SLOTS.length))).replace('{total}', String(EXPRESS_SLOTS.length))}
