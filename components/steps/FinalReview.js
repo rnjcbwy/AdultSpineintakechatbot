@@ -344,7 +344,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
         <ReviewCard
           t={t}
           title="Type of Visit"
-          onEdit={() => go('visit-type')}
+          onEdit={() => go('triage')}
           items={[{ label: 'Visit', value: t(VISIT_LABEL[visitType] || data.demographics.visitReason) }]}
         />
 

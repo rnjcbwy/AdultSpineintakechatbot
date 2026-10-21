@@ -51,6 +51,7 @@ import FinishLater from './FinishLater';
 import KioskGuard from './KioskGuard';
 import Welcome from './steps/Welcome';
 import VisitType from './steps/VisitType';
+import Triage from './steps/Triage';
 import WorkInjury from './steps/WorkInjury';
 import LegalInjury from './steps/LegalInjury';
 import IntervalHistory from './steps/IntervalHistory';
@@ -75,6 +76,7 @@ import FinalReview from './steps/FinalReview';
 // Step id -> component. The order comes from the visit type (lib/flows.js).
 const STEP_COMPONENTS = {
   welcome: Welcome,
+  triage: Triage,
   'visit-type': VisitType,
   'work-injury': WorkInjury,
   'legal-injury': LegalInjury,
