@@ -98,8 +98,9 @@ new-problem, adult spine follow-up, child spine new, child ortho fracture.
   custom rules on their apps (d382smsgd5xkup, d1dsz5t255b12o, d3chu9dux7tr7z).
 - A link may name the service: `?service=adult_ortho` (and the other keys)
   pre-sets the direction; the triage step still confirms it.
-- Practice Hub: the four form links point at intake.aaronweymd.com with the
-  service on the link (`src/server/intake-forms.ts`); its intake endpoint
+- Practice Hub holds ONE intake address (Settings → Team) and builds chart
+  links as `<intake>/?service=<key>&invite=<token>[&lang=xx]`
+  (`intakeUrl()` in `src/server/intake-invites.ts`); its intake endpoint
   accepts all four service keys and files a chart under the adult or the
   pediatric line (`chartServiceFor` in `src/server/intake.ts`).
 - The note worker (`spine-intake-worker`) was redeployed from this code.
