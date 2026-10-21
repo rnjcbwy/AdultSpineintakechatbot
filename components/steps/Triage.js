@@ -9,7 +9,9 @@ import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextArea } from '../ui/Fields';
 
 const WHO = ['Myself', 'My child (under 18)', 'An adult I am helping'];
-const SEEN = ['No, this is my first visit', 'Yes, I have been seen here before'];
+// New to THIS doctor, not to the office: a patient who saw a partner here
+// before is still a first visit, and gets the full history.
+const FIRST = ['Yes, my first time with this doctor', 'No, I have seen this doctor before'];
 const AREA = ['The neck or back', 'A bone or joint'];
 const AREA_OF = { spine: AREA[0], ortho: AREA[1] };
 const SPECIALTY_OF = { [AREA[0]]: 'spine', [AREA[1]]: 'ortho' };
@@ -44,6 +46,8 @@ export default function Triage({ onNext, onBack }) {
   const regions = tri.regions || [];
   const byRegions = specialtyFromRegions(regions);
   const description = String(tri.description || '').trim();
+  const firstTime = tri.firstTime === FIRST[0];
+  const returning = tri.firstTime === FIRST[1];
   const kind = v.choice === 'followup' ? (v.hadSurgery === 'Yes' ? 'postop' : v.hadSurgery === 'No' ? 'followup' : '') : v.choice === 'new' ? 'new' : '';
   const claim = v.workInjury || '';
   const understood = !!svc.specialty || !!kind || !!claim;
@@ -60,6 +64,11 @@ export default function Triage({ onNext, onBack }) {
     if (byRegions && !['manual', 'invite'].includes(svc.how) && svc.specialty !== byRegions) applyService({ specialty: byRegions, how: 'regions' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [byRegions]);
+
+  useEffect(() => {
+    if (firstTime && kind !== 'new') applyVisit({ kind: 'new' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstTime]);
 
   const trimCompleted = () => {
     // The steps after this one depend on these answers, so "completed" marks
@@ -91,7 +100,7 @@ export default function Triage({ onNext, onBack }) {
   };
 
   const classify = async () => {
-    const signature = `${description}|${regions.join(',')}|${tri.seenBefore || ''}`;
+    const signature = `${description}|${regions.join(',')}|${tri.firstTime || ''}`;
     if (askedFor.current === signature) return;
     askedFor.current = signature;
     setBusy(true);
@@ -99,11 +108,12 @@ export default function Triage({ onNext, onBack }) {
       const r = await fetch('/api/triage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description, regions, who: tri.who || '', seenBefore: tri.seenBefore || '', language: lang }),
+        body: JSON.stringify({ description, regions, who: tri.who || '', firstTime: tri.firstTime || '', language: lang }),
       }).then((x) => x.json());
       setNested('triage.suggestion', { specialty: r?.specialty || '', visitKind: r?.visitKind || '', claim: r?.claim || '', reason: r?.reason || '' });
       if ((r?.specialty === 'spine' || r?.specialty === 'ortho') && !['manual', 'invite'].includes(svc.how) && !byRegions) applyService({ specialty: r.specialty, how: 'ai' });
-      const k = ['new', 'followup', 'postop'].includes(r?.visitKind) ? r.visitKind : kind;
+      // A first visit with this doctor is a new-patient visit whatever the sentence says.
+      const k = firstTime ? 'new' : ['new', 'followup', 'postop'].includes(r?.visitKind) ? r.visitKind : kind;
       const c = CLAIM_OF[r?.claim] || claim;
       // What the patient already tapped is never overwritten by the model.
       applyVisit({ kind: kind || k, claim: claim || c });
@@ -120,7 +130,7 @@ export default function Triage({ onNext, onBack }) {
     if (description && !String(data.chiefComplaint?.mainReason || '').trim()) setField('chiefComplaint', 'mainReason', description);
   };
 
-  const basicsDone = !!patient && !!tri.seenBefore && (regions.length > 0 || description.length >= 3);
+  const basicsDone = !!patient && !!tri.firstTime && (regions.length > 0 || description.length >= 3);
   const allSet = !!svc.specialty && !!kind && !!claim && !!v.type;
   // Before the model has been asked, Continue asks it; afterwards it needs the three rows settled.
   const canGoNext = basicsDone && !busy && (!asked || allSet);
@@ -147,7 +157,13 @@ export default function Triage({ onNext, onBack }) {
       </div>
 
       <div className="card mt-4">
-        <Chips label="Have you been seen at this office before?" options={SEEN} value={tri.seenBefore || ''} onChange={(x) => { setNested('triage.seenBefore', x); setAsked(false); }} />
+        <Chips
+          label="Is this your first visit with this doctor?"
+          hint="If you have been to this office before but saw a different doctor, that still counts as a first visit."
+          options={FIRST}
+          value={tri.firstTime || ''}
+          onChange={(x) => { setNested('triage.firstTime', x); setAsked(false); }}
+        />
       </div>
 
       <div className="card mt-4">
@@ -181,13 +197,17 @@ export default function Triage({ onNext, onBack }) {
               value={AREA_OF[svc.specialty] || ''}
               onChange={(x) => applyService({ specialty: SPECIALTY_OF[x], how: 'manual' })}
             />
-            <Chips
-              label="This visit is"
-              options={KIND}
-              value={KIND_OF[kind] || ''}
-              onChange={(x) => applyVisit({ kind: VISIT_KIND_OF[x] })}
-              hint={kind === 'followup' || kind === 'postop' ? 'Your history is on file, so the form will only ask what has changed.' : undefined}
-            />
+            {returning ? (
+              <Chips
+                label="This visit is"
+                options={KIND}
+                value={KIND_OF[kind] || ''}
+                onChange={(x) => applyVisit({ kind: VISIT_KIND_OF[x] })}
+                hint={kind === 'followup' || kind === 'postop' ? 'Your history is on file, so the form will only ask what has changed.' : undefined}
+              />
+            ) : (
+              <p className="text-sm text-gray-600">{t('A first visit with this doctor: the form asks for your full history, even if another doctor here has seen you.')}</p>
+            )}
             <Chips
               label="Is a work injury or an accident claim involved?"
               options={CLAIM_OPTIONS}

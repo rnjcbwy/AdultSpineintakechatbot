@@ -1,6 +1,6 @@
 'use client';
 
-import { useIntake } from '../lib/store';
+import { useService, useIntake } from '../lib/store';
 import { useEffect, useState } from 'react';
 import { useLang, makeT, tx, isRtl } from '../lib/i18n';
 import { stepsForVisit } from '../lib/flows';
@@ -51,6 +51,7 @@ import FinishLater from './FinishLater';
 import KioskGuard from './KioskGuard';
 import Welcome from './steps/Welcome';
 import Triage from './steps/Triage';
+import { PEDS_STEP_COMPONENTS } from './steps/peds';
 import WorkInjury from './steps/WorkInjury';
 import LegalInjury from './steps/LegalInjury';
 import IntervalHistory from './steps/IntervalHistory';
@@ -96,10 +97,12 @@ const STEP_COMPONENTS = {
   ros: ReviewOfSystems,
   proms: PROMs,
   review: FinalReview,
+  ...PEDS_STEP_COMPONENTS,
 };
 
 export default function IntakeWizard() {
   const { data, setStep, completeStep, kiosk } = useIntake();
+  const service = useService();
   const lang = useLang();
   const t = makeT(CHROME, lang);
   const [finishLater, setFinishLater] = useState(false);
@@ -113,7 +116,7 @@ export default function IntakeWizard() {
   }, [lang]);
   // The steps for this kind of visit. Until one is chosen the full sequence
   // is shown, so the progress strip does not jump around on the first screens.
-  const steps = stepsForVisit(data.visit?.type);
+  const steps = stepsForVisit(data.visit?.type, service, data);
   const currentStep = Math.min(data.currentStep, steps.length - 1);
   const stepId = steps[currentStep]?.id;
   const StepComponent = STEP_COMPONENTS[stepId] || Welcome;

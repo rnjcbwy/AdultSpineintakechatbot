@@ -84,39 +84,30 @@ const T = {
   },
 };
 
-/**
- * The only mark on the page: three soft rounded shapes in the practice green
- * with a lighter centre. Nothing anatomical, no name, no logo: the same mark
- * greets every patient, whatever brings them in. (The `spine-logo` and
- * `vertebra` class names are only the sizing and the pulse in globals.css.)
- */
-function PracticeMark() {
-  const petals = [
-    { cx: 50, cy: 34, delay: '0s' },
-    { cx: 32, cy: 66, delay: '0.15s' },
-    { cx: 68, cy: 66, delay: '0.3s' },
-  ];
+/** The only mark on the page: the animated spine, as on the original intake. No name, no logo. */
+function SpineLogo() {
+  const vertebrae = [10, 25, 40, 55, 70, 85, 100];
   return (
     <svg viewBox="0 0 100 120" className="spine-logo mx-auto" aria-hidden="true">
       <defs>
-        <linearGradient id="markGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id="spineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#155842" />
           <stop offset="100%" stopColor="#0E3F31" />
         </linearGradient>
       </defs>
-      {petals.map((p) => (
-        <circle
-          key={p.delay}
-          cx={p.cx}
-          cy={p.cy}
-          r="24"
-          fill="url(#markGrad)"
-          fillOpacity="0.9"
+      {vertebrae.map((y, i) => (
+        <rect
+          key={y}
+          x="30"
+          y={y}
+          width="40"
+          height="12"
+          rx="6"
+          fill="url(#spineGrad)"
           className="vertebra"
-          style={{ animationDelay: p.delay }}
+          style={{ animationDelay: `${i * 0.1}s` }}
         />
       ))}
-      <circle cx="50" cy="55" r="11" fill="#6DCDB8" className="vertebra" style={{ animationDelay: '0.45s' }} />
     </svg>
   );
 }
@@ -156,7 +147,7 @@ export default function Welcome({ onNext }) {
       <div className="max-w-[560px] w-full mx-auto text-center animate-fade-in">
         {/* No name, no ownership: the page is the form. One plain mark for every patient. */}
         <div className="mb-7">
-          <PracticeMark />
+          <SpineLogo />
         </div>
 
         <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">

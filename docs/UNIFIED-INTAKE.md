@@ -15,7 +15,7 @@ four live sites keep running untouched until this one is proven.
 `components/steps/Triage.js`, the step right after the welcome, asks:
 
 - who the form is for: myself / my child (under 18) / an adult I am helping
-- whether the patient has been seen at this office before
+- whether this is the patient's first visit with this doctor (a visit to the office with another doctor still counts as a first visit, and a first visit always gets the full new-patient history)
 - where the problem is (neck, back, posture, shoulder, elbow, hand, hip,
   knee, foot, somewhere else)
 - a sentence or two about it
@@ -38,9 +38,9 @@ The kind of visit and the claim feed the existing visit machinery
 (`lib/flows.js`: `visit.choice`, `visit.hadSurgery`, `visit.workInjury`,
 `visit.type`), so the follow-up, post-operative, workers' comp and personal
 injury flows are unchanged. The old separate "type of visit" step is gone.
-"Seen here before" is recorded in `triage.seenBefore`, sent to Practice Hub,
-and used by the recognise-me flow; an established patient with a new problem
-still gets the full history steps for now (they pre-fill from the chart).
+The first-visit answer is recorded in `triage.firstTime` and sent to Practice
+Hub; the follow-up and post-operative kinds are only offered to a patient
+who has seen this doctor before.
 
 ## Where the differences live
 

@@ -19,7 +19,7 @@ Decide three things:
 
 2. visitKind
 - "new": a problem this office has not seen (a first visit, a new problem, a second opinion, a referral). A patient seen here before for something ELSE is still "new" for this problem.
-- "followup": coming back about a problem this office has already seen, with no operation for it in between.
+- "followup": coming back to the same doctor about a problem already seen, with no operation for it in between. A patient on a first visit with this doctor is always "new", even if another doctor at the office treated the problem.
 - "postop": a visit after an operation on the problem (a check-up after surgery, wound check, "I had my fusion/replacement/repair and ...").
 - "unsure" when nothing in the message says.
 
@@ -53,7 +53,7 @@ export async function POST(request) {
   const prompt = [
     `Language for the reason: ${language}`,
     `Who the form is for: ${String(body?.who || '').slice(0, 60) || 'not given'}`,
-    `Seen at this office before: ${String(body?.seenBefore || '').slice(0, 80) || 'not given'}`,
+    `First visit with this doctor: ${String(body?.firstTime || '').slice(0, 80) || 'not given'}`,
     `Regions tapped: ${regionText}`,
     `What the patient wrote:\n"""${description}"""`,
   ].join('\n');

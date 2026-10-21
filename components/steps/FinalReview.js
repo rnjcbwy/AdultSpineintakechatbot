@@ -298,7 +298,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
   // The steps this kind of visit went through; cards and "Edit" links are
   // looked up by step id, since the position depends on the visit type.
   const visitType = data.visit?.type || '';
-  const steps = stepsForVisit(visitType);
+  const steps = stepsForVisit(visitType, service, data);
   const has = (id) => stepIndex(steps, id) >= 0;
   const go = (id) => onGoToStep(Math.max(0, stepIndex(steps, id)));
   const wc = data.visit?.wc || {};
