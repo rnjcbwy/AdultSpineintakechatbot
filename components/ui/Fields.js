@@ -110,45 +110,76 @@ const SPEECH_LANG = { en: 'en-US', es: 'es-US', zh: 'zh-CN', pt: 'pt-BR', ru: 'r
  * (Chrome, Edge, Safari), in the form's language. Nothing is sent anywhere
  * by this form; the browser does the listening. Typing always works too.
  */
+const DICTATION_ERRORS = {
+  'not-allowed': 'The browser blocked the microphone. Allow it for this site (the lock icon in the address bar) and try again.',
+  'service-not-allowed': 'The browser blocked the microphone. Allow it for this site (the lock icon in the address bar) and try again.',
+  'audio-capture': 'No microphone was found.',
+  network: 'Dictation needs an internet connection in this browser.',
+  'no-speech': 'Nothing was heard. Tap again and speak after the button turns red.',
+  'language-not-supported': 'This browser cannot take dictation in this language.',
+};
+
 export function DictateButton({ onText, lang }) {
   const [listening, setListening] = useState(false);
   const [supported, setSupported] = useState(false);
+  const [note, setNote] = useState('');
+  const [interim, setInterim] = useState('');
   const recRef = useRef(null);
   const t = makeT(COMMON, lang);
   useEffect(() => {
     setSupported(typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition));
-    return () => { try { recRef.current?.stop(); } catch { /* ignore */ } };
+    return () => { try { recRef.current?.abort(); } catch { /* ignore */ } };
   }, []);
   if (!supported) return null;
+  const stop = () => { try { recRef.current?.stop(); } catch { /* ignore */ } setListening(false); setInterim(''); };
   const toggle = () => {
-    if (listening) { try { recRef.current?.stop(); } catch { /* ignore */ } setListening(false); return; }
+    if (listening) { stop(); return; }
+    setNote('');
+    if (typeof window !== 'undefined' && window.isSecureContext === false) { setNote(t('Dictation only works on a secure (https) page.')); return; }
     const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
     const rec = new Rec();
     rec.lang = SPEECH_LANG[lang] || 'en-US';
-    rec.interimResults = false;
+    rec.interimResults = true;
     rec.continuous = true;
+    rec.maxAlternatives = 1;
     rec.onresult = (e) => {
-      const text = Array.from(e.results).slice(e.resultIndex).map((r) => r[0]?.transcript || '').join(' ').trim();
-      if (text) onText(text);
+      let finalText = '';
+      let interimText = '';
+      for (let i = e.resultIndex; i < e.results.length; i += 1) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += `${r[0]?.transcript || ''} `;
+        else interimText += r[0]?.transcript || '';
+      }
+      if (finalText.trim()) onText(finalText.trim());
+      setInterim(interimText.trim());
     };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
+    rec.onend = () => { setListening(false); setInterim(''); };
+    rec.onerror = (e) => {
+      setListening(false);
+      setInterim('');
+      if (e?.error === 'aborted') return;
+      setNote(t(DICTATION_ERRORS[e?.error] || 'Dictation did not work in this browser. You can type instead.'));
+    };
     recRef.current = rec;
-    try { rec.start(); setListening(true); } catch { setListening(false); }
+    try { rec.start(); setListening(true); } catch { setListening(false); setNote(t('Dictation did not work in this browser. You can type instead.')); }
   };
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={listening}
-      className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1.5 border transition-colors ${listening ? 'bg-red-50 border-red-300 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'}`}
-    >
-      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <rect x="9" y="3" width="6" height="11" rx="3" />
-        <path d="M5 11a7 7 0 0 0 14 0M12 18v3" strokeLinecap="round" />
-      </svg>
-      {listening ? t('Listening… tap to stop') : t('Say it instead')}
-    </button>
+    <div className="flex flex-col items-end gap-1 max-w-[60%]">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={listening}
+        className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1.5 border transition-colors ${listening ? 'bg-red-50 border-red-300 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'}`}
+      >
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <rect x="9" y="3" width="6" height="11" rx="3" />
+          <path d="M5 11a7 7 0 0 0 14 0M12 18v3" strokeLinecap="round" />
+        </svg>
+        {listening ? t('Listening… tap to stop') : t('Say it instead')}
+      </button>
+      {listening && <p className="text-xs text-gray-400 text-right">{interim || t('Speak now; the words appear when you pause.')}</p>}
+      {note && <p className="text-xs text-amber-700 text-right">{note}</p>}
+    </div>
   );
 }
 

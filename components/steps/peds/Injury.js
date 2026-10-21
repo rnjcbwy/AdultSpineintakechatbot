@@ -72,12 +72,19 @@ export default function Injury({ onNext, onBack }) {
 
       <div className="space-y-6">
         <div className="card space-y-3">
-          <Chips
-            label="Is this about a recent injury or a broken bone?"
-            options={[YES, NO]}
-            value={track === 'fracture' ? YES : track === 'full' ? NO : ''}
-            onChange={setTrack}
-          />
+          {track ? (
+            <p className="text-sm text-gray-600">
+              {t(track === 'fracture' ? 'You said this is about an injury or a broken bone.' : 'You said this is not about an injury or a broken bone.')}{' '}
+              <button type="button" className="underline text-teal-600" onClick={() => setTrack('')}>{t('Change')}</button>
+            </p>
+          ) : (
+            <Chips
+              label="Is this about a recent injury or a broken bone?"
+              options={[YES, NO]}
+              value=""
+              onChange={setTrack}
+            />
+          )}
           <p className="text-xs text-gray-400">
             {t('A recent fall, twist, knock or sports injury, or a bone that has been broken or may be broken. The questions that follow are short and about the injury.')}
           </p>

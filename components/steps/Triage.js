@@ -7,6 +7,11 @@ import { TRIAGE_REGIONS, specialtyFromRegions, serviceKeyFor } from '../../lib/s
 import { CLAIM_OPTIONS, VISIT_LABEL, visitTypeFor } from '../../lib/flows';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextArea } from '../ui/Fields';
+import { PEDS_ORTHO_TEXT } from '../../lib/services/peds-ortho/text';
+
+// A child's orthopaedic visit: a recent injury or a broken bone takes the
+// short fracture-clinic path, so the form asks here, before anything else.
+const FRACTURE = ['Yes, an injury or a broken bone', 'No, something else'];
 
 const WHO = ['Myself', 'My child (under 18)', 'An adult I am helping'];
 // New to THIS doctor, not to the office: a patient who saw a partner here
@@ -34,7 +39,7 @@ const CLAIM_OF = { none: CLAIM_OPTIONS[0], workers_comp: CLAIM_OPTIONS[1], perso
 export default function Triage({ onNext, onBack }) {
   const { data, setNested, setField } = useIntake();
   const lang = useLang();
-  const t = makeT(COMMON, lang);
+  const t = makeT({ ...COMMON, ...PEDS_ORTHO_TEXT }, lang);
   const tri = data.triage || {};
   const svc = data.service || {};
   const v = data.visit || {};
@@ -134,7 +139,9 @@ export default function Triage({ onNext, onBack }) {
   };
 
   const basicsDone = !!patient && !!tri.firstTime && (regions.length > 0 || description.length >= 3);
-  const allSet = !!svc.specialty && !!kind && !!claim && !!v.type;
+  const pedsOrtho = svc.key === 'peds_ortho';
+  const track = data.pedsOrtho?.track || '';
+  const allSet = !!svc.specialty && !!kind && !!claim && !!v.type && (!pedsOrtho || !!track);
   // Before the model has been asked, Continue asks it; afterwards it needs the three rows settled.
   const canGoNext = basicsDone && !busy && (!asked || allSet);
 
@@ -217,8 +224,17 @@ export default function Triage({ onNext, onBack }) {
               value={claim}
               onChange={(x) => applyVisit({ claim: x })}
             />
+            {pedsOrtho && (
+              <Chips
+                label="Is this visit about a broken bone or a recent injury?"
+                options={FRACTURE.map((o) => t(o))}
+                value={track === 'fracture' ? t(FRACTURE[0]) : track === 'full' ? t(FRACTURE[1]) : ''}
+                onChange={(x) => { setNested('pedsOrtho.track', x === t(FRACTURE[0]) ? 'fracture' : 'full'); trimCompleted(); }}
+                hint={track === 'fracture' ? 'The form asks about the injury and the cast or splint, and skips the longer questions.' : undefined}
+              />
+            )}
           </div>
-          {!allSet && <p className="text-sm text-amber-700 mt-3">{t('Please answer each of the three above to continue.')}</p>}
+          {!allSet && <p className="text-sm text-amber-700 mt-3">{t(pedsOrtho ? 'Please answer each of the questions above to continue.' : 'Please answer each of the three above to continue.')}</p>}
         </div>
       )}
 

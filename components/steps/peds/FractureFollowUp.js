@@ -84,12 +84,19 @@ function CastCheck({ onNext, onBack }) {
 
       <div className="space-y-6">
         <div className="card space-y-3">
-          <Chips
-            label="Is this visit about a broken bone or a recent injury?"
-            options={[YES, NO]}
-            value={track === 'fracture' ? YES : track === 'full' ? NO : ''}
-            onChange={setTrack}
-          />
+          {track ? (
+            <p className="text-sm text-gray-600">
+              {t(track === 'fracture' ? 'You said this is about an injury or a broken bone.' : 'You said this is not about an injury or a broken bone.')}{' '}
+              <button type="button" className="underline text-teal-600" onClick={() => setTrack('')}>{t('Change')}</button>
+            </p>
+          ) : (
+            <Chips
+              label="Is this visit about a broken bone or a recent injury?"
+              options={[YES, NO]}
+              value=""
+              onChange={setTrack}
+            />
+          )}
           {track === 'full' && (
             <p className="text-sm text-gray-600">{t('Thank you. The next steps ask what has changed since the last visit in the usual way.')}</p>
           )}
