@@ -17,6 +17,6 @@
     "@aws-cdk/aws-iam:minimizePolicies": true,
     "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
     "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": true,
-    "emailFrom": ""
+    "emailFrom": "Dr. Aaron Wey's office <spine@aaronweymd.com>"
   }
 }

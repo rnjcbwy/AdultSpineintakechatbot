@@ -1,0 +1,50 @@
+# Amazon SES: request production access (account 933164653563, us-east-1)
+
+The account is still in the SES **sandbox**: it can only send to addresses or domains that are
+verified in SES. `aaronweymd.com` is verified (DKIM passing), so mail to any `@aaronweymd.com`
+address already works; mail to a patient's Gmail or Yahoo address is refused until AWS grants
+production access. An earlier request (case 179227456900079, from the Practice Hub setup) was
+**denied**, and the API will not accept a second request, so this one has to go through the console.
+
+## Where
+
+1. Sign in to the AWS console as the account owner.
+2. Open **Amazon SES** → **Account dashboard** (region N. Virginia, us-east-1).
+3. The banner "Your Amazon SES account is in the sandbox" has a **Request production access**
+   button (or **View case** / **Edit account details** if the old case is shown; use the option that
+   starts a new request).
+4. Fill in the form with the text below and submit. AWS usually answers within 24 hours by email
+   to the account's root email and to the additional contact.
+
+## What to enter
+
+- **Mail type:** Transactional
+- **Website URL:** https://aaronweymd.com
+- **Additional contact addresses:** admin@aaronweymd.com, aaronj.wey@gmail.com
+- **Preferred contact language:** English
+- **Use case description** (paste as is):
+
+> I am a physician (Aaron Wey, MD, adult and pediatric spine surgery, 870 Palisade Ave, Teaneck,
+> NJ; public website https://aaronweymd.com). Two applications in this account send one-to-one
+> transactional email from spine@aaronweymd.com, a verified domain identity with DKIM:
+>
+> 1. intake.aaronweymd.com: when a patient requests an appointment on our website and gives us
+>    their email address, they receive one message with the private link to the pre-visit
+>    questionnaire they asked for.
+> 2. Our internal office portal: when a referring physician submits a referral, the referred
+>    patient receives one intake invitation, and a new referring physician receives one sign-in
+>    link they requested.
+>
+> Every message is triggered by the recipient's own request or by their physician's referral.
+> There are no mailing lists, newsletters, marketing or purchased addresses, and no message is
+> sent more than once per event. Expected volume is under 100 messages per day and well under
+> 2,000 per month. Bounces and complaints: the SES account-level suppression list is enabled;
+> bounce and complaint notifications go to the office mailbox and the address is removed from
+> our records. Recipients can reply directly to spine@aaronweymd.com, which is staffed by the
+> office. The applications run in this account under the AWS Business Associate Addendum.
+
+## After approval
+
+Nothing else to change: both apps already send from `spine@aaronweymd.com`
+(`cdk.json` → `emailFrom` for the intake app; `deploy/terraform/terraform.tfvars` → `email_from`
+for Practice Hub). Send one test from the website chat to a Gmail address to confirm.

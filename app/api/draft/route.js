@@ -31,8 +31,8 @@ const MESSAGES = {
     text: (url) => `Here is the link to pick up your spine intake form where you left off:\n\n${url}\n\nIt works for 30 days and opens the answers you have given so far, so please do not forward it. Any records you attached stay on the device you added them from; you can attach them again or bring them to your visit.\n\nIf you did not ask for this link, you can ignore this message.`,
   },
   express: {
-    subject: "Your pre-visit questionnaire for Dr. Wey's office",
-    text: (url) => `Thank you for contacting Dr. Aaron Wey's office. The office will contact you within 24 to 48 hours to schedule your appointment.\n\nIn the meantime, here is the link to your pre-visit questionnaire. It takes about 15 minutes and really helps our team prepare for your visit:\n\n${url}\n\nIt works for 30 days and opens the answers you have already given, so please do not forward it.\n\nIf you did not ask for this link, you can ignore this message.\n\nDr. Aaron Wey's office\n(201) 836-1663`,
+    subject: "Welcome from Dr. Aaron Wey's office: your pre-visit questionnaire",
+    text: (url) => `Welcome to our practice, and thank you for contacting Dr. Aaron Wey's office. We look forward to meeting you. The office will contact you within 24 to 48 hours to schedule your appointment.\n\nIn the meantime, please complete your pre-visit questionnaire using the secure link below. It takes about 15 minutes, saves as you go, can be finished on a phone, tablet or computer, and really helps our team prepare for your visit:\n\n${url}\n\nThe link works for 30 days and opens the answers you have already given, so please do not forward it.\n\nIf you have questions before we call, reply to this message or call the office at (201) 836-1663. If you did not ask for this link, you can ignore this message.\n\nDr. Aaron Wey's office\nAdult and Pediatric Spine Surgery\n870 Palisade Ave, Teaneck, NJ 07666\n(201) 836-1663`,
   },
 };
 /** Practice Hub saves phone-intake drafts with the shared service key; those are not rate-limited by IP. */
