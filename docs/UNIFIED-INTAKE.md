@@ -87,20 +87,36 @@ numbers); the nine language tables regenerated.
 Walked in the browser without errors: adult spine new, adult ortho new and
 new-problem, adult spine follow-up, child spine new, child ortho fracture.
 
+## Cutover (2026-10-21)
+
+- intake.aaronweymd.com (Amplify app d1i6bgjzjkpt0h, branch
+  `feature/adult-spine-intake-app`) serves this app; `feature/unified-intake`
+  is pushed onto that branch to deploy.
+- ortho.aaronweymd.com, pedsspine.aaronweymd.com and pedsortho.aaronweymd.com
+  redirect (301, path and query kept) to intake.aaronweymd.com via Amplify
+  custom rules on their apps (d382smsgd5xkup, d1dsz5t255b12o, d3chu9dux7tr7z).
+- A link may name the service: `?service=adult_ortho` (and the other keys)
+  pre-sets the direction; the triage step still confirms it.
+- Practice Hub: the four form links point at intake.aaronweymd.com with the
+  service on the link (`src/server/intake-forms.ts`); its intake endpoint
+  accepts all four service keys and files a chart under the adult or the
+  pediatric line (`chartServiceFor` in `src/server/intake.ts`).
+- The note worker (`spine-intake-worker`) was redeployed from this code.
+- Kiosk: `?kiosk=1` once per tablet; the language chosen on the welcome
+  stays through "Start a new intake form" and the clinic code.
+
 ## Remaining
 
-1. **Cutover**: one Amplify app at one address; the three other addresses
-   redirect to it with the service pre-set; Practice Hub's four form URLs
-   point at the one site and `src/server/actions/intakes.ts` maps all four
-   sources to chart services (today only the pediatric ortho source is
-   mapped); then archive the four old repos.
-2. The review-of-systems defaults in `lib/store.js` still come from the
+1. The review-of-systems defaults in `lib/store.js` still come from the
    spine list (works for every service because missing answers are
    tolerated; should read from the service).
-3. The website express chat prompt still names the surgeon (office-side
+2. The website express chat prompt still names the surgeon (office-side
    only, as in the old apps).
-4. PROMIS pediatric T-score tables are an empty hook (raw scores are
+3. PROMIS pediatric T-score tables are an empty hook (raw scores are
    labelled as such), as in the pediatric ortho app.
+4. Archive the three old repos once the one site has taken real intakes
+   for a week or two; the Settings → Team page in Practice Hub may hold
+   old form URLs that override the defaults, check it there.
 
 ## Conventions for anyone working on this branch
 
