@@ -1,0 +1,212 @@
+{
+  "generatedAt": "2026-10-18T00:00:00.000Z",
+  "disclaimer": "This is a practice DOCUMENTATION CHECKLIST for the orthopaedic procedures the clinic books most, listing the elements commercial and Medicare Advantage reviewers commonly ask for. It is not any payer's policy text and carries no policy IDs. Verify every item against the current published policy of the patient's plan before relying on a readiness result. This tool does not determine coverage.",
+  "payers": [
+    {
+      "id": "checklist",
+      "scoring": "indicative",
+      "name": "Practice documentation checklist (common payer criteria)",
+      "criteriaAvailability": "practice_checklist",
+      "reproductionRestricted": false,
+      "note": "Written by the practice from the elements most payers ask for; replace or extend with each payer's own policy (Aetna CPBs, Cigna / eviCore MSK, Carelon MSK, Horizon) once those have been retrieved and verified.",
+      "umVendor": "varies by plan",
+      "retrievedAt": "2026-10-18",
+      "accessNotes": "No payer text was retrieved for this checklist. Add payer-specific entries with their policy IDs, source URLs and effective dates before using the readiness score for a submission.",
+      "submissionChecklist": [],
+      "policies": [
+        { "policyId": "CHECKLIST", "title": "Practice documentation checklist", "sourceUrl": "", "effectiveDate": "2026-10-18", "effectiveThrough": null }
+      ],
+      "procedures": [
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Total knee arthroplasty",
+          "indication": "symptomatic knee osteoarthritis",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "symptom_duration", "requirement": "Duration of knee pain and functional limitation documented (typically months, not weeks).", "durationRequired": "3 months or more of symptoms is commonly expected", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "functional_impairment_score", "requirement": "Functional limitation documented: pain with weight-bearing, stairs, rising from a chair, walking distance; a validated score (KOOS JR) helps.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_weightbearing_xray", "requirement": "Weight-bearing radiographs showing advanced arthritis (joint-space narrowing, osteophytes, subchondral sclerosis or cysts).", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "A course of supervised physical therapy or a documented home exercise program, with the response.", "durationRequired": "commonly 6 to 12 weeks of conservative care in total", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "medication_trial", "requirement": "A trial of analgesics or anti-inflammatories (or a reason they are contraindicated), with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Intra-articular corticosteroid injection tried, with the date and the duration of relief, or documented contraindication.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_viscosupplement", "requirement": "Hyaluronic acid injection is recommended by some plans before arthroplasty; document if tried.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "bmi", "requirement": "BMI documented; several plans and most programmes expect a plan for BMI above 40.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "nicotine_status", "requirement": "Nicotine status documented; cessation counselling where applicable.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "diabetes_control", "requirement": "For diabetic patients, recent HbA1c documented.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: range of motion, deformity, effusion, stability, gait.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side stated and consistent across the note, the imaging and the request.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Total hip arthroplasty",
+          "indication": "symptomatic hip osteoarthritis or osteonecrosis",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "symptom_duration", "requirement": "Duration of hip pain and functional limitation documented.", "durationRequired": "3 months or more of symptoms is commonly expected", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "functional_impairment_score", "requirement": "Functional limitation documented: groin pain with weight-bearing, limp, difficulty with socks and shoes, stairs, walking distance; HOOS JR helps.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_weightbearing_xray", "requirement": "Radiographs showing advanced arthritis or osteonecrosis.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "A course of physical therapy or a documented home exercise program, with the response.", "durationRequired": "commonly 6 to 12 weeks of conservative care in total", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "medication_trial", "requirement": "A trial of analgesics or anti-inflammatories (or a reason they are contraindicated), with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Intra-articular injection is recommended by some plans; document if tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "bmi", "requirement": "BMI documented.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "nicotine_status", "requirement": "Nicotine status documented.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: range of motion, limp, leg-length, Trendelenburg.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side stated and consistent.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Knee arthroscopy with meniscectomy or meniscal repair",
+          "indication": "symptomatic meniscal tear",
+          "criteriaLogic": "all gating items; an acute locked knee or a bucket-handle tear may bypass the conservative-care items",
+          "requirements": [
+            { "evidenceId": "mechanical_symptoms", "requirement": "Mechanical symptoms documented: locking, catching, giving way, or an acute injury with a pop and swelling.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_mri", "requirement": "MRI confirming a meniscal tear, with the report.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_weightbearing_xray", "requirement": "Weight-bearing radiographs excluding advanced arthritis (most plans will not cover arthroscopy for degenerative knee pain alone).", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "Physical therapy or a home exercise program tried unless the knee is locked, with the response.", "durationRequired": "commonly 6 weeks", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "medication_trial", "requirement": "Analgesics or anti-inflammatories tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: joint-line tenderness, effusion, McMurray or similar, range of motion.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side stated and consistent.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "ACL reconstruction",
+          "indication": "anterior cruciate ligament tear with instability",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "mechanical_symptoms", "requirement": "Instability documented: giving way with pivoting or cutting, or the mechanism and a pop with immediate swelling.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_mri", "requirement": "MRI confirming the ACL tear and any associated meniscal or cartilage injury.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: Lachman, pivot shift, anterior drawer, effusion, associated ligament findings.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "activity_modification", "requirement": "Activity level and goals documented (sport, occupation); bracing or rehabilitation tried where the patient is low-demand.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side stated and consistent.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Rotator cuff repair",
+          "indication": "symptomatic rotator cuff tear",
+          "criteriaLogic": "all gating items; an acute traumatic full-thickness tear may bypass the conservative-care items",
+          "requirements": [
+            { "evidenceId": "imaging_mri", "requirement": "MRI or ultrasound confirming a full-thickness or symptomatic partial tear, with the report.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "Physical therapy or a home program tried for a degenerative tear, with the response.", "durationRequired": "commonly 6 to 12 weeks", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "medication_trial", "requirement": "Analgesics or anti-inflammatories tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Subacromial corticosteroid injection is commonly expected for a degenerative tear; document if tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "neuro_deficit", "requirement": "Weakness documented: overhead weakness, inability to lift the arm, night pain.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: strength testing of each cuff muscle, impingement signs, range of motion.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side and hand dominance stated.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Shoulder arthroplasty (anatomic or reverse)",
+          "indication": "glenohumeral arthritis or cuff-tear arthropathy",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "symptom_duration", "requirement": "Duration of shoulder pain and loss of function documented.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "functional_impairment_score", "requirement": "Functional limitation documented (QuickDASH helps): dressing, overhead reach, sleep.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_xray", "requirement": "Radiographs showing advanced glenohumeral arthritis; CT or MRI for glenoid bone stock and cuff integrity.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "Physical therapy or a home program tried, with the response.", "durationRequired": "commonly 6 to 12 weeks of conservative care", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "medication_trial", "requirement": "Analgesics or anti-inflammatories tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Corticosteroid injection tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: range of motion, cuff strength, deltoid function.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side and hand dominance stated.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Carpal tunnel release",
+          "indication": "carpal tunnel syndrome",
+          "criteriaLogic": "all gating items; thenar atrophy or constant numbness may bypass the conservative-care items",
+          "requirements": [
+            { "evidenceId": "neuro_deficit", "requirement": "Symptoms in the median nerve distribution documented: numbness or tingling in the thumb, index and middle fingers, night waking, dropping objects.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "emg_ncs", "requirement": "Nerve conduction study confirming median neuropathy at the wrist is commonly expected (some plans accept clinical diagnosis with a positive provocative test).", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "bracing", "requirement": "Night splinting tried, with the response.", "durationRequired": "commonly 6 weeks", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Corticosteroid injection is recommended by some plans; document if tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "activity_modification", "requirement": "Activity modification and anti-inflammatories tried where applicable.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: Tinel, Phalen or Durkan, thenar strength and atrophy, two-point discrimination.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side and hand dominance stated.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Trigger finger release",
+          "indication": "stenosing tenosynovitis",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "mechanical_symptoms", "requirement": "Catching or locking of the finger documented, with the digit named.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Corticosteroid injection tried (commonly one or two) with the response, or a documented contraindication.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "bracing", "requirement": "Splinting or activity modification tried where applicable.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: palpable nodule, triggering reproduced, fixed flexion contracture if present.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side and digit stated.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Hip arthroscopy",
+          "indication": "femoroacetabular impingement or labral tear",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "symptom_duration", "requirement": "Duration of groin or hip pain documented.", "durationRequired": "commonly 3 months", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_mri", "requirement": "MRI or MR arthrogram showing a labral tear; radiographs showing impingement morphology and no more than mild arthritis.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "Physical therapy tried, with the response.", "durationRequired": "commonly 6 to 12 weeks", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Diagnostic intra-articular injection with the response is commonly expected.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: impingement test (FADIR), range of motion.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side stated and consistent.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Bunion (hallux valgus) correction",
+          "indication": "symptomatic hallux valgus",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "symptom_duration", "requirement": "Pain over the bunion with shoe wear and walking documented, with duration.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "imaging_weightbearing_xray", "requirement": "Weight-bearing foot radiographs with the deformity angles.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "bracing", "requirement": "Shoe modification, padding or orthotics tried, with the response.", "durationRequired": "commonly 3 months", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "medication_trial", "requirement": "Analgesics or anti-inflammatories tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination: deformity, skin, first MTP motion, lesser-toe deformities.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side stated and consistent.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "cpt_codes", "requirement": "CPT and ICD-10 codes supplied by the surgeon.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "MRI of a joint (advanced imaging)",
+          "indication": "joint pain where the result will change management",
+          "criteriaLogic": "all gating items; an acute injury with suspected ligament or tendon rupture may bypass the conservative-care items",
+          "requirements": [
+            { "evidenceId": "imaging_xray", "requirement": "Plain radiographs obtained first, with the result.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "symptom_duration", "requirement": "Duration of symptoms documented; most plans expect a trial of conservative care before MRI for non-traumatic pain.", "durationRequired": "commonly 4 to 6 weeks of conservative care", "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "Conservative care tried (therapy, home exercise, medication, injection) with the response, unless there was an acute injury or a red flag.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "exam_findings", "requirement": "Examination findings that the MRI is meant to clarify.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side and joint stated.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        },
+        {
+          "policyId": "CHECKLIST",
+          "procedure": "Hyaluronic acid (viscosupplementation) injection of the knee",
+          "indication": "knee osteoarthritis",
+          "criteriaLogic": "all gating items",
+          "requirements": [
+            { "evidenceId": "imaging_xray", "requirement": "Radiographs confirming knee osteoarthritis.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "medication_trial", "requirement": "Analgesics or anti-inflammatories tried or contraindicated, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "pt_supervised", "requirement": "Physical therapy or a home exercise program tried, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "injection_steroid", "requirement": "Corticosteroid injection tried or contraindicated, with the response.", "durationRequired": null, "verified": false, "verbatimQuote": null },
+            { "evidenceId": "laterality_site", "requirement": "Side stated and consistent.", "durationRequired": null, "verified": false, "verbatimQuote": null }
+          ]
+        }
+      ]
+    }
+  ]
+}

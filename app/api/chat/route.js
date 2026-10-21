@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { HPI_CHAT_SYSTEM_PROMPT, EXPRESS_CHAT_SYSTEM_PROMPT } from '../../../lib/prompts';
+import { getService } from '../../../lib/service';
 import { complete } from '../../../lib/server/llm';
 import { limitOr429 } from '../../../lib/server/rateLimit';
 import { logError } from '../../../lib/server/log';
@@ -26,10 +26,13 @@ export async function POST(request) {
   } catch {
     return NextResponse.json({ error: 'Expected JSON body.' }, { status: 400 });
   }
-  const { messages, context, mode } = body || {};
+  const { messages, context, mode, serviceKey } = body || {};
   if (!Array.isArray(messages) || messages.length > MAX_MESSAGES) {
     return NextResponse.json({ error: 'Invalid conversation.' }, { status: 400 });
   }
+  // The service (lib/service.js) names the interview prompt: spine or
+  // bone-and-joint. An unknown or missing key is the adult spine prompt.
+  const { HPI_CHAT_SYSTEM_PROMPT, EXPRESS_CHAT_SYSTEM_PROMPT } = getService(typeof serviceKey === 'string' ? serviceKey : '').prompts;
   // 'express': the five-turn appointment request (lib/express.js). Same model,
   // same route, a different system prompt; the context names the question.
   const express = mode === 'express';

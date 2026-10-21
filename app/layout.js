@@ -2,8 +2,8 @@ import './globals.css';
 import { IS_PRODUCTION_TIER } from '../lib/deploymentTier';
 
 export const metadata = {
-  title: 'Your Spine Story',
-  description: 'A calm, step-by-step way to put your whole spine history in one place.',
+  title: 'Before Your Visit',
+  description: 'A calm, step-by-step way to put your whole history in one place before your visit.',
 };
 
 export default function RootLayout({ children }) {

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useIntake } from '../../lib/store';
-import { COMMON_MEDICATIONS, ANTICOAGULANTS } from '../../lib/constants';
+import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import UploadToFill from '../UploadToFill';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
@@ -64,6 +63,7 @@ export default function Medications({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const { data, setSection } = useIntake();
+  const { COMMON_MEDICATIONS, ANTICOAGULANTS } = useService().constants;
   // A follow-up or post-operative visit reconciles the list rather than taking it fresh.
   const reconcile = ['followup', 'postop'].includes(data.visit?.type);
   const meds = data.medications;
@@ -80,7 +80,7 @@ export default function Medications({ onNext, onBack }) {
     if (search.length < 2) return [];
     const lower = search.toLowerCase();
     return COMMON_MEDICATIONS.filter((m) => m.toLowerCase().includes(lower)).slice(0, 8);
-  }, [search]);
+  }, [search, COMMON_MEDICATIONS]);
 
   const addMedication = (medName) => {
     if (!medName) return;

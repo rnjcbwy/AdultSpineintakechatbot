@@ -40,8 +40,9 @@ const CASES = [
   ['e.g., Denver Neurology, 1400 Elm St — (303) 555-0177',
    'Denver Neurology, 1400 Elm St — (303) 555-0177'],
 
-  // Ordinary bracketed prompts still work.
+  // Ordinary bracketed prompts still work: the spine wording and the joint wording.
   ['Where? (e.g., L4-L5, left side)', 'L4-L5, left side'],
+  ['Where? (e.g., right knee, left shoulder)', 'right knee, left shoulder'],
   ['How many? (e.g., 3)', '3'],
   ['How long did relief last? (e.g., 2 weeks)', '2 weeks'],
   ['When? (e.g., June 2024)', 'June 2024'],
@@ -51,6 +52,8 @@ const CASES = [
   ['e.g., 3 months, spring 2024', '3 months, spring 2024'],
   ['e.g., Lumbar support belt, worn daily for 3 months', 'Lumbar support belt, worn daily for 3 months'],
   ['e.g., Mild nerve irritation on the right at L5', 'Mild nerve irritation on the right at L5'],
+  ['e.g., Knee brace, worn for sport for 3 months', 'Knee brace, worn for sport for 3 months'],
+  ['e.g., Carpal tunnel on the right, moderate', 'Carpal tunnel on the right, moderate'],
 
   // Not examples at all — must pass through, minus trailing ellipsis.
   ['Describe your main concern...', 'Describe your main concern'],

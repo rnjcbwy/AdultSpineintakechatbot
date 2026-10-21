@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   extractEvidence, scoreReadiness, listPayers, listProcedures,
-  EVIDENCE_LABELS, RULES_META,
+  evidenceLabels, rulesMeta,
 } from '../../lib/authReadiness';
 import { listDocuments, getDocumentBlob, DOCUMENT_CATEGORIES, formatBytes } from '../../lib/documents';
 import { buildPacket } from '../../lib/packet';
@@ -138,7 +138,10 @@ export default function AuthorizationWorkbench() {
   };
 
   // --- derived -----------------------------------------------------------
-  const payers = useMemo(() => listPayers(), []);
+  const serviceKey = intake?.service?.key;
+  const payers = useMemo(() => listPayers(serviceKey), [serviceKey]);
+  const EVIDENCE_LABELS = useMemo(() => evidenceLabels(serviceKey), [serviceKey]);
+  const RULES_META = useMemo(() => rulesMeta(serviceKey), [serviceKey]);
   const procedures = useMemo(() => (payerId ? listProcedures(payerId) : []), [payerId]);
   const evidence = useMemo(() => (intake ? extractEvidence(intake) : null), [intake]);
   const readiness = useMemo(

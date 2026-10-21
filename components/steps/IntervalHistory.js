@@ -1,8 +1,7 @@
 'use client';
 
-import { useIntake } from '../../lib/store';
+import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
-import { SYMPTOM_REGIONS } from '../../lib/constants';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextField, TextArea, PainScale } from '../ui/Fields';
 
@@ -18,6 +17,9 @@ const YES_NO = ['Yes', 'No'];
  */
 export default function IntervalHistory({ onNext, onBack }) {
   const { data, setNested, setField } = useIntake();
+  const svc = useService();
+  const { SYMPTOM_REGIONS } = svc.constants;
+  const ortho = svc.specialty === 'ortho';
   const lang = useLang();
   const t = makeT(COMMON, lang);
   const f = data.visit?.followup || {};
@@ -26,7 +28,7 @@ export default function IntervalHistory({ onNext, onBack }) {
   const toggleRegion = (id) => {
     const next = regions.includes(id) ? regions.filter((r) => r !== id) : [...regions, id];
     setField('chiefComplaint', 'symptomRegions', next);
-    if (!data.chiefComplaint?.mainReason) setField('chiefComplaint', 'mainReason', 'Follow-up of a known spine problem');
+    if (!data.chiefComplaint?.mainReason) setField('chiefComplaint', 'mainReason', ortho ? 'Follow-up of a known bone or joint problem' : 'Follow-up of a known spine problem');
   };
   const canGoNext = !!f.overallChange;
 
@@ -96,7 +98,7 @@ export default function IntervalHistory({ onNext, onBack }) {
             <TextField label="Medication: what changed and did it help?" value={f.medicationDetails} onChange={(v) => set('medicationDetails', v)} placeholder="e.g., Started gabapentin 300 mg at night; less burning" />
           )}
           {(f.treatments || []).includes('New imaging (MRI, CT, X-ray)') && (
-            <TextField label="Imaging: what, when, and where (please bring the report)" value={f.imagingDetails} onChange={(v) => set('imagingDetails', v)} placeholder="e.g., Lumbar MRI, May 2026, Holy Name Imaging" />
+            <TextField label="Imaging: what, when, and where (please bring the report)" value={f.imagingDetails} onChange={(v) => set('imagingDetails', v)} placeholder={ortho ? 'e.g., Right knee MRI, May 2026, Holy Name Imaging' : 'e.g., Lumbar MRI, May 2026, Holy Name Imaging'} />
           )}
           {(f.treatments || []).includes('Surgery elsewhere') && (
             <TextField label="Surgery elsewhere: what, when and where" value={f.surgeryDetails} onChange={(v) => set('surgeryDetails', v)} />

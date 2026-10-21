@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useIntake } from '../../lib/store';
+import { useIntake, useService } from '../../lib/store';
 import NoteReview from '../NoteReview';
 import PainMapSummary from '../PainMapFigure';
 import { countMarks, reportsNoPain } from '../../lib/bodyMap';
 import { fingerprintAnswers, isNoteStale } from '../../lib/noteFingerprint';
-import { SYMPTOM_REGIONS } from '../../lib/constants';
 import { stepsForVisit, stepIndex, VISIT_LABEL } from '../../lib/flows';
-import { sortOperations, describeOperation } from '../../lib/operations';
-import { detectRedFlags } from '../../lib/redFlags';
-import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
 import { useLang, makeT, COMMON, tx } from '../../lib/i18n';
 import { submitIntake, pollStatus, fetchStatus, finalizeSubmission } from '../../lib/submitClient';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
@@ -193,6 +189,12 @@ const LOCAL = {
 
 export default function FinalReview({ onBack, onGoToStep }) {
   const { data, setSubmitted, setSummary, setRedFlags, setNested } = useIntake();
+  // The regions, operations, red-flag rules and questionnaire summaries of
+  // this intake's service (lib/service.js).
+  const service = useService();
+  const { SYMPTOM_REGIONS } = service.constants;
+  const { sortOperations, describeOperation } = service.operations;
+  const { detectRedFlags } = service.redFlags;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -544,7 +546,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
             t={t}
             title="Outcome Questionnaires"
             onEdit={() => go('proms')}
-            items={getPromsReviewItems(data.proms, t)}
+            items={getPromsReviewItems(data.proms, t, service.promSummary)}
           />
         )}
       </div>
@@ -686,14 +688,21 @@ function ReviewCard({ t, title, onEdit, items }) {
 }
 
 
+// The spine instruments keep their own one-line summaries; any other
+// instrument (the joint scores) shows the headline its promSummary writes.
 const PROM_NAMES = { odi: 'ODI', ndi: 'NDI', mjoa: 'mJOA', srs22r: 'SRS-22r' };
 
-function getPromsReviewItems(proms, t = (x) => x) {
+function getPromsReviewItems(proms, t = (x) => x, promSummary = null) {
   if (!proms || Object.keys(proms).length === 0) {
     return [{ label: 'Questionnaires', value: t('None applicable') }];
   }
+  const heads = Object.fromEntries((promSummary?.promHeadlines?.(proms) || []).map((h) => [h.id, h]));
   return Object.entries(proms).map(([id, entry]) => {
-    const name = PROM_NAMES[id] || id;
+    const name = PROM_NAMES[id] || heads[id]?.shortName || id;
+    if (!PROM_NAMES[id]) {
+      if (!entry.score && !heads[id]?.headline) return { label: name, value: t('Not completed') };
+      return { label: name, value: heads[id]?.headline || t('Completed') };
+    }
     if (!entry.score) return { label: name, value: t('Not completed') };
     if (id === 'odi' || id === 'ndi') {
       return { label: name, value: `${entry.score.percentage}% — ${entry.score.interpretation}` };

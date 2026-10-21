@@ -1,15 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useIntake, defaultIntakeData } from '../lib/store';
+import { useIntake, useService, defaultIntakeData } from '../lib/store';
 import { useLang, makeT, tx, COMMON, LANGUAGES, LANGUAGE_NAMES, isRtl } from '../lib/i18n';
-import { buildExpressChatContext } from '../lib/prompts';
 import {
   EXPRESS_SLOTS, EXPRESS_QUESTIONS, SAFETY_CHOICES, classifySafety, classifyLanguage,
   parseWho, parseContact, parseInsurance, isExpress, isExpressLead,
 } from '../lib/express';
 import { CONSENT_ITEMS, consentTextVia } from '../lib/consent';
-import { detectRedFlags } from '../lib/redFlags';
 import { fingerprintAnswers } from '../lib/noteFingerprint';
 import { submitIntake, finalizeSubmission, pollStatus } from '../lib/submitClient';
 import { IS_PRODUCTION_TIER, PRACTICE } from '../lib/deploymentTier';
@@ -192,6 +190,10 @@ export default function ExpressIntake() {
 // The five turns.
 // ---------------------------------------------------------------------------
 function ExpressChat({ data, t, lang, setNested, setLanguage, embedded }) {
+  // The express prompt for this intake's service (lib/service.js; the adult
+  // spine wording until the triage step says otherwise).
+  const service = useService();
+  const { buildExpressChatContext } = service.prompts;
   const x = data.express;
   const answers = x.answers || {};
   const transcript = x.transcript || [];
@@ -226,7 +228,7 @@ function ExpressChat({ data, t, lang, setNested, setLanguage, embedded }) {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'express', context, messages: transcript.map((m) => ({ role: m.role, content: m.content })) }),
+          body: JSON.stringify({ mode: 'express', context, serviceKey: service.key, messages: transcript.map((m) => ({ role: m.role, content: m.content })) }),
         });
         const j = await res.json();
         if (res.ok && j.reply) reply = String(j.reply).trim();
@@ -293,6 +295,8 @@ function ExpressChat({ data, t, lang, setNested, setLanguage, embedded }) {
 // The card: what was understood, for the patient to correct and send.
 // ---------------------------------------------------------------------------
 function ConfirmCard({ data, t, lang, setNested, setSection, setRedFlags, setSummary, setSubmitted }) {
+  // The red-flag rules for this intake's service (lib/service.js).
+  const { detectRedFlags } = useService().redFlags;
   const x = data.express;
   const answers = x.answers || {};
   const d = data.demographics || {};
@@ -326,7 +330,7 @@ function ConfirmCard({ data, t, lang, setNested, setSection, setRedFlags, setSum
     chiefComplaint: { ...(data.chiefComplaint || {}), mainReason: form.problem },
     express: { ...x, safety: form.safety },
   }), [data, x, form.problem, form.safety]);
-  const flags = useMemo(() => detectRedFlags(preview), [preview]);
+  const flags = useMemo(() => detectRedFlags(preview), [preview, detectRedFlags]);
   const urgent = form.safety === 'yes' || flags.some((f) => f.severity === 'urgent');
 
   const submit = async () => {

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useIntake } from '../../lib/store';
-import { FAMILY_CONDITIONS, FAMILY_RELATIONS } from '../../lib/constants';
+import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
@@ -12,6 +11,11 @@ const LOCAL = {
   'Do any close family members have conditions that might be relevant to your spine care? This is especially helpful for conditions like osteoporosis, scoliosis, or bleeding disorders.': {
     es: '¿Algún familiar cercano tiene afecciones que puedan ser relevantes para el cuidado de su columna? Esto es especialmente útil para afecciones como osteoporosis, escoliosis o trastornos de sangrado.',
     zh: '您有任何近亲患有可能与您的脊柱护理相关的疾病吗？这对于骨质疏松症、脊柱侧弯或出血性疾病等情况尤其有帮助。',
+  },
+
+  'Do any close family members have conditions that might be relevant to your bone and joint care? This is especially helpful for arthritis, osteoporosis, bleeding disorders, or problems with anesthesia.': {
+    es: '¿Algún familiar cercano tiene afecciones que puedan ser relevantes para el cuidado de sus huesos y articulaciones? Esto es especialmente útil para la artritis, la osteoporosis, los trastornos de sangrado o los problemas con la anestesia.',
+    zh: '您有任何近亲患有可能与您的骨骼和关节护理相关的疾病吗？这对于关节炎、骨质疏松症、出血性疾病或麻醉问题尤其有帮助。',
   },
 
   // No relevant history toggle
@@ -37,6 +41,13 @@ const LOCAL = {
   'Rheumatoid arthritis': { es: 'Artritis reumatoide', zh: '类风湿性关节炎' },
   'Ankylosing spondylitis': { es: 'Espondilitis anquilosante', zh: '强直性脊柱炎' },
   'Neurological disease (MS, ALS, etc.)': { es: 'Enfermedad neurológica (EM, ELA, etc.)', zh: '神经系统疾病（多发性硬化症、渐冻症等）' },
+  // the bone-and-joint service's list
+  'Osteoarthritis (worn-out joints, joint replacements)': { es: 'Osteoartritis (articulaciones desgastadas, reemplazos articulares)', zh: '骨关节炎（关节磨损、关节置换）' },
+  'Rheumatoid arthritis or other inflammatory arthritis': { es: 'Artritis reumatoide u otra artritis inflamatoria', zh: '类风湿性关节炎或其他炎性关节炎' },
+  'Osteoporosis or hip fracture': { es: 'Osteoporosis o fractura de cadera', zh: '骨质疏松症或髋部骨折' },
+  'Gout': { es: 'Gota', zh: '痛风' },
+  "Dupuytren's contracture": { es: 'Contractura de Dupuytren', zh: '掌腱膜挛缩症' },
+  'Problems with anesthesia (malignant hyperthermia)': { es: 'Problemas con la anestesia (hipertermia maligna)', zh: '麻醉问题（恶性高热）' },
   'Blood clotting disorder': { es: 'Trastorno de la coagulación de la sangre', zh: '血液凝固障碍' },
   'Heart disease': { es: 'Enfermedad cardíaca', zh: '心脏病' },
   'Stroke': { es: 'Accidente cerebrovascular', zh: '中风' },
@@ -58,10 +69,18 @@ const LOCAL = {
   'Uncle': { es: 'Tío', zh: '叔叔／舅舅' },
 };
 
+/** The intro, by specialty (both strings are in LOCAL above). */
+const SUBTITLE = {
+  spine: 'Do any close family members have conditions that might be relevant to your spine care? This is especially helpful for conditions like osteoporosis, scoliosis, or bleeding disorders.',
+  ortho: 'Do any close family members have conditions that might be relevant to your bone and joint care? This is especially helpful for arthritis, osteoporosis, bleeding disorders, or problems with anesthesia.',
+};
+
 export default function FamilyHistory({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const { data, setSection } = useIntake();
+  const svc = useService();
+  const { FAMILY_CONDITIONS, FAMILY_RELATIONS } = svc.constants;
   const fh = data.familyHistory;
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ relation: '', condition: '', details: '' });
@@ -92,7 +111,7 @@ export default function FamilyHistory({ onNext, onBack }) {
       <div className="mb-8">
         <h2 className="section-title">{t('Family History')}</h2>
         <p className="section-subtitle">
-          {t('Do any close family members have conditions that might be relevant to your spine care? This is especially helpful for conditions like osteoporosis, scoliosis, or bleeding disorders.')}
+          {t(SUBTITLE[svc.specialty] || SUBTITLE.spine)}
         </p>
       </div>
 

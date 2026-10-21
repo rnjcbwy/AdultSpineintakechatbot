@@ -1,9 +1,14 @@
 'use client';
 
-import { useIntake } from '../../lib/store';
-import { SYMPTOM_REGIONS } from '../../lib/constants';
+import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
+
+// The old adult spine site. The ortho service points a neck-or-back tap at
+// it, as the ortho intake did; once the cutover (docs/UNIFIED-INTAKE.md)
+// redirects that address here with the spine service pre-set, the link still
+// lands the patient on the right questions.
+const SPINE_INTAKE_URL = 'https://intake.aaronweymd.com/';
 
 const LOCAL = {
   'Choose every area where you have pain, numbness, tingling or weakness. The next step asks what it feels like.': {
@@ -25,6 +30,10 @@ const LOCAL = {
   'For example: "My low back hurts and the pain goes down my left leg" or "I was told I have a curved spine"': {
     es: 'Por ejemplo: "Me duele la parte baja de la espalda y el dolor baja por mi pierna izquierda" o "Me dijeron que tengo la columna curvada"',
     zh: '例如："我的下背部疼痛，疼痛蔓延到左腿" 或 "有人告诉我我的脊柱弯曲"',
+  },
+  'For example: "I twisted my knee playing soccer and it keeps giving way" or "My right shoulder aches at night and I cannot lift it overhead" or "I broke my wrist and want it checked"': {
+    es: 'Por ejemplo: "Me torcí la rodilla jugando fútbol y se me dobla" o "Me duele el hombro derecho por la noche y no puedo levantar el brazo" o "Me fracturé la muñeca y quiero que la revisen"',
+    zh: '例如："我踢足球时扭伤了膝盖，膝盖总是打软" 或 "我的右肩夜里疼，手臂抬不过头" 或 "我手腕骨折了，想检查一下"',
   },
   'Describe your main concern...': {
     es: 'Describa su principal preocupación...',
@@ -51,13 +60,42 @@ const LOCAL = {
     es: 'Elija cada área donde tenga dolor, entumecimiento, hormigueo, debilidad u otros síntomas.',
     zh: '请选择您有疼痛、麻木、刺痛、无力或其他症状的每个部位。',
   },
+  'Which joint or area is affected? Tap the side. *': {
+    es: '¿Qué articulación o zona está afectada? Toque el lado. *',
+    zh: '哪个关节或部位受到影响？请点选左右侧。*',
+  },
+  'Choose every joint where you have pain, swelling, stiffness, numbness or weakness. The next step asks what it feels like.': {
+    es: 'Elija cada articulación donde tenga dolor, hinchazón, rigidez, entumecimiento o debilidad. El siguiente paso pregunta cómo se siente.',
+    zh: '请选择所有出现疼痛、肿胀、僵硬、麻木或无力的关节。下一步会询问具体感受。',
+  },
   'Spine & Back': { es: 'Columna y espalda', zh: '脊柱与背部' },
   'Arms & Legs': { es: 'Brazos y piernas', zh: '手臂与腿部' },
   'Other Symptoms': { es: 'Otros síntomas', zh: '其他症状' },
+  'Joints': { es: 'Articulaciones', zh: '关节' },
+  'Left': { es: 'Izquierdo', zh: '左' },
+  'Right': { es: 'Derecho', zh: '右' },
+  'What else describes it?': { es: '¿Qué más lo describe?', zh: '还有哪些描述符合？' },
   'Selected:': { es: 'Seleccionado:', zh: '已选择：' },
+  'Neck and back problems have their own intake form.': {
+    es: 'Los problemas de cuello y espalda tienen su propio formulario.',
+    zh: '颈部和背部问题有单独的问诊表。',
+  },
+  'If the neck or back is your main problem, please use the spine intake instead.': {
+    es: 'Si el cuello o la espalda es su problema principal, use el formulario de columna.',
+    zh: '如果颈部或背部是您的主要问题，请改用脊柱问诊表。',
+  },
+  'Open the spine intake': { es: 'Abrir el formulario de columna', zh: '打开脊柱问诊表' },
+  'If a joint is the main problem and the back pain is on the side, carry on here.': {
+    es: 'Si una articulación es el problema principal y el dolor de espalda es secundario, continúe aquí.',
+    zh: '如果关节是主要问题、背痛只是附带的，请在此继续。',
+  },
   'I have had prior spine surgery': {
     es: 'He tenido una cirugía de columna previa',
     zh: '我曾接受过脊柱手术',
+  },
+  'I have had surgery on this bone or joint before': {
+    es: 'Ya me han operado este hueso o articulación',
+    zh: '我以前做过这个骨骼或关节的手术',
   },
   "We'll ask you more details about this later in the form.": {
     es: 'Le pediremos más detalles sobre esto más adelante en el formulario.',
@@ -75,14 +113,27 @@ const LOCAL = {
     es: 'p. ej., el dolor en mi pierna derecha me dificulta caminar más de una cuadra...',
     zh: '例如：我右腿的疼痛让我很难走超过一个街区……',
   },
+  'e.g., My knee gives way on stairs, so I avoid them...': {
+    es: 'p. ej., la rodilla se me dobla en las escaleras, así que las evito...',
+    zh: '例如：我的膝盖上下楼梯时会打软，所以我尽量不走楼梯……',
+  },
   'Continue to Symptom Details': {
     es: 'Continuar a los detalles de los síntomas',
     zh: '继续填写症状详情',
   },
 };
 
+/**
+ * Chief complaint. What differs by service comes from the service's
+ * constants module: the regions, how they are laid out (JOINT_ROWS is the
+ * left/right joint grid of the ortho service and empty for the spine;
+ * REGION_GROUPS the titled lists under it), and the wording that names the
+ * specialty (CHIEF_COMPLAINT_TEXT).
+ */
 export default function ChiefComplaint({ onNext, onBack }) {
-  const { data, setField, setSection } = useIntake();
+  const { data, setField } = useIntake();
+  const svc = useService();
+  const { SYMPTOM_REGIONS, JOINT_ROWS, REGION_GROUPS, CHIEF_COMPLAINT_TEXT: text } = svc.constants;
   const cc = data.chiefComplaint;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
@@ -91,15 +142,20 @@ export default function ChiefComplaint({ onNext, onBack }) {
     setField('chiefComplaint', field, value);
   };
 
+  const selected = cc.symptomRegions || [];
   const toggleRegion = (regionId) => {
-    const current = cc.symptomRegions || [];
-    const updated = current.includes(regionId)
-      ? current.filter((r) => r !== regionId)
-      : [...current, regionId];
+    const updated = selected.includes(regionId)
+      ? selected.filter((r) => r !== regionId)
+      : [...selected, regionId];
     updateField('symptomRegions', updated);
   };
 
-  const isValid = cc.mainReason && cc.symptomRegions.length > 0;
+  const isValid = cc.mainReason && selected.length > 0;
+
+  // The ortho service accepts a neck-or-back tap but points it at the spine
+  // questions; a service without that region (the spine) never shows the row.
+  const neckBack = SYMPTOM_REGIONS.find((r) => r.id === 'neck-back');
+  const spineOnly = !!neckBack && selected.includes('neck-back') && !selected.some((r) => /^(right|left)-/.test(r));
 
   return (
     <div className="animate-fade-in">
@@ -117,7 +173,7 @@ export default function ChiefComplaint({ onNext, onBack }) {
             {t('In your own words, what is the main reason for your visit? *')}
           </label>
           <p className="text-sm text-gray-400 mb-3">
-            {t('For example: "My low back hurts and the pain goes down my left leg" or "I was told I have a curved spine"')}
+            {t(text.example)}
           </p>
           <textarea
             value={cc.mainReason}
@@ -163,70 +219,74 @@ export default function ChiefComplaint({ onNext, onBack }) {
         {/* Symptom regions */}
         <div className="card">
           <label className="form-label text-base">
-            {t('Which areas are affected? Select all that apply. *')}
+            {t(text.regionsLabel)}
           </label>
           <p className="text-sm text-gray-400 mb-4">
-            {t('Choose every area where you have pain, numbness, tingling or weakness. The next step asks what it feels like.')}
+            {t(text.regionsHint)}
           </p>
 
-          {/* Visual body region groups */}
           <div className="space-y-4">
-            {/* Spine regions */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('Spine & Back')}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {SYMPTOM_REGIONS.filter(r => ['neck', 'upper-back', 'low-back'].includes(r.id)).map((region) => (
-                  <RegionButton
-                    key={region.id}
-                    region={region}
-                    label={t(region.label)}
-                    selected={cc.symptomRegions.includes(region.id)}
-                    onClick={() => toggleRegion(region.id)}
-                  />
-                ))}
+            {/* Joints: a row per joint, left and right (the ortho service) */}
+            {JOINT_ROWS.length > 0 && (
+              <div>
+                <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center mb-1 px-1">
+                  <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t('Joints')}</h4>
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-24 text-center">{t('Left')}</span>
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-24 text-center">{t('Right')}</span>
+                </div>
+                <div className="space-y-2">
+                  {JOINT_ROWS.map((row) => (
+                    <div key={row.joint} className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+                      <span className="text-sm font-medium text-gray-700 px-1">{t(row.joint)}</span>
+                      <SideButton label={t('Left')} selected={selected.includes(row.left)} onClick={() => toggleRegion(row.left)} />
+                      <SideButton label={t('Right')} selected={selected.includes(row.right)} onClick={() => toggleRegion(row.right)} />
+                    </div>
+                  ))}
+                  {neckBack && (
+                    <div className="grid grid-cols-[1fr_auto] gap-2 items-center pt-1">
+                      <span className="text-sm font-medium text-gray-700 px-1">{t(neckBack.label)}</span>
+                      <SideButton label={t(neckBack.label)} selected={selected.includes(neckBack.id)} onClick={() => toggleRegion(neckBack.id)} wide />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Arm/Leg regions */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('Arms & Legs')}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {SYMPTOM_REGIONS.filter(r => ['right-arm', 'left-arm', 'right-leg', 'left-leg'].includes(r.id)).map((region) => (
-                  <RegionButton
-                    key={region.id}
-                    region={region}
-                    label={t(region.label)}
-                    selected={cc.symptomRegions.includes(region.id)}
-                    onClick={() => toggleRegion(region.id)}
-                  />
-                ))}
+            {neckBack && selected.includes(neckBack.id) && (
+              <div className={`rounded-xl px-4 py-3 text-sm ${spineOnly ? 'bg-amber-50 border border-amber-300 text-amber-900' : 'bg-gray-50 border border-gray-200 text-gray-600'}`}>
+                <p className="font-medium">{t('Neck and back problems have their own intake form.')}</p>
+                <p className="mt-1">
+                  {t('If the neck or back is your main problem, please use the spine intake instead.')}{' '}
+                  <a href={SPINE_INTAKE_URL} className="font-semibold underline text-teal-600 hover:text-teal-700">{t('Open the spine intake')}</a>
+                </p>
+                <p className="mt-1 text-xs opacity-80">{t('If a joint is the main problem and the back pain is on the side, carry on here.')}</p>
               </div>
-            </div>
+            )}
 
-            {/* Neurologic symptoms */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t('Other Symptoms')}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {SYMPTOM_REGIONS.filter(r =>
-                  ['posture-deformity', 'prior-surgery-pain', 'trauma'].includes(r.id)
-                ).map((region) => (
-                  <RegionButton
-                    key={region.id}
-                    region={region}
-                    label={t(region.label)}
-                    selected={cc.symptomRegions.includes(region.id)}
-                    onClick={() => toggleRegion(region.id)}
-                  />
-                ))}
+            {/* Titled region groups: the spine's areas; the ortho qualities and context */}
+            {REGION_GROUPS.map((group) => (
+              <div key={group.id}>
+                <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wide">{t(group.label)}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {SYMPTOM_REGIONS.filter((r) => group.ids.includes(r.id)).map((region) => (
+                    <RegionButton
+                      key={region.id}
+                      region={region}
+                      label={t(region.label)}
+                      selected={selected.includes(region.id)}
+                      onClick={() => toggleRegion(region.id)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            ))}
           </div>
 
-          {cc.symptomRegions.length > 0 && (
+          {selected.length > 0 && (
             <div className="mt-4 p-3 bg-teal-50 rounded-xl">
               <p className="text-sm text-teal-700">
-                <strong>{t('Selected:')}</strong> {cc.symptomRegions.map(id => {
-                  const label = SYMPTOM_REGIONS.find(r => r.id === id)?.label;
+                <strong>{t('Selected:')}</strong> {selected.map((id) => {
+                  const label = SYMPTOM_REGIONS.find((r) => r.id === id)?.label;
                   return label ? t(label) : null;
                 }).filter(Boolean).join(', ')}
               </p>
@@ -234,7 +294,8 @@ export default function ChiefComplaint({ onNext, onBack }) {
           )}
         </div>
 
-        {/* Prior spine surgery flag */}
+        {/* Prior surgery on the spine, or on this bone or joint. One field for
+            every service: Practice Hub stores it under this name. */}
         <div className="card">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
@@ -245,7 +306,7 @@ export default function ChiefComplaint({ onNext, onBack }) {
             />
             <div>
               <span className="text-base font-medium text-gray-700">
-                {t('I have had prior spine surgery')}
+                {t(text.priorSurgery)}
               </span>
               <p className="text-sm text-gray-400 mt-1">
                 {t("We'll ask you more details about this later in the form.")}
@@ -265,7 +326,7 @@ export default function ChiefComplaint({ onNext, onBack }) {
           <textarea
             value={cc.primaryConcern}
             onChange={(e) => updateField('primaryConcern', e.target.value)}
-            placeholder={t('e.g., The pain in my right leg makes it hard to walk more than a block...')}
+            placeholder={t(text.concernPlaceholder)}
             rows={2}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-800 resize-none"
           />
@@ -282,6 +343,31 @@ export default function ChiefComplaint({ onNext, onBack }) {
   );
 }
 
+
+function SideButton({ label, selected, onClick, wide }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`region-btn flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-medium ${wide ? 'w-[12.5rem]' : 'w-24'} ${
+        selected ? 'selected' : 'border-gray-200 text-gray-600'
+      }`}
+    >
+      <span className={`w-4 h-4 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+        selected ? 'border-teal-400 bg-teal-400' : 'border-gray-300'
+      }`}>
+        {selected && (
+          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </span>
+      {wide ? label : null}
+      {!wide && <span className="sr-only">{label}</span>}
+    </button>
+  );
+}
 
 function RegionButton({ region, label, selected, onClick }) {
   return (

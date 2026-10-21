@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useIntake } from '../../lib/store';
-import { INJECTION_TYPES } from '../../lib/constants';
+import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import SuggestedAnswers, { useAdoptExample } from '../ui/SuggestedAnswers';
@@ -15,6 +14,7 @@ const LOCAL = {
   'Nothing yet': { es: 'Nada todavía', zh: '尚未尝试' },
   'Injections': { es: 'Inyecciones', zh: '注射' },
   'Imaging (X-ray, MRI, CT)': { es: 'Imágenes (radiografía, resonancia, tomografía)', zh: '影像检查（X光、核磁、CT）' },
+  'Imaging (X-ray, MRI, CT, ultrasound)': { es: 'Imágenes (radiografía, resonancia, tomografía, ecografía)', zh: '影像检查（X光、核磁、CT、超声）' },
   'A few details about each, as much as you remember:': {
     es: 'Algunos detalles de cada uno, lo que recuerde:',
     zh: '请尽量回忆每项的一些细节：',
@@ -28,6 +28,12 @@ const LOCAL = {
   'Lumbar support belt': { es: 'Faja lumbar', zh: '腰部支撑带' },
   'Soft cervical collar': { es: 'Collarín cervical blando', zh: '软颈托' },
   'Rigid back brace': { es: 'Corsé rígido', zh: '硬性背部支具' },
+  'Knee brace': { es: 'Rodillera', zh: '护膝支具' },
+  'Wrist splint': { es: 'Férula de muñeca', zh: '腕部夹板' },
+  'Walking boot': { es: 'Bota ortopédica', zh: '步行靴' },
+  'Sling': { es: 'Cabestrillo', zh: '吊带' },
+  'Cast': { es: 'Yeso', zh: '石膏' },
+  'Cane or crutches': { es: 'Bastón o muletas', zh: '手杖或拐杖' },
   'No relief': { es: 'Sin alivio', zh: '没有缓解' },
   'A few days': { es: 'Unos pocos días', zh: '几天' },
   'About 2 weeks': { es: 'Unas 2 semanas', zh: '大约2周' },
@@ -37,6 +43,10 @@ const LOCAL = {
   'You will be asked to upload documentation later': {
     es: 'Más adelante le pediremos que suba documentación',
     zh: '稍后我们会请您上传相关记录',
+  },
+  'Further along in this form there is a Records & Documents step where you can upload physical therapy notes, injection reports, nerve study results, and imaging reports. Insurance companies require written proof of the treatments you have already tried before they will approve joint surgery or advanced imaging, so anything you can gather now will speed up your approval. You can still finish this form without them.': {
+    es: 'Más adelante en este formulario hay una sección de Registros y Documentos donde puede subir notas de fisioterapia, informes de inyecciones, resultados de estudios nerviosos e informes de imágenes. Las aseguradoras exigen prueba escrita de los tratamientos que ya ha probado antes de aprobar una cirugía articular o estudios de imagen avanzados, así que todo lo que pueda reunir ahora acelerará su aprobación. Puede terminar este formulario sin ellos.',
+    zh: '在本表格的后面有一个"记录与文件"步骤，您可以在那里上传物理治疗记录、注射报告、神经检查结果和影像报告。保险公司在批准关节手术或高级影像检查前需要您已尝试过的治疗的书面证明，因此现在收集的任何资料都会加快审批速度。没有这些资料您也可以完成本表格。',
   },
   'Further along in this form there is a Records & Documents step where you can upload physical therapy notes, injection reports, EMG results, and imaging reports. Insurance companies require written proof of the treatments you have already tried before they will approve surgery, so anything you can gather now will speed up your approval. You can still finish this form without them.': {
     es: 'Más adelante en este formulario hay una sección de Registros y Documentos donde puede subir notas de fisioterapia, informes de inyecciones, resultados de EMG e informes de imágenes. Las aseguradoras exigen prueba escrita de los tratamientos que ya ha probado antes de aprobar una cirugía, así que todo lo que pueda reunir ahora acelerará su aprobación. Puede terminar este formulario sin ellos.',
@@ -70,11 +80,18 @@ const LOCAL = {
   'Daily': { es: 'Diariamente', zh: '每天' },
   'A few times a month': { es: 'Algunas veces al mes', zh: '每月几次' },
   'Core strengthening': { es: 'Fortalecimiento del core', zh: '核心力量训练' },
+  'Strengthening': { es: 'Fortalecimiento', zh: '力量训练' },
+  'Range of motion': { es: 'Rango de movimiento', zh: '活动范围练习' },
+  'Balance exercises': { es: 'Ejercicios de equilibrio', zh: '平衡练习' },
   'Stretching': { es: 'Estiramientos', zh: '拉伸' },
   'Walking program': { es: 'Programa de caminata', zh: '步行计划' },
 
   // Title + subtitle
   'Prior Treatments': { es: 'Tratamientos previos', zh: '既往治疗' },
+  "What treatments have you already tried for this problem? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.": {
+    es: '¿Qué tratamientos ya ha probado para este problema? Esto ayuda a su cirujano a entender lo que se ha hecho hasta ahora. Responda lo que corresponda y omita el resto.',
+    zh: '您已经为这个问题尝试过哪些治疗？这有助于您的外科医生了解迄今为止所做的治疗。请回答适用的项目，其余的可以跳过。',
+  },
   "What treatments have you already tried for your spine symptoms? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.": {
     es: '¿Qué tratamientos ya ha probado para los síntomas de su columna? Esto ayuda a su cirujano a entender lo que se ha hecho hasta ahora. Responda lo que corresponda y omita el resto.',
     zh: '您已经为您的脊柱症状尝试过哪些治疗？这有助于您的外科医生了解迄今为止所做的治疗。请回答适用的项目，其余的可以跳过。',
@@ -86,6 +103,7 @@ const LOCAL = {
   'Chiropractic care': { es: 'Atención quiropráctica', zh: '脊椎推拿治疗' },
   'Acupuncture': { es: 'Acupuntura', zh: '针灸' },
   'Back brace or cervical collar': { es: 'Faja lumbar o collarín cervical', zh: '腰背支具或颈托' },
+  'Brace, splint, cast, boot or sling': { es: 'Ortesis, férula, yeso, bota o cabestrillo', zh: '支具、夹板、石膏、步行靴或吊带' },
   'Injections': { es: 'Inyecciones', zh: '注射' },
   'Prior Imaging': { es: 'Estudios de imagen previos', zh: '既往影像检查' },
   'EMG or nerve conduction study': { es: 'EMG o estudio de conducción nerviosa', zh: '肌电图或神经传导检查' },
@@ -118,10 +136,15 @@ const LOCAL = {
   'MRI': { es: 'Resonancia magnética (MRI)', zh: '磁共振（MRI）' },
   'CT scan': { es: 'Tomografía (TC)', zh: 'CT扫描' },
   'Myelogram': { es: 'Mielografía', zh: '脊髓造影' },
+  'Ultrasound': { es: 'Ecografía', zh: '超声' },
   'Bone density scan (DEXA)': { es: 'Densitometría ósea (DEXA)', zh: '骨密度扫描（DEXA）' },
   'None': { es: 'Ninguno', zh: '无' },
 
   // Injection section
+  'Have you had any injections for this problem (cortisone, gel, PRP)? Add each one with as much detail as you can — this is important for insurance authorization.': {
+    es: '¿Se ha hecho alguna inyección para este problema (cortisona, gel, PRP)? Agregue cada una con el mayor detalle posible; esto es importante para la autorización del seguro.',
+    zh: '您为这个问题做过注射吗（可的松、凝胶、PRP）？请尽量详细地添加每一次注射，这对保险授权很重要。',
+  },
   'Have you had any spine injections? Add each one with as much detail as you can — this is important for insurance authorization.': {
     es: '¿Se ha hecho alguna inyección en la columna? Agregue cada una con el mayor detalle posible; esto es importante para la autorización del seguro.',
     zh: '您做过脊柱注射吗？请尽量详细地添加每一次注射，这对保险授权很重要。',
@@ -136,8 +159,17 @@ const LOCAL = {
   'Radiofrequency ablation (RFA)': { es: 'Ablación por radiofrecuencia (RFA)', zh: '射频消融 (RFA)' },
   'Sacroiliac (SI) joint injection': { es: 'Inyección en la articulación sacroilíaca (SI)', zh: '骶髂 (SI) 关节注射' },
   'Trigger point injection': { es: 'Inyección en punto gatillo', zh: '触发点注射' },
+  // the bone-and-joint service's injections
+  'Steroid (cortisone) injection into the joint': { es: 'Inyección de esteroides (cortisona) en la articulación', zh: '关节内类固醇（可的松）注射' },
+  'Gel / hyaluronic acid injection (knee)': { es: 'Inyección de gel / ácido hialurónico (rodilla)', zh: '凝胶／透明质酸注射（膝）' },
+  'Platelet-rich plasma (PRP)': { es: 'Plasma rico en plaquetas (PRP)', zh: '富血小板血浆（PRP）' },
+  'Steroid injection for carpal tunnel or trigger finger': { es: 'Inyección de esteroides para túnel carpiano o dedo en gatillo', zh: '腕管综合征或扳机指的类固醇注射' },
+  'Bursa or tendon injection': { es: 'Inyección en la bursa o el tendón', zh: '滑囊或肌腱注射' },
+  'Nerve block': { es: 'Bloqueo nervioso', zh: '神经阻滞' },
+  'Spine injection (epidural, facet)': { es: 'Inyección en la columna (epidural, facetaria)', zh: '脊柱注射（硬膜外、小关节）' },
   'Other': { es: 'Otro', zh: '其他' },
   'Where? (e.g., L4-L5, left side)': { es: '¿Dónde? (p. ej., L4-L5, lado izquierdo)', zh: '哪个部位？（例如 L4-L5，左侧）' },
+  'Where? (e.g., right knee, left shoulder)': { es: '¿Dónde? (p. ej., rodilla derecha, hombro izquierdo)', zh: '哪个部位？（例如 右膝、左肩）' },
   'Who did it? (doctor / clinic)': { es: '¿Quién lo hizo? (médico / clínica)', zh: '谁做的？（医生／诊所）' },
   'When? (e.g., June 2024)': { es: '¿Cuándo? (p. ej., junio de 2024)', zh: '什么时候？（例如 2024年6月）' },
   'How many? (e.g., 3)': { es: '¿Cuántas? (p. ej., 3)', zh: '多少次？（例如 3）' },
@@ -146,6 +178,7 @@ const LOCAL = {
 
   // Prior imaging section
   'What imaging studies have you had for your spine?': { es: '¿Qué estudios de imagen se ha hecho de la columna?', zh: '您为脊柱做过哪些影像检查？' },
+  'What imaging studies have you had for this problem?': { es: '¿Qué estudios de imagen se ha hecho para este problema?', zh: '您为这个问题做过哪些影像检查？' },
 
   // Records notes
   'PT visit notes or a discharge summary: upload them at the Records step, or bring them to your visit.': {
@@ -173,6 +206,10 @@ const LOCAL = {
     es: 'p. ej., fortalecimiento del core, estiramientos, programa de caminata',
     zh: '例如 核心力量训练、拉伸、步行计划',
   },
+  'e.g., Strengthening, stretching, range of motion': {
+    es: 'p. ej., fortalecimiento, estiramientos, rango de movimiento',
+    zh: '例如 力量训练、拉伸、活动范围练习',
+  },
   'How long did you go?': { es: '¿Por cuánto tiempo asistió?', zh: '您去了多久？' },
   'How long?': { es: '¿Por cuánto tiempo?', zh: '多久？' },
   'What kind?': { es: '¿Qué tipo?', zh: '哪种？' },
@@ -186,11 +223,50 @@ const LOCAL = {
 };
 
 /**
+ * What the two services word differently on this step. The strings are the
+ * keys of LOCAL above (both services' entries are kept), the lists are the
+ * one-tap suggestions.
+ */
+const COPY = {
+  spine: {
+    subtitle: "What treatments have you already tried for your spine symptoms? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.",
+    braceLabel: 'Back brace or cervical collar',
+    bracePlaceholder: 'e.g., Lumbar support belt, worn daily for 3 months',
+    braceTypes: ['Lumbar support belt', 'Soft cervical collar', 'Rigid back brace'],
+    hepPlaceholder: 'e.g., Core strengthening, stretching, walking program',
+    hepFocus: ['Core strengthening', 'Stretching', 'Walking program'],
+    injectionsPrompt: 'Have you had any spine injections? Add each one with as much detail as you can — this is important for insurance authorization.',
+    injectionWhere: 'Where? (e.g., L4-L5, left side)',
+    imagingLabel: 'Imaging (X-ray, MRI, CT)',
+    imagingPrompt: 'What imaging studies have you had for your spine?',
+    imagingStudies: ['X-rays', 'MRI', 'CT scan', 'Myelogram', 'Bone density scan (DEXA)'],
+    emgPlaceholder: 'e.g., Mild nerve irritation on the right at L5',
+  },
+  ortho: {
+    subtitle: "What treatments have you already tried for this problem? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.",
+    braceLabel: 'Brace, splint, cast, boot or sling',
+    bracePlaceholder: 'e.g., Knee brace, worn for sport for 3 months',
+    braceTypes: ['Knee brace', 'Wrist splint', 'Walking boot', 'Sling', 'Cast', 'Cane or crutches'],
+    hepPlaceholder: 'e.g., Strengthening, stretching, range of motion',
+    hepFocus: ['Strengthening', 'Stretching', 'Range of motion', 'Balance exercises'],
+    injectionsPrompt: 'Have you had any injections for this problem (cortisone, gel, PRP)? Add each one with as much detail as you can — this is important for insurance authorization.',
+    injectionWhere: 'Where? (e.g., right knee, left shoulder)',
+    imagingLabel: 'Imaging (X-ray, MRI, CT, ultrasound)',
+    imagingPrompt: 'What imaging studies have you had for this problem?',
+    imagingStudies: ['X-rays', 'MRI', 'CT scan', 'Ultrasound', 'Bone density scan (DEXA)'],
+    emgPlaceholder: 'e.g., Carpal tunnel on the right, moderate',
+  },
+};
+
+/**
  * Prior Treatments — its own full step (previously a small tab within HPI).
  * Captures the conservative treatment history the surgeon needs to know about.
  */
 export default function PriorTreatments({ onNext, onBack }) {
   const { data, setNested } = useIntake();
+  const svc = useService();
+  const { INJECTION_TYPES } = svc.constants;
+  const copy = COPY[svc.specialty] || COPY.spine;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const tx = data.hpiData.conservativeTreatments;
@@ -223,9 +299,9 @@ export default function PriorTreatments({ onNext, onBack }) {
     { key: 'homeExercise', label: 'Home exercise program', flag: 'homeExercise.tried' },
     { key: 'chiropracticCare', label: 'Chiropractic care', flag: 'chiropracticCare.tried' },
     { key: 'acupuncture', label: 'Acupuncture', flag: 'acupuncture.tried' },
-    { key: 'braces', label: 'Back brace or cervical collar', flag: 'braces.tried' },
+    { key: 'braces', label: copy.braceLabel, flag: 'braces.tried' },
     { key: 'injections', label: 'Injections', list: 'injections' },
-    { key: 'priorImaging', label: 'Imaging (X-ray, MRI, CT)', list: 'priorImaging' },
+    { key: 'priorImaging', label: copy.imagingLabel, list: 'priorImaging' },
     { key: 'priorEMG', label: 'EMG or nerve conduction study', flag: 'priorEMG.done' },
   ];
   const isOn = (g) => (g.flag ? !!tx[g.key]?.[g.flag.split('.')[1]] : (tx[g.list] || []).filter((x) => x && x !== 'None').length > 0 || !!opened[g.key]);
@@ -254,7 +330,7 @@ export default function PriorTreatments({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Prior Treatments')}</h2>
         <p className="section-subtitle">
-          {t("What treatments have you already tried for your spine symptoms? This helps your surgeon understand what's been done so far. Answer what applies and skip the rest.")}
+          {t(copy.subtitle)}
         </p>
       </div>
 
@@ -324,8 +400,8 @@ export default function PriorTreatments({ onNext, onBack }) {
                 suggestions={HEP_FREQUENCIES} />
               <div className="sm:col-span-2">
                 <TextField label={t('What did you work on?')} value={tx.homeExercise?.details}
-                  onChange={(v) => updateTx('homeExercise.details', v)} placeholder={t('e.g., Core strengthening, stretching, walking program')}
-                  suggestions={HEP_FOCUS} />
+                  onChange={(v) => updateTx('homeExercise.details', v)} placeholder={t(copy.hepPlaceholder)}
+                  suggestions={copy.hepFocus} />
               </div>
             </div>
           </TreatmentToggle>
@@ -350,12 +426,12 @@ export default function PriorTreatments({ onNext, onBack }) {
             </div>
           </TreatmentToggle>
 
-          <TreatmentToggle label={t('Back brace or cervical collar')} tried={tx.braces?.tried} onToggle={(v) => updateTx('braces.tried', v)}>
+          <TreatmentToggle label={t(copy.braceLabel)} tried={tx.braces?.tried} onToggle={(v) => updateTx('braces.tried', v)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <TextField label={t('What kind, and for how long?')} value={tx.braces?.type}
                 onChange={(v) => updateTx('braces.type', v)}
-                placeholder={t('e.g., Lumbar support belt, worn daily for 3 months')}
-                suggestions={BRACE_TYPES} />
+                placeholder={t(copy.bracePlaceholder)}
+                suggestions={copy.braceTypes} />
               <HelpedSelect value={tx.braces?.helped} onChange={(v) => updateTx('braces.helped', v)} />
             </div>
           </TreatmentToggle>
@@ -365,7 +441,7 @@ export default function PriorTreatments({ onNext, onBack }) {
           <div className="border border-gray-200 rounded-xl p-4">
             <h4 className="text-base font-medium text-navy-600 mb-1">{t('Injections')}</h4>
             <p className="text-sm text-gray-400 mb-3">
-              {t('Have you had any spine injections? Add each one with as much detail as you can — this is important for insurance authorization.')}
+              {t(copy.injectionsPrompt)}
             </p>
 
             {(tx.injections || []).map((inj, i) => (
@@ -392,7 +468,7 @@ export default function PriorTreatments({ onNext, onBack }) {
               </select>
               <TextField value={newInjection.location}
                 onChange={(v) => setNewInjection((p) => ({ ...p, location: v }))}
-                placeholder={t('Where? (e.g., L4-L5, left side)')} />
+                placeholder={t(copy.injectionWhere)} />
               <TextField value={newInjection.provider}
                 onChange={(v) => setNewInjection((p) => ({ ...p, provider: v }))}
                 placeholder={t('Who did it? (e.g., Dr. Alan Reyes, Front Range Pain — (303) 555-0199)')} />
@@ -426,9 +502,9 @@ export default function PriorTreatments({ onNext, onBack }) {
           {show('priorImaging') && (
           <div className="border border-gray-200 rounded-xl p-4">
             <h4 className="text-base font-medium text-navy-600 mb-3">{t('Prior Imaging')}</h4>
-            <p className="text-sm text-gray-400 mb-3">{t('What imaging studies have you had for your spine?')}</p>
+            <p className="text-sm text-gray-400 mb-3">{t(copy.imagingPrompt)}</p>
             <div className="flex flex-wrap gap-2">
-              {['X-rays', 'MRI', 'CT scan', 'Myelogram', 'Bone density scan (DEXA)'].map((img) => {
+              {copy.imagingStudies.map((img) => {
                 const selected = (tx.priorImaging || []).includes(img);
                 return (
                   <button key={img}
@@ -457,7 +533,7 @@ export default function PriorTreatments({ onNext, onBack }) {
               <TextField label={t('Who did it?')} value={tx.priorEMG?.provider}
                 onChange={(v) => updateTx('priorEMG.provider', v)} placeholder={t('e.g., Dr. Alan Reyes — (303) 555-0177')} />
               <TextField label={t('Results (if known)')} value={tx.priorEMG?.results}
-                onChange={(v) => updateTx('priorEMG.results', v)} placeholder={t('e.g., Mild nerve irritation on the right at L5')} />
+                onChange={(v) => updateTx('priorEMG.results', v)} placeholder={t(copy.emgPlaceholder)} />
             </div>
             <RecordsNote text={t('Your EMG / nerve study report: upload it at the Records step, or bring a copy to your visit.')} />
           </TreatmentToggle>
@@ -485,8 +561,6 @@ const PT_DURATIONS = ['6 weeks', '3 months', '6 months', 'More than a year'];
 const VISIT_FREQUENCIES = ['1x per week', '2x per week', '3x per week'];
 const HEP_SOURCES = ['None', 'Printed handout', 'YouTube', 'Phone app'];
 const HEP_FREQUENCIES = ['Daily', '3x per week', 'A few times a month'];
-const HEP_FOCUS = ['Core strengthening', 'Stretching', 'Walking program'];
-const BRACE_TYPES = ['Lumbar support belt', 'Soft cervical collar', 'Rigid back brace'];
 const INJECTION_COUNTS = ['1', '2', '3'];
 const RELIEF_DURATIONS = ['No relief', 'A few days', 'About 2 weeks', 'A few months'];
 

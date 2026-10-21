@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useIntake } from '../../lib/store';
+import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
   'Past Surgical History': { es: 'Antecedentes quirúrgicos', zh: '既往手术史' },
+  "List any prior surgeries you've had, especially any bone, joint, tendon or ligament surgery.": {
+    es: 'Enumere las cirugías que haya tenido, especialmente cualquier cirugía de huesos, articulaciones, tendones o ligamentos.',
+    zh: '请列出您以前做过的任何手术，尤其是骨骼、关节、肌腱或韧带手术。',
+  },
   "List any prior surgeries you've had, especially any spine surgeries.": {
     es: 'Enumere las cirugías que haya tenido, especialmente cualquier cirugía de la columna.',
     zh: '请列出您以前做过的任何手术，尤其是脊柱手术。',
@@ -16,9 +20,11 @@ const LOCAL = {
   'Hospital:': { es: 'Hospital:', zh: '医院：' },
   'Surgeon:': { es: 'Cirujano:', zh: '外科医生：' },
   'Spine level:': { es: 'Nivel de la columna:', zh: '脊柱节段：' },
+  'Side / site:': { es: 'Lado / sitio:', zh: '侧别／部位：' },
   'Outcome:': { es: 'Resultado:', zh: '结果：' },
   'Complications:': { es: 'Complicaciones:', zh: '并发症：' },
   'Spine Surgery': { es: 'Cirugía de la columna', zh: '脊柱手术' },
+  'Bone or Joint Surgery': { es: 'Cirugía de huesos o articulaciones', zh: '骨骼或关节手术' },
   'Edit Surgery': { es: 'Editar cirugía', zh: '编辑手术' },
   'Add Surgery': { es: 'Agregar cirugía', zh: '添加手术' },
   'Surgery type *': { es: 'Tipo de cirugía *', zh: '手术类型 *' },
@@ -26,10 +32,18 @@ const LOCAL = {
     es: 'p. ej., fusión lumbar, reemplazo de rodilla, apendicectomía',
     zh: '例如：腰椎融合、膝关节置换、阑尾切除',
   },
+  'e.g., ACL reconstruction, Knee replacement, Appendectomy': {
+    es: 'p. ej., reconstrucción del LCA, reemplazo de rodilla, apendicectomía',
+    zh: '例如：前交叉韧带重建、膝关节置换、阑尾切除',
+  },
   'Body region': { es: 'Región del cuerpo', zh: '身体部位' },
   'Cervical spine (neck)': { es: 'Columna cervical (cuello)', zh: '颈椎（脖子）' },
   'Thoracic spine (upper back)': { es: 'Columna torácica (espalda alta)', zh: '胸椎（上背部）' },
   'Lumbar spine (low back)': { es: 'Columna lumbar (espalda baja)', zh: '腰椎（下背部）' },
+  'Elbow': { es: 'Codo', zh: '肘部' },
+  'Hand or wrist': { es: 'Mano o muñeca', zh: '手或手腕' },
+  'Ankle or foot': { es: 'Tobillo o pie', zh: '踝或足' },
+  'Spine (neck or back)': { es: 'Columna (cuello o espalda)', zh: '脊柱（颈或背）' },
   'Hip': { es: 'Cadera', zh: '髋部' },
   'Knee': { es: 'Rodilla', zh: '膝盖' },
   'Shoulder': { es: 'Hombro', zh: '肩部' },
@@ -46,6 +60,9 @@ const LOCAL = {
   'This was a spine surgery': { es: 'Esta fue una cirugía de la columna', zh: '这是一次脊柱手术' },
   'Spine level (if known)': { es: 'Nivel de la columna (si lo sabe)', zh: '脊柱节段（如果知道）' },
   'e.g., L4-L5, C5-C6': { es: 'p. ej., L4-L5, C5-C6', zh: '例如：L4-L5、C5-C6' },
+  'This was a bone, joint, tendon or ligament surgery': { es: 'Esta fue una cirugía de hueso, articulación, tendón o ligamento', zh: '这是一次骨骼、关节、肌腱或韧带手术' },
+  'Which side, and what exactly? (if known)': { es: '¿Qué lado y qué exactamente? (si lo sabe)', zh: '哪一侧，具体是什么？（如果知道）' },
+  'e.g., Right knee, plate and screws in the left wrist': { es: 'p. ej., rodilla derecha, placa y tornillos en la muñeca izquierda', zh: '例如：右膝，左腕钢板和螺钉' },
   'Did the surgery help?': { es: '¿Le ayudó la cirugía?', zh: '手术有帮助吗？' },
   'Helped significantly': { es: 'Ayudó significativamente', zh: '帮助很大' },
   'Helped somewhat': { es: 'Ayudó un poco', zh: '有一些帮助' },
@@ -79,10 +96,41 @@ const LOCAL = {
   'Continue to Medications': { es: 'Continuar a medicamentos', zh: '继续填写药物' },
 };
 
+/**
+ * What the two services word differently. The `isSpineSurgery` and
+ * `spineLevel` fields keep their names in the stored data for both: for the
+ * bone-and-joint service they flag an orthopaedic operation and hold the
+ * side and site.
+ */
+const COPY = {
+  spine: {
+    subtitle: "List any prior surgeries you've had, especially any spine surgeries.",
+    typePlaceholder: 'e.g., Lumbar fusion, Knee replacement, Appendectomy',
+    regions: ['Cervical spine (neck)', 'Thoracic spine (upper back)', 'Lumbar spine (low back)', 'Hip', 'Knee', 'Shoulder', 'Abdomen', 'Heart', 'Brain/Head', 'Other'],
+    flagLabel: 'This was a spine surgery',
+    badge: 'Spine Surgery',
+    levelLabel: 'Spine level (if known)',
+    levelPlaceholder: 'e.g., L4-L5, C5-C6',
+    levelLine: 'Spine level:',
+  },
+  ortho: {
+    subtitle: "List any prior surgeries you've had, especially any bone, joint, tendon or ligament surgery.",
+    typePlaceholder: 'e.g., ACL reconstruction, Knee replacement, Appendectomy',
+    regions: ['Shoulder', 'Elbow', 'Hand or wrist', 'Hip', 'Knee', 'Ankle or foot', 'Spine (neck or back)', 'Abdomen', 'Heart', 'Brain/Head', 'Other'],
+    flagLabel: 'This was a bone, joint, tendon or ligament surgery',
+    badge: 'Bone or Joint Surgery',
+    levelLabel: 'Which side, and what exactly? (if known)',
+    levelPlaceholder: 'e.g., Right knee, plate and screws in the left wrist',
+    levelLine: 'Side / site:',
+  },
+};
+
 export default function PastSurgicalHistory({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const { data, setSection } = useIntake();
+  const svc = useService();
+  const copy = COPY[svc.specialty] || COPY.spine;
   const psh = data.pastSurgicalHistory;
   const [showForm, setShowForm] = useState(false);
   const [editIndex, setEditIndex] = useState(-1);
@@ -132,7 +180,7 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
       <div className="mb-8">
         <h2 className="section-title">{t('Past Surgical History')}</h2>
         <p className="section-subtitle">
-          {t("List any prior surgeries you've had, especially any spine surgeries.")}
+          {t(copy.subtitle)}
         </p>
       </div>
 
@@ -150,13 +198,13 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
                       {surgery.date && <p>{t('Date:')} {surgery.date}</p>}
                       {surgery.hospital && <p>{t('Hospital:')} {surgery.hospital}</p>}
                       {surgery.surgeon && <p>{t('Surgeon:')} {surgery.surgeon}</p>}
-                      {surgery.spineLevel && <p>{t('Spine level:')} {surgery.spineLevel}</p>}
+                      {surgery.spineLevel && <p>{t(copy.levelLine)} {surgery.spineLevel}</p>}
                       {surgery.helped && <p>{t('Outcome:')} {t(surgery.helped)}</p>}
                       {surgery.complications && <p>{t('Complications:')} {surgery.complications}</p>}
                     </div>
                     {surgery.isSpineSurgery && (
                       <span className="inline-block mt-2 text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-full">
-                        {t('Spine Surgery')}
+                        {t(copy.badge)}
                       </span>
                     )}
                   </div>
@@ -192,7 +240,7 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
                   type="text"
                   value={form.type}
                   onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value }))}
-                  placeholder={t('e.g., Lumbar fusion, Knee replacement, Appendectomy')}
+                  placeholder={t(copy.typePlaceholder)}
                 />
               </div>
 
@@ -204,16 +252,7 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
                     onChange={(e) => setForm(prev => ({ ...prev, bodyRegion: e.target.value }))}
                   >
                     <option value="">{t('Select...')}</option>
-                    <option value="Cervical spine (neck)">{t('Cervical spine (neck)')}</option>
-                    <option value="Thoracic spine (upper back)">{t('Thoracic spine (upper back)')}</option>
-                    <option value="Lumbar spine (low back)">{t('Lumbar spine (low back)')}</option>
-                    <option value="Hip">{t('Hip')}</option>
-                    <option value="Knee">{t('Knee')}</option>
-                    <option value="Shoulder">{t('Shoulder')}</option>
-                    <option value="Abdomen">{t('Abdomen')}</option>
-                    <option value="Heart">{t('Heart')}</option>
-                    <option value="Brain/Head">{t('Brain/Head')}</option>
-                    <option value="Other">{t('Other')}</option>
+                    {copy.regions.map((r) => <option key={r} value={r}>{t(r)}</option>)}
                   </select>
                 </div>
                 <div>
@@ -251,17 +290,17 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
                   checked={form.isSpineSurgery}
                   onChange={(e) => setForm(prev => ({ ...prev, isSpineSurgery: e.target.checked }))}
                 />
-                <span className="text-sm font-medium text-teal-700">{t('This was a spine surgery')}</span>
+                <span className="text-sm font-medium text-teal-700">{t(copy.flagLabel)}</span>
               </label>
 
               {form.isSpineSurgery && (
                 <div>
-                  <label className="form-label">{t('Spine level (if known)')}</label>
+                  <label className="form-label">{t(copy.levelLabel)}</label>
                   <input
                     type="text"
                     value={form.spineLevel}
                     onChange={(e) => setForm(prev => ({ ...prev, spineLevel: e.target.value }))}
-                    placeholder={t('e.g., L4-L5, C5-C6')}
+                    placeholder={t(copy.levelPlaceholder)}
                   />
                 </div>
               )}

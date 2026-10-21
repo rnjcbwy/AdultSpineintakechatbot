@@ -1,7 +1,13 @@
 /**
  * Export the intake as a platform-neutral JSON specification.
  *
- *   node scripts/export-spec.mjs            -> spec/spine-intake-spec.json
+ *   node scripts/export-spec.mjs                        -> spec/spine-intake-spec.json
+ *   node scripts/export-spec.mjs --service=adult_ortho  -> spec/ortho-intake-spec.json
+ *
+ * One form serves four services (lib/service.js); the content that differs
+ * between the spine and the bone-and-joint questions lives under
+ * lib/services/<specialty>/. --service names the service whose content to
+ * export (the adult spine when omitted); everything shared is exported as is.
  *
  * Written for handing the design to another team to rebuild on their own
  * platform. Everything clinical is GENERATED FROM THE APP'S OWN SOURCE rather
@@ -34,34 +40,48 @@ const ts = require('typescript');
 const ROOT = process.cwd();
 const TMP = path.join(ROOT, '.spec-tmp');
 const OUT_DIR = path.join(ROOT, 'spec');
-const OUT = path.join(OUT_DIR, 'spine-intake-spec.json');
+
+// The service to export (lib/service.js keys: adult_spine, adult_ortho,
+// peds_spine, peds_ortho). The specialty picks the lib/services folder.
+const SERVICE_KEY = (process.argv.find((a) => a.startsWith('--service=')) || '--service=adult_spine').slice('--service='.length);
+const SPECIALTY = /_ortho$/.test(SERVICE_KEY) ? 'ortho' : 'spine';
+const SERVICE_DIR = path.join(ROOT, 'lib', 'services', SPECIALTY);
+const RULES_FILE = SPECIALTY === 'ortho' ? 'ortho-rules.json' : 'rules.json';
+const OUT = path.join(OUT_DIR, `${SPECIALTY}-intake-spec.json`);
 
 // ---------------------------------------------------------------------------
 // 1. Load the data modules.
 //
 // lib/ is ESM inside a CommonJS package, so Node will not import it directly.
 // Each module is copied into a scratch directory as .mjs with its relative
-// imports rewritten to match; the directory is removed afterwards.
+// imports rewritten to match; the directory is removed afterwards. The
+// service modules come from lib/services/<specialty>/ and are staged beside
+// the shared ones, so a service module's '../../flows' and a shared module's
+// './flows' both resolve to the same staged copy.
 // ---------------------------------------------------------------------------
-const LIB_MODULES = [
-  'flows', 'constants', 'questionnaires', 'rosSystems', 'bodyMap', 'redFlags',
-  'promSummary', 'noteFingerprint', 'documentCategories', 'documents', 'authReadiness',
-  'operations',
-];
+const SHARED_MODULES = ['flows', 'bodyMap', 'noteFingerprint', 'documentCategories', 'documents', 'authReadiness'];
+const SERVICE_MODULES = ['constants', 'questionnaires', 'rosSystems', 'redFlags', 'promSummary', 'operations', 'problems'];
+
+/** A module's source with its relative imports pointed at the staged copies. */
+function stagedSource(file) {
+  return fs.readFileSync(file, 'utf8')
+    .replace(/from '\.\.\/\.\.\/([A-Za-z0-9_]+)'/g, "from './$1.mjs'")
+    .replace(/from '\.\/([A-Za-z0-9_]+)'/g, "from './$1.mjs'")
+    .replace(/import (\w+) from '\.\/payers\/([a-z-]+\.json)';/g, "import $1 from './payers/$2' with { type: 'json' };");
+}
 
 function stageModules() {
   fs.rmSync(TMP, { recursive: true, force: true });
   fs.mkdirSync(path.join(TMP, 'payers'), { recursive: true });
-  fs.copyFileSync(path.join(ROOT, 'lib/payers/rules.json'), path.join(TMP, 'payers/rules.json'));
+  for (const name of ['rules.json', 'ortho-rules.json']) {
+    fs.copyFileSync(path.join(ROOT, 'lib/payers', name), path.join(TMP, 'payers', name));
+  }
 
-  for (const name of LIB_MODULES) {
-    let src = fs.readFileSync(path.join(ROOT, 'lib', `${name}.js`), 'utf8');
-    src = src.replace(/from '\.\/([A-Za-z0-9_]+)'/g, "from './$1.mjs'");
-    src = src.replace(
-      "import rules from './payers/rules.json';",
-      "import rules from './payers/rules.json' with { type: 'json' };"
-    );
-    fs.writeFileSync(path.join(TMP, `${name}.mjs`), src);
+  for (const name of SHARED_MODULES) {
+    fs.writeFileSync(path.join(TMP, `${name}.mjs`), stagedSource(path.join(ROOT, 'lib', `${name}.js`)));
+  }
+  for (const name of SERVICE_MODULES) {
+    fs.writeFileSync(path.join(TMP, `${name}.mjs`), stagedSource(path.join(SERVICE_DIR, `${name}.js`)));
   }
 
   // The store pulls in React, so only its default data shape is staged.
@@ -83,11 +103,266 @@ function stageModules() {
   const ce = i18n.indexOf('\n};', cs) + 3;
   fs.writeFileSync(path.join(TMP, 'common.mjs'), i18n.slice(cs, ce) + '\n');
 
-  // prompts: the note instructions, with their summariser imports rewired.
-  let prompts = fs.readFileSync(path.join(ROOT, 'lib/prompts.js'), 'utf8');
-  prompts = prompts.replace(/from '\.\/([A-Za-z0-9_]+)'/g, "from './$1.mjs'");
-  fs.writeFileSync(path.join(TMP, 'prompts.mjs'), prompts);
+  // prompts: the service's note instructions, with their summariser imports rewired.
+  fs.writeFileSync(path.join(TMP, 'prompts.mjs'), stagedSource(path.join(SERVICE_DIR, 'prompts.js')));
 }
+
+// ---------------------------------------------------------------------------
+// What the spec says differently for each specialty: which questionnaires are
+// offered and how they score, which review-of-systems answers feed which red
+// flag, what the body map's marks trigger, and the document's own metadata.
+// ---------------------------------------------------------------------------
+const SPECIALTY_SPEC = {
+  spine: {
+    proms: (q, instrument) => ({
+      selectionRules: [
+        { instrument: 'odi', when: 'chiefComplaint.symptomRegions includes any of: low-back, right-leg, left-leg, walking-difficulty' },
+        { instrument: 'ndi', when: 'chiefComplaint.symptomRegions includes any of: neck, right-arm, left-arm' },
+        { instrument: 'mjoa', when: 'symptomRegions includes balance or hand-clumsiness, OR any symptom reports handDexterity, droppingObjects, gaitChanges or lhermittes' },
+        { instrument: 'srs22r', when: 'a deformity / scoliosis concern is reported' },
+      ],
+      noteHandling:
+        'Item answers are stored as the option VALUE. Before note generation they must be resolved back ' +
+        'to the option LABEL the patient chose — a bare value is meaningless to the note writer, and ' +
+        'passing values alone drops the entire functional history. Report the score and interpretation, ' +
+        'and work clinically meaningful items into the history as prose. mJOA items are a myelopathy ' +
+        'history and must be reported explicitly, not only as a total.',
+      instruments: [
+        instrument(q.ODI, {
+          scoring: {
+            method: 'Sum of answered items / (answered items x 5) x 100, rounded. Unanswered items are excluded from the denominator.',
+            direction: 'higher_is_worse',
+            bands: [
+              { max: 20, label: 'Minimal disability' },
+              { max: 40, label: 'Moderate disability' },
+              { max: 60, label: 'Severe disability' },
+              { max: 80, label: 'Crippled' },
+              { max: 100, label: 'Bed-bound or exaggerating symptoms' },
+            ],
+          },
+        }),
+        instrument(q.NDI, {
+          scoring: {
+            method: 'As ODI: sum / (answered x 5) x 100.',
+            direction: 'higher_is_worse',
+            bands: 'same as ODI',
+          },
+        }),
+        instrument(q.MJOA, {
+          scoring: {
+            method: 'Sum of item values; maximum 18.',
+            direction: 'higher_is_better',
+            bands: [
+              { min: 18, label: 'No myelopathy' },
+              { min: 15, label: 'Mild myelopathy' },
+              { min: 12, label: 'Moderate myelopathy' },
+              { min: 0, label: 'Severe myelopathy' },
+            ],
+          },
+          itemsAreClinicalFindings: true,
+        }),
+        instrument(q.SRS22R, {
+          scoring: {
+            method: 'Mean item score per domain (1-5); total is the mean of answered items.',
+            direction: 'higher_is_better',
+          },
+        }),
+      ],
+      recommendedAdditions: [
+        {
+          id: 'nrs_pain',
+          status: 'recommended — not yet in the prototype',
+          name: 'Numeric pain rating, split by region',
+          items: [
+            'Back pain right now, 0-10', 'Leg pain right now, 0-10',
+            'Neck pain right now, 0-10 (cervical patients)', 'Arm pain right now, 0-10 (cervical patients)',
+          ],
+          rationale:
+            'The prototype has no numeric pain score anywhere. Separate axial vs limb scores distinguish ' +
+            'axial from radicular predominance, which several payer policies reference for decompression ' +
+            'versus fusion, and are needed as a baseline for MCID at follow-up.',
+        },
+        {
+          id: 'phq2_gad7',
+          status: 'recommended — not yet in the prototype',
+          name: 'PHQ-2 (escalating to PHQ-9 when positive) and GAD-7',
+          rationale:
+            'Psychological distress is among the strongest predictors of a poor spine surgery outcome, and ' +
+            'some bundled-payment and centre-of-excellence programmes require documented screening.',
+        },
+        {
+          id: 'zcq',
+          status: 'optional — depends on stenosis volume',
+          name: 'Zurich Claudication Questionnaire',
+          rationale: 'The stenosis-specific instrument; nothing in the current set covers neurogenic claudication.',
+        },
+      ],
+      licensing:
+        'VERIFY BEFORE CLINICAL USE. PHQ-9/GAD-7 and PROMIS are free to use; ODI, SRS-22r and ZCQ have ' +
+        'permission or licensing processes. The item wording below is reproduced from the prototype for ' +
+        'build reference only and does not convey any licence.',
+    }),
+    redFlagLinks: {
+      cauda_equina_bowel_bladder: ['bladderChanges', 'bowelChanges', 'urinaryRetention'],
+      weight_loss: ['unexplainedWeightLoss'],
+      fever_back_pain: ['fevers'],
+      cancer_history_new_pain: ['cancerHistory'],
+    },
+    triggers: [
+      { id: 'cauda_equina', severity: 'urgent', when: 'any mark in a perineum / saddle zone',
+        action: 'Ask about bowel/bladder control and saddle numbness immediately; raise a red flag.' },
+      { id: 'below_knee', severity: 'branch', when: 'any mark in a shin, calf, foot, toe, heel or ankle zone',
+        action: 'Open radicular questions; set hpiData.overall.painBelowKnee (an explicit Aetna / eviCore fusion criterion).' },
+      { id: 'pattern_l5', severity: 'pattern', when: 'same side: lateral shin or lateral calf, AND great toe / inner foot / dorsum',
+        action: 'Surgeon-only hint. Never shown to the patient as a finding.' },
+      { id: 'pattern_s1', severity: 'pattern', when: 'same side: calf AND little toe / outer foot / heel / lateral border of the foot',
+        action: 'Surgeon-only hint.' },
+      { id: 'pattern_l4', severity: 'pattern', when: 'same side: knee AND medial shin', action: 'Surgeon-only hint.' },
+      { id: 'pattern_c6', severity: 'pattern', when: 'same side: lateral forearm AND thumb / index finger', action: 'Surgeon-only hint.' },
+      { id: 'pattern_c8', severity: 'pattern', when: 'same side: medial forearm AND ring / little finger', action: 'Surgeon-only hint.' },
+      { id: 'myelopathy', severity: 'branch', when: 'any cervical/neck zone AND any finger or thumb zone',
+        action: 'Run the myelopathy screen: buttons, handwriting, dropping objects, balance, Lhermitte.' },
+      { id: 'bilateral_legs', severity: 'branch', when: 'leg zones marked on BOTH sides',
+        action: 'Ask the claudication set: walking distance, relief with sitting / leaning forward.' },
+      { id: 'axial_only', severity: 'branch', when: 'no limb zone marked at all',
+        action: 'Shorten the form: hide radiation and dermatome questions.' },
+      { id: 'autofill_sensory', severity: 'autofill', when: 'numbness or tingling marker used',
+        action: 'Pre-answer the numbness / tingling questions.' },
+      { id: 'foot_drop', severity: 'branch', when: 'weakness marker in a foot, toe, shin or calf zone',
+        action: 'Ask about tripping, catching the toe, stair difficulty.' },
+    ],
+    meta: {
+      name: 'Comprehensive Spine & Scoliosis Center — Adult Spine Intake',
+      sourceRepository: 'https://github.com/rnjcbwy/AdultSpineintakechatbot',
+      prototype: 'https://adult-spine-intake.vercel.app',
+      pediatricRedirect: 'Patients under 18 are directed to https://peds-spine-intake.vercel.app/',
+    },
+    knownGaps: [
+      'No structured opioid / controlled-substance capture (MDM risk element; spine planning; payers).',
+      'No height / weight / BMI (several payers gate fusion on BMI).',
+    ],
+  },
+  ortho: {
+    proms: (q, instrument) => ({
+      selectionRules: [
+        { instrument: 'quickdash', when: 'chiefComplaint.symptomRegions includes any shoulder, elbow or hand region' },
+        { instrument: 'hoos_jr', when: 'chiefComplaint.symptomRegions includes right-hip or left-hip' },
+        { instrument: 'koos_jr', when: 'chiefComplaint.symptomRegions includes right-knee or left-knee' },
+        { instrument: 'lefs', when: 'chiefComplaint.symptomRegions includes right-foot or left-foot' },
+      ],
+      noteHandling:
+        'Item answers are stored as the option VALUE. Before note generation they must be resolved back ' +
+        'to the option LABEL the patient chose — a bare value is meaningless to the note writer, and ' +
+        'passing values alone drops the entire functional history. Report the score and interpretation, ' +
+        'and work clinically meaningful items into the history as prose. HOOS JR and KOOS JR raw sums ' +
+        'are reported as raw sums until the published interval crosswalk is loaded.',
+      instruments: [
+        instrument(q.QUICKDASH, {
+          scoring: {
+            method: '((sum of answered items / number answered) - 1) x 25, rounded; valid only with 10 or 11 of 11 items answered.',
+            direction: 'higher_is_worse',
+            bands: 'none published; 0 = no disability, 100 = most severe',
+          },
+        }),
+        instrument(q.HOOS_JR, {
+          scoring: {
+            method: 'Raw sum of 6 items (0-24); the published HSS crosswalk converts the raw sum to an interval score 0-100 (100 = no problems). The crosswalk is a constant (INTERVAL_TABLES) to be pasted from the published table.',
+            direction: 'higher_is_worse (raw); higher_is_better (interval)',
+          },
+        }),
+        instrument(q.KOOS_JR, {
+          scoring: {
+            method: 'Raw sum of 7 items (0-28); converted by the published HSS crosswalk as for HOOS JR.',
+            direction: 'higher_is_worse (raw); higher_is_better (interval)',
+          },
+        }),
+        instrument(q.LEFS, {
+          scoring: {
+            method: 'Sum of 20 items, 0-80; percent of maximal function = sum / 80.',
+            direction: 'higher_is_better',
+          },
+        }),
+      ],
+      recommendedAdditions: [
+        {
+          id: 'nrs_pain',
+          status: 'recommended — not yet in the prototype',
+          name: 'Numeric pain rating, split by region',
+          items: [
+            'Pain in the joint right now, 0-10', 'Pain at its worst in the past week, 0-10',
+          ],
+          rationale:
+            'A per-problem severity is captured on Symptom Details; a now / worst pair is the usual baseline ' +
+            'for MCID at follow-up and is what injection and arthroplasty reviewers look for.',
+        },
+        {
+          id: 'phq2_gad7',
+          status: 'recommended — not yet in the prototype',
+          name: 'PHQ-2 (escalating to PHQ-9 when positive) and GAD-7',
+          rationale:
+            'Psychological distress predicts poor outcome after joint replacement and cuff repair, and ' +
+            'some bundled-payment and centre-of-excellence programmes require documented screening.',
+        },
+        {
+          id: 'ases',
+          status: 'optional — shoulder-specific',
+          name: 'ASES shoulder score',
+          rationale: 'QuickDASH covers the whole upper limb; a shoulder-specific instrument is useful for arthroplasty and cuff-repair outcomes.',
+        },
+      ],
+      licensing:
+        'VERIFY BEFORE CLINICAL USE. HOOS JR, KOOS JR and LEFS are free to use; QuickDASH is free for ' +
+        'clinical use once registered with the Institute for Work & Health and must be used unmodified. ' +
+        'The item wording below is reproduced from the prototype for build reference only and does not convey any licence.',
+    }),
+    redFlagLinks: {
+      septic_joint: ['hotSwollenJoint'],
+      dvt_pe: ['calfSwelling'],
+      weight_loss: ['unexplainedWeightLoss'],
+      cancer_history_new_pain: ['cancerHistory'],
+    },
+    triggers: [
+      { id: 'joints_marked', severity: 'branch', when: 'any mark resolves to a limb zone',
+        action: 'Name the joints (side-joint) so the chief-complaint chips and the drawing agree; add any joint the patient did not tap.' },
+      { id: 'spine_marked', severity: 'branch', when: 'any mark over the cervical, thoracic, lumbar or sacral spine',
+        action: 'Show the spine-intake pointer; keep the answers if a joint is the main problem.' },
+      { id: 'cauda_equina', severity: 'urgent', when: 'any mark in a perineum / saddle zone',
+        action: 'Ask about bowel/bladder control and saddle numbness immediately; raise a red flag; direct to the spine intake or urgent care.' },
+      { id: 'pattern_median', severity: 'pattern', when: 'numbness / tingling on thumb / index finger without the forearm',
+        action: 'Surgeon-only hint: median nerve (carpal tunnel) pattern; ask about night waking and shaking the hand out.' },
+      { id: 'pattern_c6', severity: 'pattern', when: 'same side: lateral forearm AND thumb / index finger', action: 'Surgeon-only hint: C6 root vs median nerve.' },
+      { id: 'pattern_ulnar', severity: 'pattern', when: 'numbness / tingling on ring / little finger without the forearm',
+        action: 'Surgeon-only hint: ulnar nerve (cubital tunnel) pattern.' },
+      { id: 'pattern_c8', severity: 'pattern', when: 'same side: medial forearm AND ring / little finger', action: 'Surgeon-only hint: C8 root vs ulnar nerve.' },
+      { id: 'pattern_lateral_hip', severity: 'pattern', when: 'hip / buttock or lateral thigh marked with no spine mark',
+        action: 'Surgeon-only hint: trochanteric vs referred; ask about lying on that side.' },
+      { id: 'pattern_groin_hip', severity: 'pattern', when: 'groin marked', action: 'Surgeon-only hint: intra-articular hip pattern.' },
+      { id: 'pattern_radicular_leg', severity: 'pattern', when: 'a radiation path from the low back / buttock / hip into the leg',
+        action: 'Surgeon-only hint: radicular pattern; consider the spine intake; sets painBelowKnee when marks are below the knee.' },
+      { id: 'bilateral_knees', severity: 'branch', when: 'knee zones marked on BOTH sides', action: 'Ask the arthritis set.' },
+      { id: 'bilateral_hips', severity: 'branch', when: 'hip / groin zones marked on BOTH sides', action: 'Ask the arthritis set.' },
+      { id: 'calf_marked', severity: 'branch', when: 'a pain marker (not numbness / tingling) in a calf zone',
+        action: 'Ask the clot screen: calf swelling, recent cast, travel or surgery, shortness of breath.' },
+      { id: 'no_limb', severity: 'branch', when: 'no limb or joint zone marked at all',
+        action: 'Confirm which joint the visit is about, or route to the spine intake.' },
+      { id: 'autofill_sensory', severity: 'autofill', when: 'numbness or tingling marker used',
+        action: 'Pre-answer the numbness / tingling questions.' },
+      { id: 'autofill_weakness', severity: 'autofill', when: 'weakness marker used',
+        action: 'Pre-answer the weakness question; ask what the patient cannot do.' },
+    ],
+    meta: {
+      name: 'Aaron Wey, MD — Adult Orthopaedic Intake',
+      sourceRepository: 'derived from https://github.com/rnjcbwy/AdultSpineintakechatbot (the adult spine intake)',
+      prototype: 'local development only until deployed on AWS Amplify',
+      pediatricRedirect: 'Patients under 18 are directed to the pediatric orthopaedic intake; neck and back problems to the adult spine intake at https://intake.aaronweymd.com/',
+    },
+    knownGaps: [
+      'No structured opioid / controlled-substance capture (MDM risk element; payers).',
+      'No height / weight / BMI (several payers gate joint replacement on BMI).',
+    ],
+  },
+};
+const OWN = SPECIALTY_SPEC[SPECIALTY];
 
 async function load(name) {
   return import(pathToFileURL(path.join(TMP, `${name}.mjs`)).href);
@@ -162,7 +437,7 @@ const SPEC_SECTIONS = {
 
 /** Step id (flows.STEP_LABELS) -> component file. */
 const STEP_FILES = {
-  welcome: 'Welcome', 'visit-type': 'VisitType',
+  welcome: 'Welcome', triage: 'Triage', 'visit-type': 'VisitType',
   'work-injury': 'WorkInjury', 'legal-injury': 'LegalInjury', interval: 'IntervalHistory', postop: 'PostOpVisit',
   demographics: 'Demographics',
   'chief-complaint': 'ChiefComplaint', 'pain-map': 'PainMap', 'symptom-details': 'SymptomDetails',
@@ -595,7 +870,7 @@ async function main() {
     const { defaultIntakeData } = await load('schema');
     const { COMMON } = await load('common');
     const prompts = await load('prompts');
-    const rules = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib/payers/rules.json'), 'utf8'));
+    const rules = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib/payers', RULES_FILE), 'utf8'));
 
     // ---- steps + fields -------------------------------------------------
     const translations = { ...COMMON };
@@ -603,7 +878,9 @@ async function main() {
     // uses, with the visit-specific steps where their flow places them.
     const allSteps = Object.entries(flows.STEP_LABELS).map(([id, label]) => ({ id, label }));
     const steps = allSteps.map((s, i) => {
-      const file = STEP_FILES[s.id];
+      // A step whose component is gone (the old visit-type step, replaced by
+      // triage) is listed by label only.
+      const file = STEP_FILES[s.id] && fs.existsSync(path.join(ROOT, 'components/steps', `${STEP_FILES[s.id]}.js`)) ? STEP_FILES[s.id] : null;
       const out = { order: i, id: s.id, label: s.label, component: file || null };
       if (file) {
         const { sf } = parseComponent(file);
@@ -643,94 +920,7 @@ async function main() {
       ...(def.domains ? { domains: def.domains } : {}),
     });
 
-    const proms = {
-      selectionRules: [
-        { instrument: 'odi', when: 'chiefComplaint.symptomRegions includes any of: low-back, right-leg, left-leg, walking-difficulty' },
-        { instrument: 'ndi', when: 'chiefComplaint.symptomRegions includes any of: neck, right-arm, left-arm' },
-        { instrument: 'mjoa', when: 'symptomRegions includes balance or hand-clumsiness, OR any symptom reports handDexterity, droppingObjects, gaitChanges or lhermittes' },
-        { instrument: 'srs22r', when: 'a deformity / scoliosis concern is reported' },
-      ],
-      noteHandling:
-        'Item answers are stored as the option VALUE. Before note generation they must be resolved back ' +
-        'to the option LABEL the patient chose — a bare value is meaningless to the note writer, and ' +
-        'passing values alone drops the entire functional history. Report the score and interpretation, ' +
-        'and work clinically meaningful items into the history as prose. mJOA items are a myelopathy ' +
-        'history and must be reported explicitly, not only as a total.',
-      instruments: [
-        instrument(q.ODI, {
-          scoring: {
-            method: 'Sum of answered items / (answered items x 5) x 100, rounded. Unanswered items are excluded from the denominator.',
-            direction: 'higher_is_worse',
-            bands: [
-              { max: 20, label: 'Minimal disability' },
-              { max: 40, label: 'Moderate disability' },
-              { max: 60, label: 'Severe disability' },
-              { max: 80, label: 'Crippled' },
-              { max: 100, label: 'Bed-bound or exaggerating symptoms' },
-            ],
-          },
-        }),
-        instrument(q.NDI, {
-          scoring: {
-            method: 'As ODI: sum / (answered x 5) x 100.',
-            direction: 'higher_is_worse',
-            bands: 'same as ODI',
-          },
-        }),
-        instrument(q.MJOA, {
-          scoring: {
-            method: 'Sum of item values; maximum 18.',
-            direction: 'higher_is_better',
-            bands: [
-              { min: 18, label: 'No myelopathy' },
-              { min: 15, label: 'Mild myelopathy' },
-              { min: 12, label: 'Moderate myelopathy' },
-              { min: 0, label: 'Severe myelopathy' },
-            ],
-          },
-          itemsAreClinicalFindings: true,
-        }),
-        instrument(q.SRS22R, {
-          scoring: {
-            method: 'Mean item score per domain (1-5); total is the mean of answered items.',
-            direction: 'higher_is_better',
-          },
-        }),
-      ],
-      recommendedAdditions: [
-        {
-          id: 'nrs_pain',
-          status: 'recommended — not yet in the prototype',
-          name: 'Numeric pain rating, split by region',
-          items: [
-            'Back pain right now, 0-10', 'Leg pain right now, 0-10',
-            'Neck pain right now, 0-10 (cervical patients)', 'Arm pain right now, 0-10 (cervical patients)',
-          ],
-          rationale:
-            'The prototype has no numeric pain score anywhere. Separate axial vs limb scores distinguish ' +
-            'axial from radicular predominance, which several payer policies reference for decompression ' +
-            'versus fusion, and are needed as a baseline for MCID at follow-up.',
-        },
-        {
-          id: 'phq2_gad7',
-          status: 'recommended — not yet in the prototype',
-          name: 'PHQ-2 (escalating to PHQ-9 when positive) and GAD-7',
-          rationale:
-            'Psychological distress is among the strongest predictors of a poor spine surgery outcome, and ' +
-            'some bundled-payment and centre-of-excellence programmes require documented screening.',
-        },
-        {
-          id: 'zcq',
-          status: 'optional — depends on stenosis volume',
-          name: 'Zurich Claudication Questionnaire',
-          rationale: 'The stenosis-specific instrument; nothing in the current set covers neurogenic claudication.',
-        },
-      ],
-      licensing:
-        'VERIFY BEFORE CLINICAL USE. PHQ-9/GAD-7 and PROMIS are free to use; ODI, SRS-22r and ZCQ have ' +
-        'permission or licensing processes. The item wording below is reproduced from the prototype for ' +
-        'build reference only and does not convey any licence.',
-    };
+    const proms = OWN.proms(q, instrument);
 
     // ---- review of systems ---------------------------------------------
     const reviewOfSystems = {
@@ -743,12 +933,7 @@ async function main() {
       answers: ['yes', 'no'],
       ux: ['Per-system "No to all" (ROS answers are overwhelmingly negative).', 'Live "N of 14 systems reviewed" counter.'],
       systems: ros.ROS_SECTIONS,
-      redFlagLinks: {
-        cauda_equina_bowel_bladder: ['bladderChanges', 'bowelChanges', 'urinaryRetention'],
-        weight_loss: ['unexplainedWeightLoss'],
-        fever_back_pain: ['fevers'],
-        cancer_history_new_pain: ['cancerHistory'],
-      },
+      redFlagLinks: OWN.redFlagLinks,
       lookupRule:
         'Look answers up by question id across all systems, never by a fixed path. The prototype once ' +
         'read these from the wrong level and the weight-loss flag silently never fired from the ROS.',
@@ -786,36 +971,14 @@ async function main() {
       },
       modes: ['mark (tap to place)', 'radiate (drag a path from origin to destination)', 'erase'],
       zones: bm.ZONES,
-      triggers: [
-        { id: 'cauda_equina', severity: 'urgent', when: 'any mark in a perineum / saddle zone',
-          action: 'Ask about bowel/bladder control and saddle numbness immediately; raise a red flag.' },
-        { id: 'below_knee', severity: 'branch', when: 'any mark in a shin, calf, foot, toe, heel or ankle zone',
-          action: 'Open radicular questions; set hpiData.overall.painBelowKnee (an explicit Aetna / eviCore fusion criterion).' },
-        { id: 'pattern_l5', severity: 'pattern', when: 'same side: lateral shin or lateral calf, AND great toe / inner foot / dorsum',
-          action: 'Surgeon-only hint. Never shown to the patient as a finding.' },
-        { id: 'pattern_s1', severity: 'pattern', when: 'same side: calf AND little toe / outer foot / heel / lateral border of the foot',
-          action: 'Surgeon-only hint.' },
-        { id: 'pattern_l4', severity: 'pattern', when: 'same side: knee AND medial shin', action: 'Surgeon-only hint.' },
-        { id: 'pattern_c6', severity: 'pattern', when: 'same side: lateral forearm AND thumb / index finger', action: 'Surgeon-only hint.' },
-        { id: 'pattern_c8', severity: 'pattern', when: 'same side: medial forearm AND ring / little finger', action: 'Surgeon-only hint.' },
-        { id: 'myelopathy', severity: 'branch', when: 'any cervical/neck zone AND any finger or thumb zone',
-          action: 'Run the myelopathy screen: buttons, handwriting, dropping objects, balance, Lhermitte.' },
-        { id: 'bilateral_legs', severity: 'branch', when: 'leg zones marked on BOTH sides',
-          action: 'Ask the claudication set: walking distance, relief with sitting / leaning forward.' },
-        { id: 'axial_only', severity: 'branch', when: 'no limb zone marked at all',
-          action: 'Shorten the form: hide radiation and dermatome questions.' },
-        { id: 'autofill_sensory', severity: 'autofill', when: 'numbness or tingling marker used',
-          action: 'Pre-answer the numbness / tingling questions.' },
-        { id: 'foot_drop', severity: 'branch', when: 'weakness marker in a foot, toe, shin or calf zone',
-          action: 'Ask about tripping, catching the toe, stair difficulty.' },
-      ],
+      triggers: OWN.triggers,
       inNote:
         'Render the marked views (only views actually marked) with a legend of markers used, above the ' +
         'narrative, plus a prose description for EMR text fields.',
     };
 
     // Every trigger the app can fire must be described here.
-    const trigSrc = fs.readFileSync(path.join(ROOT, 'lib/painMapTriggers.js'), 'utf8');
+    const trigSrc = fs.readFileSync(path.join(SERVICE_DIR, 'painMapTriggers.js'), 'utf8');
     const srcIds = [...trigSrc.matchAll(/id: '([a-z0-9_]+)'/g)].map((m) => m[1]);
     const missingTriggers = srcIds.filter((id) => !bodyMap.triggers.some((t) => t.id === id));
     if (missingTriggers.length) throw new Error(`Triggers in source but not in spec: ${missingTriggers.join(', ')}`);
@@ -865,8 +1028,8 @@ async function main() {
         description:
           'Each payer requirement is keyed to an evidenceId; the intake produces evidence, and readiness ' +
           'is scored per payer and procedure. Some evidence can only come from the clinician (exam, imaging review).',
-        evidenceLabels: auth.EVIDENCE_LABELS,
-        clinicianSupplied: [...auth.CLINICIAN_SUPPLIED],
+        evidenceLabels: auth.evidenceLabels(SERVICE_KEY),
+        clinicianSupplied: [...auth.clinicianSupplied(SERVICE_KEY)],
       },
       documentCategories: docs.DOCUMENT_CATEGORIES,
       uploadLimits: { maxFileBytes: docs.MAX_FILE_BYTES, maxTotalBytes: docs.MAX_TOTAL_BYTES, acceptedTypes: docs.ACCEPTED_TYPES },
@@ -922,12 +1085,13 @@ async function main() {
     // and declaring one would invite a validator to treat it as the latter.
     spec = {
       meta: {
-        name: 'Comprehensive Spine & Scoliosis Center — Adult Spine Intake',
+        name: OWN.meta.name,
+        service: SERVICE_KEY,
         specVersion: '1.0.0',
         generatedAt: new Date().toISOString(),
         generatedFrom: 'scripts/export-spec.mjs — derived from the prototype source, not hand-transcribed.',
-        sourceRepository: 'https://github.com/rnjcbwy/AdultSpineintakechatbot',
-        prototype: 'https://adult-spine-intake.vercel.app',
+        sourceRepository: OWN.meta.sourceRepository,
+        prototype: OWN.meta.prototype,
         audience: 'Implementation team rebuilding this intake on a production platform.',
         important: [
           'The prototype is NOT HIPAA compliant and has never held real patient data. A production build needs its own compliance, hosting, BAA and audit controls.',
@@ -935,7 +1099,7 @@ async function main() {
           'Payer criteria change often. Every rule carries a policy id, source and date; re-verify before relying on it.',
           'Requirement text is withheld for any payer that restricts reproduction. See priorAuthorization.payers[].withheld.',
         ],
-        pediatricRedirect: 'Patients under 18 are directed to https://peds-spine-intake.vercel.app/',
+        pediatricRedirect: OWN.meta.pediatricRedirect,
       },
       dataModel: {
         description: 'The complete shape of one intake record, with default values. Field paths in steps[].fields refer into this.',
@@ -965,8 +1129,7 @@ async function main() {
       ux,
       knownGaps: [
         'No numeric pain score (see proms.recommendedAdditions.nrs_pain).',
-        'No structured opioid / controlled-substance capture (MDM risk element; spine planning; payers).',
-        'No height / weight / BMI (several payers gate fusion on BMI).',
+        ...OWN.knownGaps,
         'Conservative-care dates are free text; payers want duration AND recency.',
         'No consolidated list of outside care sources (MDM data element counts each unique external source reviewed).',
         'The clinician dashboard reads the patient\'s own browser storage, so it only works on the device the intake was completed on. Production needs a server.',

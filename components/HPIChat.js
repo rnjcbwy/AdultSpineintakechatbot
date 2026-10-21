@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { buildHPIChatContext } from '../lib/prompts';
+import { useService } from '../lib/store';
 import { useLang, makeT, COMMON } from '../lib/i18n';
 import ChatPanel from './ui/ChatPanel';
 
@@ -43,6 +43,9 @@ export default function HPIChat({ intakeData, hpiData, setNested, maxTurns = 5, 
   const [chatStarted, setChatStarted] = useState(autoStart || (hpiData.conversationHistory || []).length > 0);
   const inputRef = useRef(null);
   const started = useRef(false);
+  // The interview prompt and context builder for this intake's service.
+  const service = useService();
+  const { buildHPIChatContext } = service.prompts;
 
   const answered = messages.filter((m) => m.role === 'user').length;
   const finished = answered >= maxTurns;
@@ -59,7 +62,7 @@ export default function HPIChat({ intakeData, hpiData, setNested, maxTurns = 5, 
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history.map((m) => ({ role: m.role, content: m.content })), context }),
+      body: JSON.stringify({ messages: history.map((m) => ({ role: m.role, content: m.content })), context, serviceKey: service.key }),
     });
     const data = await res.json();
     return data.reply;

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useIntake } from '../../lib/store';
-import { COMMON_CONDITIONS, IMPLANTED_DEVICES } from '../../lib/constants';
+import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import UploadToFill from '../UploadToFill';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
@@ -91,12 +90,23 @@ const LOCAL = {
   'Cochlear implant': { es: 'Implante coclear', zh: '人工耳蜗' },
   'Joint replacement': { es: 'Reemplazo de articulación', zh: '关节置换' },
   'Prior spine hardware': { es: 'Instrumentación previa de columna', zh: '既往脊柱内固定物' },
+
+  // The bone-and-joint service's conditions and implants
+  'Joint replacement (hip, knee, shoulder)': { es: 'Reemplazo de articulación (cadera, rodilla, hombro)', zh: '关节置换（髋、膝、肩）' },
+  'Plates, screws, rods or pins from a fracture': { es: 'Placas, tornillos, clavos o alambres de una fractura', zh: '骨折后的钢板、螺钉、髓内钉或钢针' },
+  'Metal allergy or sensitivity': { es: 'Alergia o sensibilidad a metales', zh: '金属过敏或敏感' },
+  'Osteoarthritis': { es: 'Osteoartritis (artrosis)', zh: '骨关节炎' },
+  'Gout': { es: 'Gota', zh: '痛风' },
+  'Psoriatic arthritis': { es: 'Artritis psoriásica', zh: '银屑病关节炎' },
+  'Peripheral vascular disease': { es: 'Enfermedad vascular periférica', zh: '外周血管疾病' },
+  'Problems with anesthesia (you or a relative)': { es: 'Problemas con la anestesia (usted o un familiar)', zh: '麻醉问题（您或亲属）' },
 };
 
 export default function PastMedicalHistory({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const { data, setSection } = useIntake();
+  const { COMMON_CONDITIONS, IMPLANTED_DEVICES } = useService().constants;
   const pmh = data.pastMedicalHistory;
   const [searchTerm, setSearchTerm] = useState('');
   const [customCondition, setCustomCondition] = useState('');

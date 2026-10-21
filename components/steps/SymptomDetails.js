@@ -1,45 +1,112 @@
 'use client';
 
-import { useState } from 'react';
-import { useIntake } from '../../lib/store';
-import { PAIN_QUALITIES, SYMPTOM_REGIONS } from '../../lib/constants';
+import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { PainScale } from '../ui/Fields';
-import { problemsFor, ONSET_OPTIONS, ONSET_TYPE_OPTIONS, PROGRESSION_OPTIONS } from '../../lib/problems';
 import HPIChat from '../HPIChat';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 // Display-only translations. Stored values stay canonical English.
 const LOCAL = {
+  // Problem labels (lib/services/spine/problems.js)
   'Neck and arm symptoms': { es: 'Síntomas de cuello y brazo', zh: '颈部和手臂症状' },
   'Mid-back symptoms': { es: 'Síntomas de la espalda media', zh: '中背部症状' },
   'Low back and leg symptoms': { es: 'Síntomas de la espalda baja y la pierna', zh: '下背部和腿部症状' },
   'Posture or curvature': { es: 'Postura o curvatura', zh: '姿势或脊柱弯曲' },
+  // Problem labels (lib/services/ortho/problems.js)
+  'Shoulder symptoms': { es: 'Síntomas del hombro', zh: '肩部症状' },
+  'Elbow symptoms': { es: 'Síntomas del codo', zh: '肘部症状' },
+  'Hand, wrist or finger symptoms': { es: 'Síntomas de la mano, la muñeca o los dedos', zh: '手、手腕或手指症状' },
+  'Hip symptoms': { es: 'Síntomas de la cadera', zh: '髋部症状' },
+  'Knee symptoms': { es: 'Síntomas de la rodilla', zh: '膝部症状' },
+  'Ankle or foot symptoms': { es: 'Síntomas del tobillo o el pie', zh: '踝或足部症状' },
+  'Neck or back symptoms': { es: 'Síntomas del cuello o la espalda', zh: '颈部或背部症状' },
   'Your symptoms': { es: 'Sus síntomas', zh: '您的症状' },
+  'right': { es: 'derecho', zh: '右侧' },
+  'left': { es: 'izquierdo', zh: '左侧' },
+  'both sides': { es: 'ambos lados', zh: '双侧' },
   'A few quick questions about each problem. Where it hurts and where it travels comes from the body map you drew, so we will not ask that again.': {
     es: 'Unas pocas preguntas rápidas sobre cada problema. Dónde le duele y hacia dónde se extiende viene del mapa corporal que dibujó, así que no lo volveremos a preguntar.',
     zh: '关于每个问题的几个快速提问。疼痛的部位和放射范围来自您绘制的身体图，因此不会再次询问。',
   },
+  'A few quick questions about each joint. Which side it is and where it travels comes from the body map you drew, so we will not ask that again.': {
+    es: 'Unas pocas preguntas rápidas sobre cada articulación. De qué lado es y hacia dónde se extiende viene del mapa corporal que dibujó, así que no lo volveremos a preguntar.',
+    zh: '关于每个关节的几个快速提问。哪一侧以及放射范围来自您绘制的身体图，因此不会再次询问。',
+  },
   'Which problem bothers you the most?': { es: '¿Qué problema le molesta más?', zh: '哪个问题最困扰您？' },
-  'When did this start?': { es: '¿Cuándo empezó esto?', zh: '这是什么时候开始的？' },
   'Gradually, for no clear reason': { es: 'Gradualmente, sin una razón clara', zh: '逐渐出现，没有明显原因' },
-  'Suddenly': { es: 'De repente', zh: '突然' },
   'After an injury or accident': { es: 'Después de una lesión o accidente', zh: '受伤或事故之后' },
   'After lifting or straining': { es: 'Después de levantar algo o hacer esfuerzo', zh: '搬重物或用力之后' },
-  'Getting better': { es: 'Mejorando', zh: '正在好转' },
-  'Getting worse': { es: 'Empeorando', zh: '正在加重' },
-  'Comes and goes': { es: 'Va y viene', zh: '时好时坏' },
+  'After a fall': { es: 'Después de una caída', zh: '跌倒之后' },
+  'During sport or exercise': { es: 'Durante el deporte o el ejercicio', zh: '运动或锻炼时' },
+  'After a twist, slip or awkward step': { es: 'Después de una torcedura, un resbalón o un mal paso', zh: '扭伤、滑倒或踩空之后' },
+  'After an accident (car, work)': { es: 'Después de un accidente (auto, trabajo)', zh: '事故之后（车祸、工伤）' },
+  'After repetitive use or overuse': { es: 'Por uso repetitivo o sobrecarga', zh: '反复使用或过度使用之后' },
+  'What do you think this is?': { es: '¿Qué cree que es?', zh: '您认为这是什么问题？' },
+  'This only helps us ask the right questions. Your surgeon makes the diagnosis.': {
+    es: 'Esto solo nos ayuda a hacer las preguntas correctas. Su cirujano hace el diagnóstico.',
+    zh: '这只是帮助我们提出合适的问题。诊断由您的外科医生做出。',
+  },
+  'An injury (fall, twist, sport, accident)': { es: 'Una lesión (caída, torcedura, deporte, accidente)', zh: '受伤（跌倒、扭伤、运动、事故）' },
+  'A broken bone': { es: 'Un hueso roto', zh: '骨折' },
+  'Wear and tear or arthritis': { es: 'Desgaste o artritis', zh: '磨损或关节炎' },
+  'A long-standing problem that has worsened': { es: 'Un problema de larga data que ha empeorado', zh: '长期存在且加重的问题' },
+  'Over time, has this been...': { es: 'Con el tiempo, esto ha estado...', zh: '随着时间推移，这个问题一直是……' },
+  'About the same': { es: 'Más o menos igual', zh: '大致相同' },
   'How bad is it on a typical day? (0 to 10)': { es: '¿Qué tan fuerte es en un día típico? (0 a 10)', zh: '通常一天的疼痛程度如何？（0 到 10）' },
   'How would you describe it? (optional, tap all that apply)': { es: '¿Cómo lo describiría? (opcional, toque todos los que apliquen)', zh: '您会如何描述它？（可选，点选所有适用项）' },
+  'Does the joint do any of these? (tap all that apply)': { es: '¿La articulación hace algo de esto? (toque todo lo que aplique)', zh: '关节有以下情况吗？（点选所有适用项）' },
+  'Swelling': { es: 'Hinchazón', zh: '肿胀' },
+  'Stiffness, worst in the morning or after sitting': { es: 'Rigidez, peor por la mañana o después de estar sentado', zh: '僵硬，早晨或久坐后最明显' },
+  'Locking or catching': { es: 'Se traba o se engancha', zh: '卡住或交锁' },
+  'Giving way or feeling unstable': { es: 'Se dobla o se siente inestable', zh: '打软或感觉不稳' },
+  'Clicking, popping or grinding': { es: 'Chasquidos, crujidos o rechinar', zh: '弹响、咔哒声或摩擦感' },
+  'Loss of motion': { es: 'Pérdida de movimiento', zh: '活动范围减少' },
+  'A visible bump or change in shape': { es: 'Un bulto visible o un cambio de forma', zh: '可见的隆起或形状改变' },
+  'Pain at night': { es: 'Dolor por la noche', zh: '夜间疼痛' },
+  'None of these': { es: 'Ninguno de estos', zh: '以上都没有' },
+  'About the injury': { es: 'Sobre la lesión', zh: '关于受伤' },
+  'When did the injury happen?': { es: '¿Cuándo ocurrió la lesión?', zh: '受伤是什么时候发生的？' },
+  'e.g., March 3, or about 2 weeks ago': { es: 'p. ej., 3 de marzo, o hace unas 2 semanas', zh: '例如：3月3日，或大约两周前' },
+  'Can you put weight on it or use it?': { es: '¿Puede apoyar peso o usarlo?', zh: '能承重或使用它吗？' },
+  'Yes, normally': { es: 'Sí, con normalidad', zh: '可以，正常' },
+  'Yes, but it hurts': { es: 'Sí, pero duele', zh: '可以，但疼' },
+  'Only with a limp or support': { es: 'Solo cojeando o con apoyo', zh: '只能跛行或借助支撑' },
+  'Are you in any of these right now?': { es: '¿Lleva alguno de estos ahora?', zh: '您目前使用以下哪些？' },
+  'None': { es: 'Ninguno', zh: '无' },
+  'Cast': { es: 'Yeso', zh: '石膏' },
+  'Splint or brace': { es: 'Férula u ortesis', zh: '夹板或支具' },
+  'Walking boot': { es: 'Bota ortopédica', zh: '步行靴' },
+  'Sling': { es: 'Cabestrillo', zh: '吊带' },
+  'Crutches or a walker': { es: 'Muletas o andador', zh: '拐杖或助行器' },
+  'Where were you seen, and were X-rays taken?': { es: '¿Dónde lo atendieron y le hicieron radiografías?', zh: '您在哪里就诊过？拍过X光吗？' },
+  'e.g., The emergency room on the day, X-ray showed a broken wrist; or not seen yet': { es: 'p. ej., Urgencias ese día, la radiografía mostró una muñeca rota; o aún no me han visto', zh: '例如：当天在急诊，X光显示手腕骨折；或尚未就诊' },
   'Safety check': { es: 'Revisión de seguridad', zh: '安全检查' },
   'A few yes/no questions that matter for your care. Please answer each one.': {
     es: 'Unas pocas preguntas de sí/no que importan para su atención. Por favor responda cada una.',
     zh: '几个对您的诊疗很重要的是/否问题。请逐一回答。',
   },
   'Numbness anywhere?': { es: '¿Entumecimiento en alguna parte?', zh: '身体任何部位麻木？' },
-  'Tingling or pins-and-needles?': { es: '¿Hormigueo o sensación de alfileres?', zh: '刺痛或针刺感？' },
   'Weakness in an arm or leg?': { es: '¿Debilidad en un brazo o una pierna?', zh: '手臂或腿部无力？' },
   'Any new trouble controlling your bladder or bowels?': { es: '¿Algún problema nuevo para controlar la vejiga o el intestino?', zh: '新出现的大小便控制困难？' },
+  'Is the joint hot, red and swollen, or do you have a fever with it?': { es: '¿La articulación está caliente, roja e hinchada, o tiene fiebre con ella?', zh: '关节发热、发红、肿胀，或伴有发烧？' },
+  'Any open wound or broken skin over the injured area?': { es: '¿Alguna herida abierta o piel rota sobre la zona lesionada?', zh: '受伤部位有开放性伤口或皮肤破损？' },
+  'Is the hand or foot beyond the injury cold, pale or numb?': { es: '¿La mano o el pie más allá de la lesión está frío, pálido o entumecido?', zh: '受伤部位远端的手或脚发冷、苍白或麻木？' },
+  'Severe pain getting rapidly worse, with tight swelling?': { es: '¿Dolor intenso que empeora rápidamente, con hinchazón tensa?', zh: '剧烈疼痛迅速加重，伴有紧绷的肿胀？' },
+  'Especially inside a cast or splint': { es: 'Especialmente dentro de un yeso o una férula', zh: '尤其是在石膏或夹板内' },
+  'Calf swelling or pain, or sudden shortness of breath?': { es: '¿Hinchazón o dolor en la pantorrilla, o falta de aire repentina?', zh: '小腿肿胀或疼痛，或突然气短？' },
+  'Do numb fingers wake you at night or make you shake your hand out?': { es: '¿Los dedos entumecidos lo despiertan por la noche o lo hacen sacudir la mano?', zh: '手指麻木会让您夜里醒来或需要甩手？' },
+  'Does a finger catch or lock when you bend it?': { es: '¿Algún dedo se traba o se bloquea al doblarlo?', zh: '弯曲手指时会卡住或锁住？' },
+  'Which hand do you write with?': { es: '¿Con qué mano escribe?', zh: '您用哪只手写字？' },
+  'Right-handed': { es: 'Diestro', zh: '右利手' },
+  'Left-handed': { es: 'Zurdo', zh: '左利手' },
+  'Pain lying on that shoulder at night?': { es: '¿Dolor al acostarse sobre ese hombro por la noche?', zh: '夜里侧卧压到那侧肩膀会疼？' },
+  'Has the shoulder ever popped out (dislocated)?': { es: '¿Alguna vez se le ha salido el hombro (luxación)?', zh: '肩膀曾经脱臼过吗？' },
+  'Trouble lifting the arm overhead?': { es: '¿Dificultad para levantar el brazo por encima de la cabeza?', zh: '手臂抬过头顶有困难？' },
+  'Pain in the groin, or trouble putting on socks and shoes?': { es: '¿Dolor en la ingle, o dificultad para ponerse calcetines y zapatos?', zh: '腹股沟疼痛，或穿袜子穿鞋有困难？' },
+  'Did you hear or feel a pop when it was injured?': { es: '¿Escuchó o sintió un chasquido al lesionarse?', zh: '受伤时听到或感觉到"啪"的一声？' },
+  'Did it swell within a few hours of the injury?': { es: '¿Se hinchó en las primeras horas tras la lesión?', zh: '受伤后几小时内就肿了？' },
+  'Repeated ankle sprains or rolling over on uneven ground?': { es: '¿Esguinces de tobillo repetidos o se le dobla en terreno irregular?', zh: '反复扭伤脚踝，或在不平的地面上容易崴脚？' },
   'Numbness in the groin or inner thighs?': { es: '¿Entumecimiento en la ingle o la cara interna de los muslos?', zh: '腹股沟或大腿内侧麻木？' },
   'Foot slapping or catching on stairs?': { es: '¿El pie se arrastra o se traba en las escaleras?', zh: '上楼梯时脚拖地或绊到？' },
   'Trouble with buttons, writing or small objects?': { es: '¿Dificultad con botones, escritura u objetos pequeños?', zh: '扣扣子、写字或拿小物件有困难？' },
@@ -61,6 +128,10 @@ const LOCAL = {
     es: 'Responda unas pocas preguntas de opción múltiple por cada zona que le duele.',
     zh: '为每个疼痛部位点选几个选择题。',
   },
+  'Tap through a few multiple-choice questions for each joint that hurts.': {
+    es: 'Responda unas pocas preguntas de opción múltiple por cada articulación que le duele.',
+    zh: '为每个疼痛的关节点选几个选择题。',
+  },
   'Prefer to talk it through instead?': { es: '¿Prefiere contarlo en una conversación?', zh: '更想通过对话来讲述？' },
   'Prefer quick questions instead?': { es: '¿Prefiere las preguntas rápidas?', zh: '更想回答快速问题？' },
   'Switch': { es: 'Cambiar', zh: '切换' },
@@ -77,6 +148,8 @@ const LOCAL = {
   // Empty state
   'No symptom areas were selected yet. Please go back and choose where you have symptoms.':
     { es: 'Aún no se seleccionaron áreas de síntomas. Vuelva atrás y elija dónde tiene síntomas.', zh: '尚未选择任何症状部位。请返回并选择您有症状的部位。' },
+  'No joints were selected yet. Please go back and choose where you have symptoms.':
+    { es: 'Aún no se seleccionaron articulaciones. Vuelva atrás y elija dónde tiene síntomas.', zh: '尚未选择任何关节。请返回并选择您有症状的部位。' },
   'Go Back': { es: 'Volver', zh: '返回' },
 
   // Nav
@@ -202,7 +275,7 @@ const LOCAL = {
   'Does it travel or spread to other areas?': { es: '¿Se traslada o se extiende a otras áreas?', zh: '它会传导或扩散到其他部位吗？' },
   'Where does it travel to? e.g., Down my left leg to the foot': { es: '¿A dónde se traslada? p. ej., Baja por mi pierna izquierda hasta el pie', zh: '它传导到哪里？例如：沿我的左腿向下到脚' },
 
-  // PAIN_QUALITIES (defined in lib/constants) — translate here for display
+  // PAIN_QUALITIES (the service's constants module) — translate here for display
   'Aching': { es: 'Adolorido', zh: '酸痛' },
   'Sharp': { es: 'Agudo', zh: '刺痛' },
   'Burning': { es: 'Ardiente', zh: '灼痛' },
@@ -220,13 +293,23 @@ const LOCAL = {
  *
  * Instead of forcing the patient to fill out an entire page of questions for
  * EACH symptom region, this step is completed all at once:
- *   - Per-symptom cards ask only what genuinely varies by symptom
- *     (onset, trend, side, severity, quality, radiation).
- *   - Shared questions (aggravating/relieving factors, associated symptoms,
- *     region-specific screening, functional impact) are asked a single time.
+ *   - One card per problem asks only what genuinely varies by problem
+ *     (onset, how it started, the trend, severity, quality). For a joint
+ *     (the ortho service) the card also asks what the patient thinks it is,
+ *     the mechanical symptoms, and for an injury the date, weight bearing and
+ *     any cast or splint.
+ *   - The safety questions are asked a single time; which ones appear comes
+ *     from the service's SAFETY_QUESTIONS (the myelopathy and cauda equina
+ *     screens for the spine; the infection, circulation, clot and
+ *     joint-specific screens for a bone or joint).
+ *
+ * Everything that differs by service is read from `useService().problems`.
  */
 export default function SymptomDetails({ onNext, onBack }) {
   const { data, setNested } = useIntake();
+  const svc = useService();
+  const defs = svc.problems;
+  const { SYMPTOM_DETAILS_TEXT: text } = defs;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const hpi = data.hpiData;
@@ -236,15 +319,20 @@ export default function SymptomDetails({ onNext, onBack }) {
   const updateOverall = (field, value) => setNested(`hpiData.overall.${field}`, value);
 
   // The areas the patient tapped, folded into the problems they belong to.
-  const problems = problemsFor(selectedRegions);
-  const hasCervical = problems.some((p) => p.id === 'cervical');
-  const hasLumbar = problems.some((p) => p.id === 'lumbar' || p.id === 'general');
+  const problems = defs.problemsFor(selectedRegions);
+  const kinds = Object.values(hpi.problems || {}).map((p) => p?.kind);
+  const anyInjury = kinds.some(defs.isInjuryKind) || selectedRegions.includes('trauma');
+  const safetyContext = { problems: new Set(problems.map((p) => p.id)), anyInjury };
   const primary = hpi.primaryProblem || (problems.length === 1 ? problems[0].id : '');
 
   // One path or the other, never both: a short guided conversation, or the
   // structured questions. The choice is kept so coming back shows the same.
   const mode = hpi.detailMode || '';
   const setMode = (m) => setNested('hpiData.detailMode', m);
+
+  const safety = (
+    <SafetyCheck t={t} overall={overall} update={updateOverall} questions={defs.SAFETY_QUESTIONS} context={safetyContext} />
+  );
 
   if (selectedRegions.length > 0 && !mode) {
     return (
@@ -260,7 +348,7 @@ export default function SymptomDetails({ onNext, onBack }) {
           </button>
           <button type="button" onClick={() => setMode('questions')} className="text-left p-6 rounded-2xl border-2 border-gray-200 bg-white hover:border-teal-300 transition-all">
             <span className="block text-base font-semibold text-navy-600">{t('Answer quick questions')}</span>
-            <span className="block text-sm text-gray-500 mt-1 leading-relaxed">{t('Tap through a few multiple-choice questions for each area that hurts.')}</span>
+            <span className="block text-sm text-gray-500 mt-1 leading-relaxed">{t(text.quick)}</span>
           </button>
         </div>
         <StepNavigation onNext={onNext} onBack={onBack} canGoNext={false} />
@@ -280,7 +368,7 @@ export default function SymptomDetails({ onNext, onBack }) {
           </p>
         </div>
         <HPIChat intakeData={data} hpiData={hpi} setNested={setNested} maxTurns={5} autoStart />
-        <SafetyCheck t={t} overall={overall} update={updateOverall} hasCervical={hasCervical} hasLumbar={hasLumbar} />
+        {safety}
         <StepNavigation onNext={onNext} onBack={onBack} canGoNext={answered >= 1} nextLabel={t('Continue')} />
       </div>
     );
@@ -291,7 +379,7 @@ export default function SymptomDetails({ onNext, onBack }) {
       <div className="animate-fade-in">
         <div className="card text-center py-12">
           <p className="text-gray-500 mb-4">
-            {t('No symptom areas were selected yet. Please go back and choose where you have symptoms.')}
+            {t(text.empty)}
           </p>
           <button onClick={onBack} className="btn-secondary">{t('Go Back')}</button>
         </div>
@@ -305,7 +393,7 @@ export default function SymptomDetails({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Symptom Details')}</h2>
         <p className="section-subtitle">
-          {t('A few quick questions about each problem. Where it hurts and where it travels comes from the body map you drew, so we will not ask that again.')}{' '}
+          {t(text.intro)}{' '}
           {t('Prefer to talk it through instead?')}{' '}
           <button type="button" onClick={() => setMode('conversation')} className="text-teal-600 hover:underline font-medium">{t('Switch')}</button>
         </p>
@@ -334,6 +422,8 @@ export default function SymptomDetails({ onNext, onBack }) {
           <ProblemCard
             key={p.id}
             t={t}
+            defs={defs}
+            painQualities={svc.constants.PAIN_QUALITIES}
             problem={p}
             single={problems.length === 1}
             isPrimary={problems.length > 1 && primary === p.id}
@@ -344,7 +434,7 @@ export default function SymptomDetails({ onNext, onBack }) {
         ))}
       </div>
 
-      <SafetyCheck t={t} overall={overall} update={updateOverall} hasCervical={hasCervical} hasLumbar={hasLumbar} />
+      {safety}
 
       <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue')} />
     </div>
@@ -354,59 +444,99 @@ export default function SymptomDetails({ onNext, onBack }) {
 
 // ===========================================================================
 // One problem: when, how it started, the trend, how bad, what it feels like.
-// The chief-complaint step already asked how long it has been going on, so a
-// single problem does not ask again.
+// For a joint (the ortho service's option lists are non-empty): also what the
+// patient thinks it is, what the joint does, and for an injury the date,
+// weight bearing and any cast or splint. The chief-complaint step already
+// asked how long it has been going on, so a single problem does not ask again.
 // ===========================================================================
-function ProblemCard({ t, problem, value, update, single, isPrimary, duration }) {
+function ProblemCard({ t, defs, painQualities, problem, value, update, single, isPrimary, duration }) {
+  const {
+    sidesFor, isInjuryKind, ONSET_OPTIONS, ONSET_TYPE_OPTIONS, PROGRESSION_OPTIONS,
+    PROBLEM_KIND_OPTIONS, MECHANICAL_OPTIONS, WEIGHT_BEARING_OPTIONS, IMMOBILIZATION_OPTIONS, SYMPTOM_DETAILS_TEXT: text,
+  } = defs;
+  const side = sidesFor(problem);
+  const injury = isInjuryKind(value.kind);
+  const asksMechanical = MECHANICAL_OPTIONS.length > 0 && problem.mechanical !== false;
+  const mech = value.mechanical || [];
+  const toggleMech = (opt) => {
+    if (opt === 'None of these') return update('mechanical', mech.includes(opt) ? [] : ['None of these']);
+    const next = mech.filter((x) => x !== 'None of these');
+    update('mechanical', next.includes(opt) ? next.filter((x) => x !== opt) : [...next, opt]);
+  };
   return (
     <div className={`card space-y-5 ${isPrimary ? 'ring-2 ring-teal-300' : ''}`}>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <h3 className="text-lg font-semibold text-navy-600">{t(problem.label)}</h3>
+        {side && <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{t(side)}</span>}
         {isPrimary && (
           <span className="text-xs font-medium text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">{t('Bothers me most')}</span>
         )}
       </div>
+      {PROBLEM_KIND_OPTIONS.length > 0 && (
+        <div>
+          <ChipRow t={t} label={t('What do you think this is?')} value={value.kind} onChange={(v) => update('kind', v)} options={PROBLEM_KIND_OPTIONS} />
+          <p className="text-xs text-gray-400 mt-1">{t('This only helps us ask the right questions. Your surgeon makes the diagnosis.')}</p>
+        </div>
+      )}
       {!(single && duration) && (
         <ChipRow t={t} label={t('When did this start?')} value={value.onset} onChange={(v) => update('onset', v)} options={ONSET_OPTIONS} />
       )}
       <ChipRow t={t} label={t('How did it start?')} value={value.onsetType} onChange={(v) => update('onsetType', v)} options={ONSET_TYPE_OPTIONS} />
-      <ChipRow t={t} label={t('Over time, has this symptom been...')} value={value.progression} onChange={(v) => update('progression', v)} options={PROGRESSION_OPTIONS} />
+      {injury && (
+        <div className="rounded-xl bg-gray-50 p-4 space-y-4">
+          <h4 className="text-sm font-semibold text-navy-600">{t('About the injury')}</h4>
+          <div>
+            <label className="form-label">{t('When did the injury happen?')}</label>
+            <input type="text" value={value.injuryDate || ''} onChange={(e) => update('injuryDate', e.target.value)} placeholder={t('e.g., March 3, or about 2 weeks ago')} />
+          </div>
+          <ChipRow t={t} label={t('Can you put weight on it or use it?')} value={value.weightBearing} onChange={(v) => update('weightBearing', v)} options={WEIGHT_BEARING_OPTIONS} />
+          <MultiChip t={t} label={t('Are you in any of these right now?')} options={IMMOBILIZATION_OPTIONS} selected={value.immobilized || []} onChange={(v) => update('immobilized', v.includes('None') && v[v.length - 1] === 'None' ? ['None'] : v.filter((x) => x !== 'None'))} />
+          <div>
+            <label className="form-label">{t('Where were you seen, and were X-rays taken?')}</label>
+            <input type="text" value={value.seenWhere || ''} onChange={(e) => update('seenWhere', e.target.value)} placeholder={t('e.g., The emergency room on the day, X-ray showed a broken wrist; or not seen yet')} />
+          </div>
+        </div>
+      )}
+      <ChipRow t={t} label={t(text.progression)} value={value.progression} onChange={(v) => update('progression', v)} options={PROGRESSION_OPTIONS} />
       <PainScale label={t('How bad is it on a typical day? (0 to 10)')} value={value.severity == null ? '' : String(value.severity)} onChange={(v) => update('severity', v === '' ? '' : parseInt(v, 10))} />
-      <MultiChip t={t} label={t('How would you describe it? (optional, tap all that apply)')} options={PAIN_QUALITIES} selected={value.quality || []} onChange={(v) => update('quality', v)} />
+      <MultiChip t={t} label={t('How would you describe it? (optional, tap all that apply)')} options={painQualities} selected={value.quality || []} onChange={(v) => update('quality', v)} />
+      {asksMechanical && (
+        <div>
+          <label className="form-label">{t('Does the joint do any of these? (tap all that apply)')}</label>
+          <div className="flex flex-wrap gap-2">
+            {MECHANICAL_OPTIONS.map((opt) => (
+              <button key={opt} type="button" onClick={() => toggleMech(opt)}
+                className={`chip ${mech.includes(opt) ? 'chip-selected' : 'chip-unselected'}`}>
+                {t(opt)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 
 // ===========================================================================
-// The questions that change management, asked once. The cervical myelopathy
-// screens appear with a neck problem, the cauda equina and foot-drop screens
-// with a back problem; numbness, tingling and weakness always.
+// The questions that change management, asked once. The list and the rule
+// for showing each one come from the service (SAFETY_QUESTIONS in its
+// problems module); every answer is stored under hpiData.overall.<field>.
 // ===========================================================================
-function SafetyCheck({ t, overall, update, hasCervical, hasLumbar }) {
+function SafetyCheck({ t, overall, update, questions, context }) {
+  const shown = questions.filter((q) => !q.when || q.when(context));
   return (
     <div className="card mt-4 mb-4">
       <h4 className="text-base font-medium text-navy-600 mb-1">{t('Safety check')}</h4>
       <p className="text-sm text-gray-400 mb-4">{t('A few yes/no questions that matter for your care. Please answer each one.')}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <YesNoQuestion t={t} label="Numbness anywhere?" value={overall.numbness} onChange={(v) => update('numbness', v)} />
-        <YesNoQuestion t={t} label="Tingling or pins-and-needles?" value={overall.tingling} onChange={(v) => update('tingling', v)} />
-        <YesNoQuestion t={t} label="Weakness in an arm or leg?" value={overall.weakness} onChange={(v) => update('weakness', v)} />
-        <YesNoQuestion t={t} label="Any new trouble controlling your bladder or bowels?" value={overall.bowelBladder} onChange={(v) => update('bowelBladder', v)} />
-        {hasLumbar && (
-          <>
-            <YesNoQuestion t={t} label="Numbness in the groin or inner thighs?" value={overall.saddleAnesthesia} onChange={(v) => update('saddleAnesthesia', v)} />
-            <YesNoQuestion t={t} label="Foot slapping or catching on stairs?" sublabel="Foot drop or leg weakness" value={overall.footDrop} onChange={(v) => update('footDrop', v)} />
-          </>
-        )}
-        {hasCervical && (
-          <>
-            <YesNoQuestion t={t} label="Trouble with buttons, writing or small objects?" value={overall.handDexterity} onChange={(v) => update('handDexterity', v)} />
-            <YesNoQuestion t={t} label="Dropping things more than usual?" value={overall.droppingObjects} onChange={(v) => update('droppingObjects', v)} />
-            <YesNoQuestion t={t} label="Unsteady on your feet?" value={overall.gaitChanges} onChange={(v) => update('gaitChanges', v)} />
-            <YesNoQuestion t={t} label="Electric shock down your spine when you bend your neck?" value={overall.lhermittes} onChange={(v) => update('lhermittes', v)} />
-          </>
-        )}
+        {shown.map((q) => (
+          q.options ? (
+            <ChoiceQuestion key={q.field} t={t} label={q.label} options={q.options} value={overall[q.field]} onChange={(v) => update(q.field, v)} />
+          ) : (
+            <YesNoQuestion key={q.field} t={t} label={q.label} sublabel={q.sublabel} value={overall[q.field]} onChange={(v) => update(q.field, v)} />
+          )
+        ))}
       </div>
     </div>
   );
@@ -419,7 +549,7 @@ function ChipRow({ t, label, value, onChange, options }) {
       <label className="form-label">{label}</label>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => (
-          <button key={opt} onClick={() => onChange(opt)}
+          <button key={opt} type="button" onClick={() => onChange(opt)}
             className={`chip ${value === opt ? 'chip-selected' : 'chip-unselected'}`}>
             {t(opt)}
           </button>
@@ -437,7 +567,7 @@ function MultiChip({ t, label, options, selected, onChange }) {
         {options.map((opt) => {
           const isOn = selected.includes(opt);
           return (
-            <button key={opt}
+            <button key={opt} type="button"
               onClick={() => onChange(isOn ? selected.filter((x) => x !== opt) : [...selected, opt])}
               className={`chip ${isOn ? 'chip-selected' : 'chip-unselected'}`}>
               {t(opt)}
@@ -456,7 +586,7 @@ function YesNoQuestion({ t, label, sublabel, value, onChange }) {
       {sublabel && <p className="text-xs text-gray-400 mb-2">{t(sublabel)}</p>}
       <div className="flex gap-2">
         {['Yes', 'No'].map((opt) => (
-          <button key={opt} onClick={() => onChange(opt === 'Yes')}
+          <button key={opt} type="button" onClick={() => onChange(opt === 'Yes')}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
               value === (opt === 'Yes')
                 ? opt === 'Yes'
@@ -464,6 +594,23 @@ function YesNoQuestion({ t, label, sublabel, value, onChange }) {
                   : 'bg-green-100 text-green-700 border border-green-300'
                 : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'
             }`}>
+            {t(opt)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// A short choice in the safety check (which hand the patient writes with).
+function ChoiceQuestion({ t, label, options, value, onChange }) {
+  return (
+    <div className="p-3 bg-gray-50 rounded-xl">
+      <p className="text-sm font-medium text-gray-700 mb-1">{t(label)}</p>
+      <div className="flex gap-2">
+        {options.map((opt) => (
+          <button key={opt} type="button" onClick={() => onChange(opt)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${value === opt ? 'bg-teal-100 text-teal-700 border border-teal-300' : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
             {t(opt)}
           </button>
         ))}

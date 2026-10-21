@@ -1,27 +1,25 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useIntake } from '../../lib/store';
+import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import ImagingUpload from '../ImagingUpload';
 import { Chips, CheckChips, TextField, TextArea, PainScale } from '../ui/Fields';
-import {
-  OPERATION_KINDS, SURGEON_SHORTCUTS, whereFor, PROCEDURE_OPTIONS, PROCEDURE_SUBOPTIONS, composeProcedure, LEVEL_OPTIONS, MONTHS,
-  emptyOperation, operationDate, operationTime, operationsFromChart, regionsForOperation, mostRecentOperation, sortOperations,
-} from '../../lib/operations';
 
 const WOUND = ['Healing well', 'Redness around the incision', 'Drainage or fluid', 'The incision has opened', 'Fever or chills', 'Not sure'];
 const VS_BEFORE = ['Much better', 'Somewhat better', 'About the same', 'Worse'];
 const LIMB = ['Gone', 'Better', 'About the same', 'Worse', 'New symptoms in the arm or leg'];
 const NEURO = ['None', 'Numbness', 'Weakness', 'Both numbness and weakness'];
 const YES_NO = ['Yes', 'No'];
+const CIRCULATION = ['Normal colour and warmth', 'Swollen', 'Cold or pale', 'Blue or dusky'];
+const MOTION = ['Moving well', 'Stiff but improving', 'Very stiff', 'Not allowed to move it yet'];
+const WEIGHT = ['Full weight as allowed', 'Partial weight with crutches or a walker', 'No weight on it yet', 'Not a leg operation'];
 const WALKING = ['Less than a block', 'A few blocks', 'About a mile', 'As far as I want'];
 const BRACE = ['Wearing it as instructed', 'Was not prescribed one', 'Stopped wearing it'];
 const PT = ['Not started yet', 'Started', 'Finished'];
 const WORK = ['Back to full duty', 'Back on light duty', 'Not back yet', 'Not working / retired'];
 const OPIOIDS = ['None', 'Occasionally', 'Daily'];
-const COMPLICATIONS = ['Emergency room visit', 'Readmitted to the hospital', 'Infection treated with antibiotics', 'Blood clot', 'A fall', 'None of these'];
 
 const THIS_YEAR = new Date().getFullYear();
 const VISIT_REASONS = ['Routine post-op visit', 'A new concern: pain, deformity, weakness, a wound concern, or something else'];
@@ -29,16 +27,53 @@ const VISIT_REASONS = ['Routine post-op visit', 'A new concern: pain, deformity,
 const YEARS = Array.from({ length: 40 }, (_, i) => String(THIS_YEAR - i));
 
 /**
+ * What the two services word differently on this step. The procedures, the
+ * level or side chips and the site suggestions come from the service's
+ * operations module; this is the surrounding copy. The spine asks about the
+ * bladder and bowels; the bone-and-joint service asks about circulation,
+ * motion, weight bearing and the cast or splint instead.
+ */
+const COPY = {
+  spine: {
+    title: 'Your Spine Surgery',
+    subtitle: 'Tell us about each spine operation you have had. The month and year are enough if you do not remember the exact date, and anything already on file is shown for you to check. Fields marked with * are required.',
+    addAnother: 'Add another spine operation',
+    complications: ['Emergency room visit', 'Readmitted to the hospital', 'Infection treated with antibiotics', 'Blood clot', 'A fall', 'None of these'],
+    limbLabel: 'The arm or leg pain, numbness or tingling you had before surgery is:',
+    braceLabel: 'Brace or collar',
+    newMedicinesPlaceholder: 'e.g., Gabapentin 300 mg at night; a blood thinner',
+    questionsPlaceholder: 'e.g., When can I drive? Is the tingling in my foot normal?',
+  },
+  ortho: {
+    title: 'Your Bone or Joint Surgery',
+    subtitle: 'Tell us about each bone or joint operation you have had. The month and year are enough if you do not remember the exact date, and anything already on file is shown for you to check. Fields marked with * are required.',
+    addAnother: 'Add another operation',
+    complications: ['Emergency room visit', 'Readmitted to the hospital', 'Infection treated with antibiotics', 'Blood clot', 'A fall', 'A problem with the cast or splint', 'None of these'],
+    limbLabel: 'Any numbness, tingling or weakness you had before surgery is:',
+    braceLabel: 'Cast, splint, boot, sling or brace',
+    newMedicinesPlaceholder: 'e.g., Aspirin 81 mg twice a day as a blood thinner',
+    questionsPlaceholder: 'e.g., When can I drive? When can I put weight on it? Is the swelling normal?',
+  },
+};
+
+/**
  * A visit after an operation. The note needs every operation (procedure,
- * levels, when, first or revision, where), the postoperative course (wound,
- * fever, trips to the ER), what the symptoms did compared with before
- * surgery, function, medicines and activity. The interval since the most
- * recent operation is worked out later from the date; the patient only gives
- * the month and year unless the exact day is known. None of the pre-operative
- * history is re-asked.
+ * levels or side and site, when, first or revision, where), the postoperative
+ * course (wound, fever, trips to the ER), what the symptoms did compared with
+ * before surgery, function, medicines and activity. The interval since the
+ * most recent operation is worked out later from the date; the patient only
+ * gives the month and year unless the exact day is known. None of the
+ * pre-operative history is re-asked.
  */
 export default function PostOpVisit({ onNext, onBack }) {
   const { data, setNested, setField } = useIntake();
+  const svc = useService();
+  const {
+    OPERATION_KINDS, SURGEON_SHORTCUTS, whereFor, LEVEL_OPTIONS, LEVEL_FIELDS, SITE_SUGGESTIONS, MONTHS,
+    emptyOperation, operationDate, operationTime, operationsFromChart, regionsForOperation, mostRecentOperation, sortOperations,
+  } = svc.operations;
+  const copy = COPY[svc.specialty] || COPY.spine;
+  const ortho = svc.specialty === 'ortho';
   const lang = useLang();
   const t = makeT(COMMON, lang);
   const p = data.visit?.postop || {};
@@ -56,7 +91,8 @@ export default function PostOpVisit({ onNext, onBack }) {
   const setOps = (next) => {
     set('operations', next);
     // The body region of the most recent operation steers the questionnaires
-    // (NDI for the neck, ODI for the low back) and the chief complaint line.
+    // (NDI for the neck, ODI for the low back; the joint scores for a bone or
+    // joint) and the chief complaint line.
     const recent = mostRecentOperation(next);
     const regions = regionsForOperation(recent);
     setField('chiefComplaint', 'symptomRegions', regions);
@@ -80,9 +116,9 @@ export default function PostOpVisit({ onNext, onBack }) {
   return (
     <div className="animate-fade-in">
       <div className="mb-8">
-        <h2 className="section-title">{t('Your Spine Surgery')}</h2>
+        <h2 className="section-title">{t(copy.title)}</h2>
         <p className="section-subtitle">
-          {t('Tell us about each spine operation you have had. The month and year are enough if you do not remember the exact date, and anything already on file is shown for you to check. Fields marked with * are required.')}
+          {t(copy.subtitle)}
         </p>
       </div>
 
@@ -113,20 +149,21 @@ export default function PostOpVisit({ onNext, onBack }) {
               </div>
             </div>
 
-            <ProcedurePicker t={t} op={o} update={(patch) => updateOp(o.id, patch)} />
+            <ProcedurePicker t={t} op={o} update={(patch) => updateOp(o.id, patch)} operations={svc.operations} />
 
             <CheckChips
-              label="Which levels? (tap all that apply, or Not sure)"
+              label={LEVEL_FIELDS.label}
               options={LEVEL_OPTIONS}
               value={o.levels || []}
               onChange={(v) => updateOp(o.id, { levels: v })}
               exclusive="Not sure"
             />
             <TextField
-              label="Levels written another way, if you prefer (optional)"
+              label={LEVEL_FIELDS.otherLabel}
               value={o.levelsOther}
               onChange={(v) => updateOp(o.id, { levelsOther: v })}
-              placeholder="e.g., L4 to S1, or T10 to pelvis"
+              placeholder={LEVEL_FIELDS.otherPlaceholder}
+              suggestions={SITE_SUGGESTIONS.length ? SITE_SUGGESTIONS : undefined}
             />
 
             <div>
@@ -178,7 +215,7 @@ export default function PostOpVisit({ onNext, onBack }) {
         ))}
 
         <button type="button" onClick={addOp} className="btn-secondary w-full sm:w-auto">
-          + {t('Add another spine operation')}
+          + {t(copy.addAnother)}
         </button>
         {ordered.length > 1 && (
           <p className="text-xs text-gray-400">
@@ -190,7 +227,7 @@ export default function PostOpVisit({ onNext, onBack }) {
         <div className="card space-y-4">
           <h3 className="text-lg font-medium text-navy-600">{t('The incision and the recovery')}</h3>
           <CheckChips label="How does the incision look? (choose all that apply)" options={WOUND} value={p.wound || []} onChange={(v) => set('wound', v)} exclusive="Healing well" />
-          <CheckChips label="Since the surgery, have you had any of these?" options={COMPLICATIONS} value={p.complications || []} onChange={(v) => set('complications', v)} exclusive="None of these" />
+          <CheckChips label="Since the surgery, have you had any of these?" options={copy.complications} value={p.complications || []} onChange={(v) => set('complications', v)} exclusive="None of these" />
           {(p.complications || []).some((c) => c !== 'None of these') && (
             <TextArea label="Tell us what happened" value={p.complicationDetails} onChange={(v) => set('complicationDetails', v)} rows={2} />
           )}
@@ -201,26 +238,34 @@ export default function PostOpVisit({ onNext, onBack }) {
           <h3 className="text-lg font-medium text-navy-600">{t('Your symptoms now')}</h3>
           <Chips label="Compared with before surgery, the pain you had surgery for is:" options={VS_BEFORE} value={p.painVsBefore} onChange={(v) => set('painVsBefore', v)} />
           <PainScale label="Your pain today, on average (0 to 10)" value={p.painNow} onChange={(v) => set('painNow', v)} />
-          <Chips label="The arm or leg pain, numbness or tingling you had before surgery is:" options={LIMB} value={p.limbSymptoms} onChange={(v) => set('limbSymptoms', v)} />
+          <Chips label={copy.limbLabel} options={LIMB} value={p.limbSymptoms} onChange={(v) => set('limbSymptoms', v)} />
           <Chips label="Any numbness or weakness right now?" options={NEURO} value={p.neuro} onChange={(v) => set('neuro', v)} />
           {p.neuro && p.neuro !== 'None' && (
             <TextField label="Where, and is it new since the surgery?" value={p.neuroDetails} onChange={(v) => set('neuroDetails', v)} />
           )}
-          <Chips label="Any new trouble controlling your bladder or bowels?" options={YES_NO} value={p.bowelBladder} onChange={(v) => set('bowelBladder', v)} />
+          {ortho ? (
+            <>
+              <Chips label="The hand or foot beyond the operation is:" options={CIRCULATION} value={p.circulation} onChange={(v) => set('circulation', v)} />
+              <Chips label="How is the joint moving?" options={MOTION} value={p.motion} onChange={(v) => set('motion', v)} />
+            </>
+          ) : (
+            <Chips label="Any new trouble controlling your bladder or bowels?" options={YES_NO} value={p.bowelBladder} onChange={(v) => set('bowelBladder', v)} />
+          )}
         </div>
 
         {recent && (
         <div className="card space-y-4">
           <h3 className="text-lg font-medium text-navy-600">{t('Activity and medicines')}</h3>
+          {ortho && <Chips label="Weight bearing" options={WEIGHT} value={p.weightBearing} onChange={(v) => set('weightBearing', v)} />}
           <Chips label="How far can you walk comfortably?" options={WALKING} value={p.walking} onChange={(v) => set('walking', v)} />
-          <Chips label="Brace or collar" options={BRACE} value={p.brace} onChange={(v) => set('brace', v)} />
+          <Chips label={copy.braceLabel} options={BRACE} value={p.brace} onChange={(v) => set('brace', v)} />
           <Chips label="Physical therapy" options={PT} value={p.pt} onChange={(v) => set('pt', v)} />
           <Chips label="Work" options={WORK} value={p.work} onChange={(v) => set('work', v)} />
           <Chips label="Are you still taking opioid pain medicine (oxycodone, hydrocodone, tramadol)?" options={OPIOIDS} value={p.opioids} onChange={(v) => set('opioids', v)} />
           {p.opioids && p.opioids !== 'None' && (
             <TextField label="Which one, and how much per day?" value={p.opioidDetails} onChange={(v) => set('opioidDetails', v)} placeholder="e.g., Oxycodone 5 mg, one at night" />
           )}
-          <TextField label="Any other new medicine since the surgery?" value={p.newMedicines} onChange={(v) => set('newMedicines', v)} placeholder="e.g., Gabapentin 300 mg at night; a blood thinner" />
+          <TextField label="Any other new medicine since the surgery?" value={p.newMedicines} onChange={(v) => set('newMedicines', v)} placeholder={copy.newMedicinesPlaceholder} />
         </div>
         )}
 
@@ -231,7 +276,7 @@ export default function PostOpVisit({ onNext, onBack }) {
             label="Anything you are worried about, or want to ask at this visit?"
             value={p.questions}
             onChange={(v) => set('questions', v)}
-            placeholder="e.g., When can I drive? Is the tingling in my foot normal?"
+            placeholder={copy.questionsPlaceholder}
             rows={3}
           />
         </div>
@@ -245,9 +290,11 @@ export default function PostOpVisit({ onNext, onBack }) {
 /**
  * The operation, picked from chips: tap every one that applies; a procedure
  * with kinds (lumbar fusion) opens a second row. A free-text box takes
- * anything not listed, or the name as written on the discharge papers.
+ * anything not listed, or the name as written on the discharge papers. The
+ * chips come from the service's operations module.
  */
-function ProcedurePicker({ t, op, update }) {
+function ProcedurePicker({ t, op, update, operations }) {
+  const { PROCEDURE_OPTIONS, PROCEDURE_SUBOPTIONS, composeProcedure } = operations;
   const list = op.procedureList || [];
   const subs = op.procedureSubs || {};
   // An older draft, or an operation from the chart, holds only the text.

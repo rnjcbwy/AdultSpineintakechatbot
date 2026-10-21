@@ -50,7 +50,6 @@ import ProgressBar from './ProgressBar';
 import FinishLater from './FinishLater';
 import KioskGuard from './KioskGuard';
 import Welcome from './steps/Welcome';
-import VisitType from './steps/VisitType';
 import Triage from './steps/Triage';
 import WorkInjury from './steps/WorkInjury';
 import LegalInjury from './steps/LegalInjury';
@@ -77,7 +76,6 @@ import FinalReview from './steps/FinalReview';
 const STEP_COMPONENTS = {
   welcome: Welcome,
   triage: Triage,
-  'visit-type': VisitType,
   'work-injury': WorkInjury,
   'legal-injury': LegalInjury,
   interval: IntervalHistory,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useIntake } from '../../lib/store';
+import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import BodyDiagram, { MarkerGlyph } from '../BodyDiagram';
@@ -14,6 +14,10 @@ const LOCAL = {
   'If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.': {
     es: 'Si tiene más de un tipo de sensación, marque cada una: por ejemplo, un dolor sordo en la espalda baja y un dolor agudo y punzante por la parte posterior de la pierna derecha. Solo elija una sensación diferente antes de tocar cada punto.',
     zh: '如果您有不止一种感觉，请分别标记：例如下背部的钝痛和右腿后侧的锐痛、刺痛。只需在点击每个部位前选择不同的感觉。',
+  },
+  'If you have more than one kind of feeling, mark each one: for example, a dull ache deep in the right knee and a sharp, stabbing pain on its inner side. Just choose a different feeling before tapping each spot.': {
+    es: 'Si tiene más de un tipo de sensación, marque cada una: por ejemplo, un dolor sordo en el fondo de la rodilla derecha y un dolor agudo y punzante en su cara interna. Solo elija una sensación diferente antes de tocar cada punto.',
+    zh: '如果您有不止一种感觉，请分别标记：例如，右膝深处的钝痛，以及膝内侧的尖锐刺痛。只需在点击每个位置前选择不同的感觉。',
   },
   'Where Are Your Symptoms?': { es: '¿Dónde están sus síntomas?', zh: '您的症状在哪里？' },
   'Tap the body where you feel something. Pick the type of feeling first — you can mark as many places as you like, on the front and the back.':
@@ -93,6 +97,9 @@ const LOCAL = {
 
 export default function PainMap({ onNext, onBack }) {
   const { data, setNested } = useIntake();
+  // The drawing is the same for every service; only the example in the
+  // introduction names the specialty (PAIN_MAP_TEXT in the service's constants).
+  const svc = useService();
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
 
@@ -181,7 +188,7 @@ export default function PainMap({ onNext, onBack }) {
         <h2 className="section-title">{t('Where Are Your Symptoms?')}</h2>
         <p className="section-subtitle">
           {t('Tap the body where you feel something. Pick the type of feeling first — you can mark as many places as you like, on the front and the back.')}{' '}
-          {t('If you have more than one kind of feeling, mark each one: for example, a dull ache in the low back and a sharp, stabbing pain down the back of the right leg. Just choose a different feeling before tapping each spot.')}
+          {t(svc.constants.PAIN_MAP_TEXT.example)}
         </p>
       </div>
 
@@ -255,7 +262,7 @@ export default function PainMap({ onNext, onBack }) {
           })}
         </div>
 
-        {/* Name your own. The six built-ins cover most spine complaints but
+        {/* Name your own. The six built-ins cover most complaints but
             not itching, cramping or coldness, and forcing those into "aching"
             loses the word the patient chose. */}
         <div className="mt-4 pt-3 border-t border-gray-100">

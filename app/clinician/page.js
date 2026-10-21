@@ -1,12 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PROBLEM_LABEL } from '../../lib/problems';
-import { SYMPTOM_REGIONS } from '../../lib/constants';
-import { ODI, NDI, MJOA, SRS22R } from '../../lib/questionnaires';
-import { ROS_SECTIONS, countReviewedSystems } from '../../lib/rosSystems';
+import { getService } from '../../lib/service';
 import PainMapSummary from '../../components/PainMapFigure';
-import { promDetail } from '../../lib/promSummary';
 import { defaultIntakeData } from '../../lib/store';
 import { countMarks, reportsNoPain } from '../../lib/bodyMap';
 import { isExpressLead, SAFETY_SUMMARY } from '../../lib/express';
@@ -84,7 +80,7 @@ export default function ClinicianDashboard() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold">Clinician Dashboard</h1>
-                <p className="text-sm text-white/60">Spine Surgery Pre-Visit Summary</p>
+                <p className="text-sm text-white/60">{SUMMARY_TITLE[getService(data.service?.key).specialty]}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -218,7 +214,16 @@ function SummaryTab({ summary, onCopy, copied }) {
 // ===========================================================================
 // TAB: Structured Data
 // ===========================================================================
+/** The dashboard subtitle and the prior-surgery row, per specialty. */
+const SUMMARY_TITLE = { spine: 'Spine Surgery Pre-Visit Summary', ortho: 'Orthopaedic Surgery Pre-Visit Summary' };
+const PRIOR_SURGERY_LABEL = { spine: 'Prior Spine Surgery', ortho: 'Prior Bone or Joint Surgery' };
+
 function StructuredTab({ data }) {
+  // The regions, problem names and review-of-systems lists of this intake's service.
+  const service = getService(data.service?.key);
+  const { SYMPTOM_REGIONS } = service.constants;
+  const { PROBLEM_LABEL } = service.problems;
+  const { ROS_SECTIONS, countReviewedSystems } = service.rosSystems;
   const redFlags = data.redFlags || [];
   const x = data.express;
 
@@ -264,7 +269,7 @@ function StructuredTab({ data }) {
         <DataRow label="Symptom Regions" value={data.chiefComplaint.symptomRegions.map(id =>
           SYMPTOM_REGIONS.find(r => r.id === id)?.label).filter(Boolean).join(', ')} />
         <DataRow label="Primary Concern" value={data.chiefComplaint.primaryConcern} />
-        <DataRow label="Prior Spine Surgery" value={data.chiefComplaint.hasPriorSpineSurgery ? 'Yes' : 'No'} />
+        <DataRow label={PRIOR_SURGERY_LABEL[service.specialty]} value={data.chiefComplaint.hasPriorSpineSurgery ? 'Yes' : 'No'} />
       </DataSection>
 
       {/* Symptoms by problem (per-area entries are what older intakes hold) */}
@@ -430,7 +435,7 @@ function StructuredTab({ data }) {
 
       {/* PROMs */}
       {data.proms && Object.keys(data.proms).length > 0 && (
-        <PromsSection proms={data.proms} />
+        <PromsSection proms={data.proms} promSummary={service.promSummary} />
       )}
     </div>
   );
@@ -523,20 +528,25 @@ function formatLabel(key) {
 }
 
 
-const PROM_LABELS = { odi: 'ODI', ndi: 'NDI', mjoa: 'mJOA', srs22r: 'SRS-22r' };
+// Both services' instruments: the ids never collide, so one table serves.
+const PROM_LABELS = { odi: 'ODI', ndi: 'NDI', mjoa: 'mJOA', srs22r: 'SRS-22r', quickdash: 'QuickDASH', hoos_jr: 'HOOS JR', koos_jr: 'KOOS JR', lefs: 'LEFS' };
 const PROM_FULL_NAMES = {
   odi: 'Oswestry Disability Index',
   ndi: 'Neck Disability Index',
   mjoa: 'Modified Japanese Orthopedic Association',
   srs22r: 'Scoliosis Research Society-22r',
+  quickdash: 'Disabilities of the Arm, Shoulder and Hand (short form)',
+  hoos_jr: 'Hip disability and Osteoarthritis Outcome Score for Joint Replacement',
+  koos_jr: 'Knee injury and Osteoarthritis Outcome Score for Joint Replacement',
+  lefs: 'Lower Extremity Functional Scale',
 };
 
-function PromsSection({ proms }) {
+function PromsSection({ proms, promSummary }) {
   // Resolve the stored answer codes back into the sentences the patient chose.
   // The scores alone were all that ever left this screen, so the functional
   // history inside these questionnaires — how far they walk, whether they can
   // dress themselves — was collected and then never shown to anyone.
-  const detail = promDetail(proms);
+  const detail = promSummary.promDetail(proms);
   const byId = Object.fromEntries(detail.map((d) => [d.id, d]));
 
   return (
@@ -583,7 +593,7 @@ function PromsSection({ proms }) {
               <div className="ml-4 mt-1.5 border-l-2 border-gray-100 pl-3 space-y-0.5">
                 {d.itemsAreFindings && (
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 mb-1">
-                    Myelopathy history — read the items, not just the score
+                    {d.id === 'mjoa' ? 'Myelopathy history — read the items, not just the score' : 'Read the items, not just the score'}
                   </p>
                 )}
                 {d.items.map((item) => (

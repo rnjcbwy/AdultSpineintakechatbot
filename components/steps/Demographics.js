@@ -1,7 +1,6 @@
 'use client';
 
-import { useIntake } from '../../lib/store';
-import { US_STATES } from '../../lib/constants';
+import { useIntake, useService } from '../../lib/store';
 
 // Offered as suggestions only; any country can be typed.
 const COUNTRY_SUGGESTIONS = ['United States', 'Canada', 'Mexico', 'United Kingdom', 'Ireland', 'Spain', 'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Argentina', 'Colombia', 'Dominican Republic', 'Puerto Rico', 'India', 'China', 'Taiwan', 'Hong Kong', 'Singapore', 'Philippines', 'South Korea', 'Japan', 'Australia', 'Israel', 'United Arab Emirates', 'Saudi Arabia', 'Nigeria', 'South Africa'];
@@ -88,6 +87,7 @@ const LOCAL = {
 
 export default function Demographics({ onNext, onBack }) {
   const { data, setField, setNested } = useIntake();
+  const { US_STATES } = useService().constants;
   const d = data.demographics;
   const v = data.visit || {};
   // The claim question belongs to a new problem; a follow-up is not asked it.

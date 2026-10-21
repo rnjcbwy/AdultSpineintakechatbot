@@ -29,7 +29,7 @@ Decide three things:
 - "none" when the message says nothing of the kind. Never guess a claim from an injury alone: a fall at home is "none".
 
 Reply with ONLY a JSON object:
-{"specialty":"spine"|"ortho"|"unsure","visitKind":"new"|"followup"|"postop"|"unsure","claim":"none"|"workers_comp"|"personal_injury","reason":"<one short, warm sentence to the patient, in the language named, saying what you understood, e.g. 'A swollen right knee after a fall at work last month.'>"}`;
+{"specialty":"spine"|"ortho"|"unsure","visitKind":"new"|"followup"|"postop"|"unsure","claim":"none"|"workers_comp"|"personal_injury","reason":"<one short sentence, in the language named, restating what you understood, e.g. 'A swollen right knee after a fall at work last month.' No greeting, no pleasantries, no advice, no dashes.>"}`;
 
 /**
  * What the patient's first words say about the visit: the specialty, the

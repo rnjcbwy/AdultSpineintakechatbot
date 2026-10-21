@@ -122,7 +122,8 @@ export default function Triage({ onNext, onBack }) {
 
   const basicsDone = !!patient && !!tri.seenBefore && (regions.length > 0 || description.length >= 3);
   const allSet = !!svc.specialty && !!kind && !!claim && !!v.type;
-  const canGoNext = basicsDone && !busy && (asked || allSet || understood);
+  // Before the model has been asked, Continue asks it; afterwards it needs the three rows settled.
+  const canGoNext = basicsDone && !busy && (!asked || allSet);
 
   const next = async () => {
     if (!asked && description.length >= 3 && !allSet) { await classify(); return; }

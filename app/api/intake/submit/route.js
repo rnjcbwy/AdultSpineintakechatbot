@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { detectRedFlags } from '../../../../lib/redFlags';
+import { getService } from '../../../../lib/service';
 import { cleanCampaign } from '../../../../lib/campaign';
 import { consentComplete, expressConsentComplete } from '../../../../lib/consent';
 import { isExpressLead } from '../../../../lib/express';
@@ -80,7 +80,8 @@ export async function POST(request) {
   const id = newSubmissionId();
   const token = newAccessToken();
   const now = new Date().toISOString();
-  const redFlags = detectRedFlags(clean);
+  // The red-flag rules belong to the intake's service (spine or bone-and-joint).
+  const redFlags = getService(clean.service?.key).redFlags.detectRedFlags(clean);
   const state = {
     id,
     createdAt: now,

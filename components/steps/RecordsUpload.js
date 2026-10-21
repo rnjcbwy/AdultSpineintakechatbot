@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useIntake } from '../../lib/store';
+import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import ImagingUpload from '../ImagingUpload';
 import {
-  DOCUMENT_CATEGORIES,
+  documentCategoriesFor,
   ACCEPTED_TYPES,
   addDocument,
   listDocuments,
@@ -30,6 +30,11 @@ const LOCAL = {
     {
       es: 'Las compañías de seguros exigen pruebas de lo que ya ha intentado antes de aprobar un tratamiento de columna. Cuanto más pueda darnos ahora, menos probable será que su atención se retrase.',
       zh: '保险公司在批准脊柱治疗前，需要您已尝试过哪些治疗的证明。您现在提供得越多，日后您的治疗被延误的可能性就越小。',
+    },
+  'Insurance companies require proof of what you have already tried before they will approve joint surgery, injections or advanced imaging. The more of this you can give us now, the less likely your care is delayed later.':
+    {
+      es: 'Las compañías de seguros exigen pruebas de lo que ya ha intentado antes de aprobar una cirugía articular, inyecciones o estudios de imagen avanzados. Cuanto más pueda darnos ahora, menos probable será que su atención se retrase.',
+      zh: '保险公司在批准关节手术、注射或高级影像检查前，需要您已尝试过哪些治疗的证明。您现在提供得越多，日后您的治疗被延误的可能性就越小。',
     },
 
   // Imaging
@@ -94,6 +99,11 @@ const LOCAL = {
     {
       es: 'Algunos procedimientos de columna tienen requisitos específicos sobre la nicotina, por lo que necesitamos un poco más de detalle de lo habitual.',
       zh: '某些脊柱手术对尼古丁有特定要求，因此我们需要比平时更详细的信息。',
+    },
+  'Nicotine slows bone and tendon healing, and some procedures have specific nicotine requirements, so we need a little more detail than usual.':
+    {
+      es: 'La nicotina retrasa la curación de huesos y tendones, y algunos procedimientos tienen requisitos específicos sobre la nicotina, por lo que necesitamos un poco más de detalle de lo habitual.',
+      zh: '尼古丁会延缓骨骼和肌腱愈合，某些手术对尼古丁有特定要求，因此我们需要比平时更详细的信息。',
     },
   'Do you currently use any nicotine?': { es: '¿Consume nicotina actualmente?', zh: '您目前使用尼古丁吗？' },
   'Never used': { es: 'Nunca he consumido', zh: '从未使用' },
@@ -177,6 +187,19 @@ const LOCAL = {
     es: 'Notas quirúrgicas de cualquier cirugía de columna previa.',
     zh: '任何既往脊柱手术的手术记录。',
   },
+  'Operative notes from any previous bone or joint surgery.': {
+    es: 'Notas quirúrgicas de cualquier cirugía previa de huesos o articulaciones.',
+    zh: '任何既往骨骼或关节手术的手术记录。',
+  },
+  'Imaging reports (X-ray, MRI, CT, ultrasound)': { es: 'Informes de imágenes (radiografía, resonancia, tomografía, ecografía)', zh: '影像报告（X光、核磁、CT、超声）' },
+  'Procedure notes showing the joint injected, the date, and how long relief lasted.': {
+    es: 'Notas del procedimiento que muestren la articulación inyectada, la fecha y cuánto duró el alivio.',
+    zh: '显示注射的关节、日期以及缓解持续时间的操作记录。',
+  },
+  'Office notes from your primary care doctor, the emergency room or urgent care, a rheumatologist, pain management, or a physical therapist.': {
+    es: 'Notas de su médico de cabecera, de la sala de emergencias o de urgencias, de un reumatólogo, de manejo del dolor o de un fisioterapeuta.',
+    zh: '您的初级保健医生、急诊室或急症护理、风湿科医生、疼痛科或物理治疗师的门诊记录。',
+  },
   'Other provider notes': { es: 'Notas de otros proveedores', zh: '其他医疗提供者的记录' },
   'Office notes from your primary care doctor, pain management, chiropractor, or neurologist.': {
     es: 'Notas de consulta de su médico de cabecera, manejo del dolor, quiropráctico o neurólogo.',
@@ -201,6 +224,9 @@ const LOCAL = {
 
 export default function RecordsUpload({ onNext, onBack }) {
   const { data, setNested } = useIntake();
+  const svc = useService();
+  const categories = documentCategoriesFor(svc.specialty);
+  const ortho = svc.specialty === 'ortho';
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
 
@@ -301,7 +327,9 @@ export default function RecordsUpload({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Records & Documents')}</h2>
         <p className="section-subtitle">
-          {t('Insurance companies require proof of what you have already tried before they will approve spine treatment. The more of this you can give us now, the less likely your care is delayed later.')}
+          {t(ortho
+            ? 'Insurance companies require proof of what you have already tried before they will approve joint surgery, injections or advanced imaging. The more of this you can give us now, the less likely your care is delayed later.'
+            : 'Insurance companies require proof of what you have already tried before they will approve spine treatment. The more of this you can give us now, the less likely your care is delayed later.')}
         </p>
       </div>
 
@@ -419,7 +447,9 @@ export default function RecordsUpload({ onNext, onBack }) {
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">{t('Nicotine Use')}</h3>
         <p className="text-sm text-gray-400 mb-4">
-          {t('Some spine procedures have specific nicotine requirements, so we need a little more detail than usual.')}
+          {t(ortho
+            ? 'Nicotine slows bone and tendon healing, and some procedures have specific nicotine requirements, so we need a little more detail than usual.'
+            : 'Some spine procedures have specific nicotine requirements, so we need a little more detail than usual.')}
         </p>
         <label className="form-label">{t('Do you currently use any nicotine?')}</label>
         <div className="flex flex-wrap gap-2 mb-4">
@@ -484,7 +514,7 @@ export default function RecordsUpload({ onNext, onBack }) {
         )}
 
         <div className="space-y-3">
-          {DOCUMENT_CATEGORIES.filter((cat) => cat.id !== 'imaging_reports').map((cat) => {
+          {categories.filter((cat) => cat.id !== 'imaging_reports').map((cat) => {
             const catDocs = docsIn(cat.id);
             const isSuggested = suggested.has(cat.id);
             return (
@@ -564,7 +594,7 @@ export default function RecordsUpload({ onNext, onBack }) {
             {t('Based on what you have told us, these are the records most likely to be requested by your insurance.')}
           </p>
           <ul className="space-y-2">
-            {DOCUMENT_CATEGORIES.filter((c) => suggested.has(c.id)).map((cat) => {
+            {categories.filter((c) => suggested.has(c.id)).map((cat) => {
               const have = docsIn(cat.id).length > 0;
               return (
                 <li key={cat.id} className="flex items-center gap-3 text-sm">

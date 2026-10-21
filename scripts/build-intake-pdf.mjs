@@ -66,16 +66,30 @@ const CONFIG = {
 
 // ---------------------------------------------------------------------------
 // App data. lib/ is ESM inside a CommonJS package, so the modules are staged
-// as .mjs copies for the duration of the build.
+// as .mjs copies for the duration of the build. The questionnaires, regions
+// and review of systems come from the spine service's folder
+// (lib/services/spine, see lib/service.js): this printed form is the spine
+// intake's paper twin, and its questionnaire pages are the ODI, NDI and mJOA.
 // ---------------------------------------------------------------------------
 const TMP = path.join(ROOT, '.pdf-tmp');
+const SERVICE_DIR = path.join(ROOT, 'lib', 'services', 'spine');
 async function loadLib() {
   fs.rmSync(TMP, { recursive: true, force: true });
   fs.mkdirSync(TMP, { recursive: true });
   const out = {};
   try {
-    for (const name of ['constants', 'questionnaires', 'rosSystems', 'bodyMap']) {
+    // The shared modules the service modules import, staged under the names
+    // their rewritten imports use.
+    for (const name of ['bodyMap', 'flows']) {
       fs.copyFileSync(path.join(ROOT, 'lib', `${name}.js`), path.join(TMP, `${name}.mjs`));
+    }
+    for (const name of ['constants', 'questionnaires', 'rosSystems']) {
+      const src = fs.readFileSync(path.join(SERVICE_DIR, `${name}.js`), 'utf8')
+        .replace(/from '\.\.\/\.\.\/([A-Za-z0-9_]+)'/g, "from './$1.mjs'")
+        .replace(/from '\.\/([A-Za-z0-9_]+)'/g, "from './$1.mjs'");
+      fs.writeFileSync(path.join(TMP, `${name}.mjs`), src);
+    }
+    for (const name of ['constants', 'questionnaires', 'rosSystems', 'bodyMap']) {
       out[name] = await import(pathToFileURL(path.join(TMP, `${name}.mjs`)).href);
     }
   } finally {

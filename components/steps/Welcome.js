@@ -8,12 +8,10 @@ import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
 
 const T = {
   en: {
-    title: 'Your Spine Story',
-    subtitle: 'A calm, step-by-step way to put your whole history in one place: your symptoms, what you have tried, and what matters to you.',
+    title: 'Before Your Visit',
+    subtitle: 'A calm, step-by-step way to put your whole history in one place: your symptoms, what you have tried, and what matters to you. For adults and children, and for the spine, bones and joints.',
     banner:
       '⚠️ PROTOTYPE / DEMONSTRATION ONLY — Please do not enter real patient information. Use fictional names and details for testing purposes.',
-    under18Prefix: 'Younger and teenage patients can use the ',
-    under18Link: 'pediatric version, which asks more age-appropriate questions',
     description:
       'This takes about 10–15 minutes and covers:',
     steps: [
@@ -35,12 +33,10 @@ const T = {
     bannerProd: 'Your answers are sent securely to the care team and reviewed before your visit.',
   },
   es: {
-    title: 'La historia de su columna',
-    subtitle: 'Una forma tranquila, paso a paso, de reunir toda su historia en un solo lugar: sus síntomas, lo que ha probado y lo que le importa.',
+    title: 'Antes de su visita',
+    subtitle: 'Una forma tranquila, paso a paso, de reunir toda su historia en un solo lugar: sus síntomas, lo que ha probado y lo que le importa. Para adultos y niños, y para la columna, los huesos y las articulaciones.',
     banner:
       '⚠️ SOLO PROTOTIPO / DEMOSTRACIÓN — Por favor, no ingrese información real de pacientes. Use nombres y datos ficticios con fines de prueba.',
-    under18Prefix: 'Los pacientes más jóvenes y adolescentes pueden usar la ',
-    under18Link: 'versión pediátrica, con preguntas más adecuadas a su edad',
     description:
       'Toma entre 15 y 25 minutos y abarca:',
     steps: [
@@ -62,12 +58,10 @@ const T = {
     bannerProd: 'Sus respuestas se envían de forma segura al equipo de atención y se revisan antes de su cita.',
   },
   zh: {
-    title: '您的脊柱故事',
-    subtitle: '以平静、循序渐进的方式，把您的全部病史放在一处：您的症状、尝试过的治疗，以及对您重要的事。',
+    title: '就诊之前',
+    subtitle: '以平静、循序渐进的方式，把您的全部病史放在一处：您的症状、尝试过的治疗，以及对您重要的事。适用于成人和儿童，涵盖脊柱、骨骼和关节。',
     banner:
       '⚠️ 仅供原型/演示 — 请勿输入真实患者信息。请使用虚构的姓名和信息进行测试。',
-    under18Prefix: '儿童和青少年患者可以使用',
-    under18Link: '儿科版本，其中的问题更适合他们的年龄',
     description:
       '大约需要 10–15 分钟，包括：',
     steps: [
@@ -90,29 +84,39 @@ const T = {
   },
 };
 
-function SpineLogo() {
-  const vertebrae = [10, 25, 40, 55, 70, 85, 100];
+/**
+ * The only mark on the page: three soft rounded shapes in the practice green
+ * with a lighter centre. Nothing anatomical, no name, no logo: the same mark
+ * greets every patient, whatever brings them in. (The `spine-logo` and
+ * `vertebra` class names are only the sizing and the pulse in globals.css.)
+ */
+function PracticeMark() {
+  const petals = [
+    { cx: 50, cy: 34, delay: '0s' },
+    { cx: 32, cy: 66, delay: '0.15s' },
+    { cx: 68, cy: 66, delay: '0.3s' },
+  ];
   return (
     <svg viewBox="0 0 100 120" className="spine-logo mx-auto" aria-hidden="true">
       <defs>
-        <linearGradient id="spineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id="markGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#155842" />
           <stop offset="100%" stopColor="#0E3F31" />
         </linearGradient>
       </defs>
-      {vertebrae.map((y, i) => (
-        <rect
-          key={y}
-          x="30"
-          y={y}
-          width="40"
-          height="12"
-          rx="6"
-          fill="url(#spineGrad)"
+      {petals.map((p) => (
+        <circle
+          key={p.delay}
+          cx={p.cx}
+          cy={p.cy}
+          r="24"
+          fill="url(#markGrad)"
+          fillOpacity="0.9"
           className="vertebra"
-          style={{ animationDelay: `${i * 0.1}s` }}
+          style={{ animationDelay: p.delay }}
         />
       ))}
+      <circle cx="50" cy="55" r="11" fill="#6DCDB8" className="vertebra" style={{ animationDelay: '0.45s' }} />
     </svg>
   );
 }
@@ -150,9 +154,9 @@ export default function Welcome({ onNext }) {
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
       <div className="max-w-[560px] w-full mx-auto text-center animate-fade-in">
-        {/* No name, no ownership: the page is the form. The spine is the only mark. */}
+        {/* No name, no ownership: the page is the form. One plain mark for every patient. */}
         <div className="mb-7">
-          <SpineLogo />
+          <PracticeMark />
         </div>
 
         <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">
@@ -191,19 +195,8 @@ export default function Welcome({ onNext }) {
           </div>
         )}
 
-        {/* Under-18 redirect */}
-        <p className="text-sm text-gray-600 mb-6">
-          {t.under18Prefix}
-          <a
-            href="https://pedsspine.aaronweymd.com/"
-            className="font-semibold text-teal-500 underline hover:text-teal-600"
-          >
-            {t.under18Link}
-          </a>
-          .
-        </p>
-
-        <p className="text-sm font-medium uppercase tracking-[0.12em] text-gray-400 mb-3">
+        {/* No redirects: the next step works out who the form is for and what it is about. */}
+        <p className="text-sm font-medium uppercase tracking-[0.12em] text-gray-400 mb-3 mt-6">
           {t.description}
         </p>
 
