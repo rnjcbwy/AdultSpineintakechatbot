@@ -29,9 +29,13 @@ const LOCAL = {
     zh: '我们无法根据这些信息匹配到您的记录，或者档案中没有邮箱。请继续填写，诊所会将您的表格关联到您的病历。',
   },
   'Address, insurance and referral': { es: 'Dirección, seguro y referencia', zh: '地址、保险与转诊' },
-  'If you already have an appointment, or you have been seen here before, we most likely have this on file and you can leave it blank. If this is your first time, please fill it in.': {
-    es: 'Si ya tiene una cita, o ya ha sido atendido aquí antes, lo más probable es que ya tengamos esta información y puede dejarla en blanco. Si es su primera vez, por favor complétela.',
-    zh: '如果您已经预约，或者之前在这里就诊过，我们很可能已有这些信息，您可以留空。如果这是您第一次来，请填写。',
+  'Already a patient here, or already gave the office this information? If nothing has changed, you can skip this. If you are new to the office or anything has changed, please fill it in so your appointment can be made.': {
+    es: '¿Ya es paciente aquí, o ya le dio esta información a la oficina? Si nada ha cambiado, puede omitir esta parte. Si es nuevo en la oficina o algo ha cambiado, por favor complétela para que se pueda programar su cita.',
+    zh: '您已经是这里的患者，或者已经向办公室提供过这些信息？如果没有任何变化，可以跳过此部分。如果您是新患者或信息有变动，请填写，以便为您安排预约。',
+  },
+  'If the office already has your insurance and nothing has changed, leave this blank.': {
+    es: 'Si la oficina ya tiene su seguro y nada ha cambiado, deje esto en blanco.',
+    zh: '如果办公室已有您的保险信息且没有变化，请留空。',
   },
   'Emergency contact (optional)': { es: 'Contacto de emergencia (opcional)', zh: '紧急联系人（可选）' },
   'Someone we may call if we cannot reach you.': { es: 'Alguien a quien podamos llamar si no logramos comunicarnos con usted.', zh: '在联系不到您时可以联系的人。' },
@@ -250,7 +254,7 @@ export default function Demographics({ onNext, onBack }) {
         <div className="pt-2">
           <h3 className="text-base font-semibold text-navy-600">{t('Address, insurance and referral')}</h3>
           <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-            {t('If you already have an appointment, or you have been seen here before, we most likely have this on file and you can leave it blank. If this is your first time, please fill it in.')}
+            {t('Already a patient here, or already gave the office this information? If nothing has changed, you can skip this. If you are new to the office or anything has changed, please fill it in so your appointment can be made.')}
           </p>
         </div>
 
@@ -336,7 +340,8 @@ export default function Demographics({ onNext, onBack }) {
 
         {/* Insurance & Referral */}
         <div className="card">
-          <h3 className="text-lg font-medium text-navy-600 mb-4">{t('Insurance & Referral')}</h3>
+          <h3 className="text-lg font-medium text-navy-600 mb-1">{t('Insurance & Referral')}</h3>
+          <p className="text-sm text-gray-500 mb-4 leading-relaxed">{t('If the office already has your insurance and nothing has changed, leave this blank.')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="form-label">{t('Insurance Provider')}</label>

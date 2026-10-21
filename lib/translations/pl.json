@@ -121,6 +121,7 @@
   "All of the time": "Przez cały czas",
   "Allergies": "Alergie",
   "Allergies & Immune System": "Alergie i układ odpornościowy",
+  "Already a patient here, or already gave the office this information? If nothing has changed, you can skip this. If you are new to the office or anything has changed, please fill it in so your appointment can be made.": "Czy jest Pan/Pani już naszym pacjentem lub przekazał/a Pan/Pani te informacje wcześniej? Jeśli nic się nie zmieniło, może Pan/Pani pominąć tę sekcję. Jeśli jest Pan/Pani nowym pacjentem lub cokolwiek uległo zmianie, prosimy o wypełnienie formularza, abyśmy mogli umówić wizytę.",
   "Always": "Zawsze",
   "Ambulance to the hospital": "Karetką do szpitala",
   "An AI assistant will help gather medical history through conversation — this assistant **cannot provide medical advice**": "Asystent AI pomoże zebrać historię medyczną w formie rozmowy — asystent ten **nie udziela porad medycznych**",
@@ -649,6 +650,7 @@
   "Ice": "Lód (zimne okłady)",
   "If none of these describe what you feel, name it yourself and pick a marker. You can add up to 4.": "Jeśli żadne z powyższych nie opisuje tego, co odczuwasz, wpisz własną nazwę i wybierz znacznik. Możesz dodać maksymalnie 4.",
   "If so, we will ask about the injury and the claim before the rest of your history.": "Jeśli tak, zapytamy o uraz i roszczenie przed zebraniem pozostałej części wywiadu medycznego.",
+  "If the office already has your insurance and nothing has changed, leave this blank.": "Jeśli gabinet posiada już Pana/Pani dane ubezpieczeniowe i nic się nie zmieniło, proszę pozostawić to pole puste.",
   "If we already have you on file, we can send a private link to the email we have for you that opens this form with your history filled in.": "Jeśli mamy już Pana(i) dane w naszym systemie, możemy wysłać prywatny link na adres e-mail, który mamy w dokumentacji – po jego otwarciu formularz zostanie wstępnie wypełniony Pana(i) historią.",
   "If yes, we will ask for the claim number and how the injury happened.": "Jeśli tak, poprosimy o numer sprawy oraz opis okoliczności urazu.",
   "If yes, we will ask which operation, roughly when (month and year are fine), and whether it was done here.": "Jeśli tak, zapytamy o rodzaj operacji, przybliżony termin (wystarczy miesiąc i rok) oraz czy była wykonana w naszej placówce.",
@@ -1024,6 +1026,7 @@
   "Physician / provider name": "Imię i nazwisko lekarza / świadczeniodawcy",
   "Pick a marker": "Wybierz znacznik",
   "Pins and needles": "Mrowienie",
+  "Plan name, or \"none\"": "Nazwa planu lub „brak”",
   "Please add the date and where each study was done below.": "Proszę podać poniżej datę oraz miejsce wykonania każdego badania.",
   "Please also bring the images themselves to your visit, on a CD or through the imaging center's patient portal, so your surgeon can review the images and not only the report.": "Prosimy również o przyniesienie na wizytę samych obrazów – na płycie CD lub za pośrednictwem portalu pacjenta pracowni diagnostycznej – aby lekarz mógł zapoznać się z obrazami, a nie tylko z opisem badania.",
   "Please answer as accurately as you can. This form gathers information for your visit; it is not medical advice and nobody reads it in real time.": "Prosimy odpowiadać możliwie jak najdokładniej. Formularz służy do zebrania informacji przed wizytą — nie stanowi porady medycznej i nikt nie czyta go na bieżąco.",
@@ -1637,6 +1640,5 @@
   "which kind? Tap all that apply, or skip if you are not sure.": "Jakiego rodzaju? Proszę zaznaczyć wszystkie pasujące odpowiedzi lub pominąć, jeśli nie jest Pani/Pan pewna/pewny.",
   "⚠️ PROTOTYPE / DEMONSTRATION ONLY — Please do not enter real patient information. Use fictional names and details for testing purposes.": "⚠️ TYLKO PROTOTYP / WERSJA DEMONSTRACYJNA — Prosimy nie wprowadzać prawdziwych danych pacjenta. Do celów testowych należy używać fikcyjnych imion i danych.",
   "⚠️ Prototype for demonstration only. Please use fictional names and details.": "⚠️ Wersja demonstracyjna. Proszę używać fikcyjnych danych osobowych.",
-  "🚧 This is a prototype — not HIPAA compliant": "🚧 To jest prototyp — niezgodny z wymogami HIPAA",
-  "Plan name, or \"none\"": "Nazwa planu lub „brak”"
+  "🚧 This is a prototype — not HIPAA compliant": "🚧 To jest prototyp — niezgodny z wymogami HIPAA"
 }

@@ -4,14 +4,28 @@
     {
       "name": "intake",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "practice-hub-test",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["scripts/dev-practice-hub-test.mjs"],
+      "runtimeArgs": [
+        "scripts/dev-practice-hub-test.mjs"
+      ],
       "port": 3101
+    },
+    {
+      "name": "peds-ortho-intake",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd /d ..\\pedsorthointake && npx next dev --port 3012"
+      ],
+      "port": 3012
     }
   ]
 }
