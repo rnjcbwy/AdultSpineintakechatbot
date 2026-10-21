@@ -255,9 +255,13 @@ for (const [name, svc] of [['spine', spine], ['ortho', ortho]]) {
   const pick = (regions) => getApplicableQuestionnaires({ chiefComplaint: { symptomRegions: regions } });
   check('a shoulder selects QuickDASH', pick(['right-shoulder']).join() === 'quickdash');
   check('a hand selects QuickDASH, once', pick(['right-hand', 'left-hand']).join() === 'quickdash');
+  check('the upper arm, forearm and wrist select QuickDASH', ['right-arm', 'left-forearm', 'right-wrist'].every((r) => pick([r]).join() === 'quickdash'));
   check('a hip selects HOOS JR', pick(['left-hip']).join() === 'hoos_jr');
   check('a knee selects KOOS JR', pick(['right-knee']).join() === 'koos_jr');
-  check('an ankle selects LEFS', pick(['left-foot']).join() === 'lefs');
+  check('an ankle selects LEFS', pick(['left-ankle']).join() === 'lefs');
+  check('a foot selects LEFS', pick(['left-foot']).join() === 'lefs');
+  check('the thigh, lower leg, pelvis, tailbone and SI joint select LEFS', ['right-thigh', 'left-leg', 'pelvis', 'tailbone', 'right-si'].every((r) => pick([r]).join() === 'lefs'));
+  check('a knee with an ankle selects KOOS JR and LEFS', pick(['right-knee', 'right-ankle']).join() === 'koos_jr,lefs');
   check('neck or back alone selects nothing', pick(['neck-back']).length === 0);
   check('ride-along chips select nothing on their own', pick(['swelling', 'trauma']).length === 0);
 

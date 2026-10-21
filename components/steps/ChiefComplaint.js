@@ -113,7 +113,7 @@ const LOCAL = {
 export default function ChiefComplaint({ onNext, onBack }) {
   const { data, setField, setNested, setStep } = useIntake();
   const svc = useService();
-  const { SYMPTOM_REGIONS, JOINT_ROWS, REGION_GROUPS, CHIEF_COMPLAINT_TEXT: text, regionsFromTriage } = svc.constants;
+  const { SYMPTOM_REGIONS, JOINT_ROWS, PELVIS_ROWS = [], REGION_GROUPS, CHIEF_COMPLAINT_TEXT: text, regionsFromTriage } = svc.constants;
   const cc = data.chiefComplaint;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
@@ -145,17 +145,23 @@ export default function ChiefComplaint({ onNext, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seedKey]);
 
-  // The joint rows the triage named (the side is still to be tapped) and the rest.
+  // The joint rows the triage named (the side is still to be tapped) and the
+  // rest; the same split for the pelvis rows (an SI tap still needs a side).
   const triageRows = JOINT_ROWS.filter((row) => fromTriage.joints.includes(row.joint));
   const otherRows = JOINT_ROWS.filter((row) => !fromTriage.joints.includes(row.joint));
+  const triagePelvisRows = PELVIS_ROWS.filter((row) => row.joint && fromTriage.joints.includes(row.joint));
+  const otherPelvisRows = PELVIS_ROWS.filter((row) => !triagePelvisRows.includes(row));
 
   const mainReason = String(cc.mainReason || '');
   const isValid = mainReason.trim() && selected.length > 0;
 
   // The ortho service accepts a neck-or-back tap but points it at the spine
   // questions; a service without that region (the spine) never shows the row.
+  // A bone-or-joint region is anything with a place (a side, or the pelvis
+  // and the tailbone); the quality and context chips do not count.
   const neckBack = SYMPTOM_REGIONS.find((r) => r.id === 'neck-back');
-  const spineOnly = !!neckBack && selected.includes('neck-back') && !selected.some((r) => /^(right|left)-/.test(r));
+  const isPlace = (id) => /^(right|left)-/.test(id) || PELVIS_ROWS.some((row) => row.kind === 'wide' && row.id === id);
+  const spineOnly = !!neckBack && selected.includes('neck-back') && !selected.some(isPlace);
 
   const jointRow = (row) => (
     <div key={row.joint} className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
@@ -164,6 +170,43 @@ export default function ChiefComplaint({ onNext, onBack }) {
       <SideButton label={t('Right')} selected={selected.includes(row.right)} onClick={() => toggleRegion(row.right)} />
     </div>
   );
+
+  // A pelvis row: one wide button for a region with no side, or Left / Right
+  // with a "Both" button beside the name that taps (or clears) both sides.
+  const pelvisRow = (row) => {
+    if (row.kind === 'wide') {
+      const region = SYMPTOM_REGIONS.find((r) => r.id === row.id);
+      if (!region) return null;
+      return (
+        <div key={row.id} className="grid grid-cols-[1fr_auto] gap-2 items-center">
+          <span className="text-sm font-medium text-gray-700 px-1">{t(region.label)}</span>
+          <SideButton label={t(region.label)} selected={selected.includes(region.id)} onClick={() => toggleRegion(region.id)} wide />
+        </div>
+      );
+    }
+    const both = selected.includes(row.left) && selected.includes(row.right);
+    const toggleBoth = () => {
+      const rest = selected.filter((r) => r !== row.left && r !== row.right);
+      updateField('symptomRegions', both ? rest : [...rest, row.left, row.right]);
+    };
+    return (
+      <div key={row.joint} className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+        <span className="flex items-center gap-2 px-1">
+          <span className="text-sm font-medium text-gray-700">{t(row.joint)}</span>
+          <button
+            type="button"
+            onClick={toggleBoth}
+            aria-pressed={both}
+            className={`region-btn px-2.5 py-1 rounded-lg border text-xs font-medium ${both ? 'selected' : 'border-gray-200 text-gray-500'}`}
+          >
+            {t('Both')}
+          </button>
+        </span>
+        <SideButton label={t('Left')} selected={selected.includes(row.left)} onClick={() => toggleRegion(row.left)} />
+        <SideButton label={t('Right')} selected={selected.includes(row.right)} onClick={() => toggleRegion(row.right)} />
+      </div>
+    );
+  };
 
   return (
     <div className="animate-fade-in">
@@ -213,7 +256,7 @@ export default function ChiefComplaint({ onNext, onBack }) {
 
           <div className="space-y-4">
             {/* The joints the triage step named: only the side is missing (the ortho service) */}
-            {triageRows.length > 0 && (
+            {(triageRows.length > 0 || triagePelvisRows.length > 0) && (
               <div className="rounded-xl border border-teal-200 bg-teal-50/40 p-3">
                 <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center mb-1 px-1">
                   <h4 className="text-sm font-medium text-navy-600">{t('Which side? *')}</h4>
@@ -221,20 +264,21 @@ export default function ChiefComplaint({ onNext, onBack }) {
                   <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-24 text-center">{t('Right')}</span>
                 </div>
                 <p className="text-xs text-gray-500 px-1 mb-2">{t('Tap the side for each joint you named on the first screen. Tap both if both sides are affected.')}</p>
-                <div className="space-y-2">{triageRows.map(jointRow)}</div>
+                <div className="space-y-2">{triageRows.map(jointRow)}{triagePelvisRows.map(pelvisRow)}</div>
               </div>
             )}
 
-            {/* Joints: a row per joint, left and right (the ortho service) */}
-            {otherRows.length > 0 && (
+            {/* Joints: a row per joint, left and right, then the pelvis rows (the ortho service) */}
+            {(otherRows.length > 0 || otherPelvisRows.length > 0) && (
               <div>
                 <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center mb-1 px-1">
-                  <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t(triageRows.length ? 'Any other joint?' : 'Joints')}</h4>
+                  <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t(triageRows.length || triagePelvisRows.length ? 'Any other joint?' : 'Joints')}</h4>
                   <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-24 text-center">{t('Left')}</span>
                   <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-24 text-center">{t('Right')}</span>
                 </div>
                 <div className="space-y-2">
                   {otherRows.map(jointRow)}
+                  {otherPelvisRows.map(pelvisRow)}
                   {neckBack && (
                     <div className="grid grid-cols-[1fr_auto] gap-2 items-center pt-1">
                       <span className="text-sm font-medium text-gray-700 px-1">{t(neckBack.label)}</span>

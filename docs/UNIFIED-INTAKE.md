@@ -16,8 +16,9 @@ four live sites keep running untouched until this one is proven.
 
 - who the form is for: myself / my child (under 18) / an adult I am helping
 - whether this is the patient's first visit with this doctor (a visit to the office with another doctor still counts as a first visit, and a first visit always gets the full new-patient history)
-- where the problem is (neck, back, posture, shoulder, elbow, hand, hip,
-  knee, foot, somewhere else)
+- where the problem is (neck, back, posture, then the limb in body order:
+  shoulder, upper arm, elbow, forearm, wrist, hand, hip, thigh, knee, lower
+  leg, ankle, foot, then the pelvis or tailbone, the SI joint, somewhere else)
 - a sentence or two about it
 
 From those it settles, and shows for one-tap correction:

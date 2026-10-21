@@ -63,6 +63,13 @@ export default function Triage({ onNext, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient]);
 
+  // A "broken bone" tap on a child's visit is the fracture-clinic path.
+  const tappedFracture = regions.includes('fracture');
+  useEffect(() => {
+    if (tappedFracture && patient === 'child' && !data.pedsOrtho?.track) setNested('pedsOrtho.track', 'fracture');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tappedFracture, patient]);
+
   // Regions that all point one way settle the specialty without the model
   // (unless the patient or the office already chose).
   useEffect(() => {

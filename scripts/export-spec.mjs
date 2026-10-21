@@ -245,10 +245,10 @@ const SPECIALTY_SPEC = {
   ortho: {
     proms: (q, instrument) => ({
       selectionRules: [
-        { instrument: 'quickdash', when: 'chiefComplaint.symptomRegions includes any shoulder, elbow or hand region' },
+        { instrument: 'quickdash', when: 'chiefComplaint.symptomRegions includes any arm region (shoulder, arm, elbow, forearm, wrist or hand, either side)' },
         { instrument: 'hoos_jr', when: 'chiefComplaint.symptomRegions includes right-hip or left-hip' },
         { instrument: 'koos_jr', when: 'chiefComplaint.symptomRegions includes right-knee or left-knee' },
-        { instrument: 'lefs', when: 'chiefComplaint.symptomRegions includes right-foot or left-foot' },
+        { instrument: 'lefs', when: 'chiefComplaint.symptomRegions includes any thigh, leg (lower leg), ankle, foot or si region (either side), or pelvis or tailbone' },
       ],
       noteHandling:
         'Item answers are stored as the option VALUE. Before note generation they must be resolved back ' +

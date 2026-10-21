@@ -230,6 +230,22 @@ const ORTHO_CASES = [
     ['joints_marked'],
     ['no_limb', 'bilateral_knees'],
   ],
+  [
+    'Upper arm, forearm, thigh and calf marks name those areas, not the joints next to them',
+    [['anterior', 50, 200], ['anterior', 30, 280], ['anterior', 95, 340], ['posterior', 175, 450]],
+    ['joints_marked'],
+    ['no_limb'],
+    [],
+    { 'chiefComplaint.addRegions': ['right-arm', 'right-forearm', 'right-thigh', 'right-leg'] },
+  ],
+  [
+    'Sacrum mark adds the tailbone and does not point at the spine intake',
+    [['posterior', 140, 265]],
+    ['joints_marked'],
+    ['spine_marked', 'no_limb'],
+    [],
+    { 'chiefComplaint.addRegions': ['tailbone'] },
+  ],
 ];
 
 const CASES = [
@@ -239,12 +255,20 @@ const CASES = [
 
 let pass = 0;
 const fails = [];
-for (const [specialty, name, taps, must, mustNot, paths = []] of CASES) {
+for (const [specialty, name, taps, must, mustNot, paths = [], sets = null] of CASES) {
   const map = draw(taps, paths);
-  const fired = triggers[specialty].evaluatePainMap(map).map((f) => f.id);
+  const results = triggers[specialty].evaluatePainMap(map);
+  const fired = results.map((f) => f.id);
   const missing = must.filter((id) => !fired.includes(id));
   const extra = mustNot.filter((id) => fired.includes(id));
-  if (!missing.length && !extra.length) {
+  // `sets`: what the fired triggers must write (a list is compared as a set).
+  const wrong = [];
+  for (const [key, want] of Object.entries(sets || {})) {
+    const got = results.map((f) => f.sets?.[key]).find((v) => v !== undefined);
+    const same = Array.isArray(want) ? Array.isArray(got) && [...want].sort().join() === [...got].sort().join() : got === want;
+    if (!same) wrong.push(`${key}: wanted ${JSON.stringify(want)}, got ${JSON.stringify(got)}`);
+  }
+  if (!missing.length && !extra.length && !wrong.length) {
     pass++;
   } else {
     fails.push(
@@ -252,7 +276,8 @@ for (const [specialty, name, taps, must, mustNot, paths = []] of CASES) {
       `     zones:   ${taps.map(([v, x, y]) => zoneAt(x / W, y / H, v)).join(' | ')}\n` +
       `     fired:   ${fired.join(', ') || '(nothing)'}\n` +
       (missing.length ? `     MISSING: ${missing.join(', ')}\n` : '') +
-      (extra.length ? `     UNWANTED: ${extra.join(', ')}\n` : '')
+      (extra.length ? `     UNWANTED: ${extra.join(', ')}\n` : '') +
+      (wrong.length ? `     SETS:    ${wrong.join('; ')}\n` : '')
     );
   }
 }

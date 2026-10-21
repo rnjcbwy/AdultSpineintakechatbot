@@ -14,7 +14,7 @@ Decide three things:
 
 1. specialty
 - "spine": neck, back, spine, scoliosis or posture, pain or numbness that comes from the spine into an arm or a leg (sciatica, a pinched nerve in the neck), a prior spine operation.
-- "ortho": a bone or a joint other than the spine: shoulder, elbow, hand, wrist, fingers, hip, knee, ankle, foot; fractures and injuries to them; arthritis of a joint; tendons and ligaments.
+- "ortho": a bone or a joint other than the spine: shoulder, upper arm, elbow, forearm, wrist, hand, fingers, hip, thigh, knee, lower leg, ankle, foot, toes, the pelvis, the tailbone, the SI joint; fractures and injuries to them; arthritis of a joint; tendons and ligaments.
 - A limb pain WITHOUT a joint problem and WITH neck or back symptoms is "spine". A fall or injury to a limb is "ortho". If it cannot be told, "unsure".
 
 2. visitKind
