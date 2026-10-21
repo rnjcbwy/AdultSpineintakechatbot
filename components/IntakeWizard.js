@@ -7,9 +7,9 @@ import { stepsForVisit } from '../lib/flows';
 
 // Rough minutes a patient spends on each step; the header adds up what is left.
 const STEP_MINUTES = {
-  triage: 1, demographics: 3, growth: 1, 'work-injury': 2, 'legal-injury': 3, interval: 2, postop: 2, injury: 2, 'injury-care': 2, 'fx-followup': 2,
-  'chief-complaint': 2, 'pain-map': 2, 'symptom-details': 3, 'spine-history': 3, treatments: 2, records: 2, 'clinical-photos': 1,
-  pmh: 2, psh: 1, medications: 2, allergies: 1, social: 1, family: 1, ros: 1, proms: 4, review: 2,
+  triage: 1, demographics: 2, growth: 1, 'work-injury': 2, 'legal-injury': 2, interval: 2, postop: 2, injury: 2, 'injury-care': 2, 'fx-followup': 2,
+  'chief-complaint': 1, 'pain-map': 1, 'symptom-details': 2, 'spine-history': 2, treatments: 1, records: 2, 'clinical-photos': 1,
+  pmh: 1, psh: 1, medications: 1, allergies: 1, social: 1, family: 1, ros: 1, proms: 3, review: 1,
 };
 
 const CHROME = {
