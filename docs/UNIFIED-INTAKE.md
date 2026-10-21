@@ -69,21 +69,38 @@ Shared and written once: welcome, triage, demographics, uploads, medications,
 allergies, social and family history, review and signature, kiosk mode,
 languages, drafts, Practice Hub hand-off.
 
-## Phases
+## Status (2026-10-21)
 
-1. **Foundation** (this branch, in progress): the service switch, the triage
-   step, the ortho content merged in from the adult ortho repo as the
-   `ortho` service. Both adult paths verified end to end.
-2. **Pediatric spine**: the child's demographics (parent or guardian filling
-   in, growth, birth history, school), the scoliosis and early-onset sections,
-   SRS-22r, from the pediatric spine app. Service `peds_spine`.
-3. **Pediatric orthopaedics**: the fracture-clinic track, injury and cast or
-   splint questions, the pediatric post-operative questions. Service
-   `peds_ortho`.
-4. **Cutover**: one Amplify app at one address; the three other addresses
-   redirect to it with the service pre-set (`/spine`, `/ortho`, `/kids`
-   style paths keep referral links working); Practice Hub's four form URLs
-   point at the one site; the old apps are archived.
+Done on this branch: the triage step; the adult spine and adult ortho
+services merged; the pediatric spine and pediatric ortho services ported
+(parent-or-guardian demographics, growth, clinical photos, the spine history
+step with follow-up and post-operative variants, the fracture-clinic short
+path, pediatric questionnaires, prompts, note specs and red flags); the
+streamlining pass (nothing asked twice: triage pre-fills the areas and the
+main concern, safety answers pre-fill the review of systems, imaging asked
+once, claim asked once, medicines-tried and care window only for new
+problems, nicotine on daily life, the mode gate and the additional-details
+step gone, follow-ups without symptom details, plain step names, a compact
+progress line on phones, an insurance-card photo that fills the plan and
+numbers); the nine language tables regenerated.
+
+Walked in the browser without errors: adult spine new, adult ortho new and
+new-problem, adult spine follow-up, child spine new, child ortho fracture.
+
+## Remaining
+
+1. **Cutover**: one Amplify app at one address; the three other addresses
+   redirect to it with the service pre-set; Practice Hub's four form URLs
+   point at the one site and `src/server/actions/intakes.ts` maps all four
+   sources to chart services (today only the pediatric ortho source is
+   mapped); then archive the four old repos.
+2. The review-of-systems defaults in `lib/store.js` still come from the
+   spine list (works for every service because missing answers are
+   tolerated; should read from the service).
+3. The website express chat prompt still names the surgeon (office-side
+   only, as in the old apps).
+4. PROMIS pediatric T-score tables are an empty hook (raw scores are
+   labelled as such), as in the pediatric ortho app.
 
 ## Conventions for anyone working on this branch
 
