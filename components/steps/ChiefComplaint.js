@@ -8,7 +8,6 @@ import { useLang, makeT, COMMON } from '../../lib/i18n';
 // it, as the ortho intake did; once the cutover (docs/UNIFIED-INTAKE.md)
 // redirects that address here with the spine service pre-set, the link still
 // lands the patient on the right questions.
-const SPINE_INTAKE_URL = 'https://intake.aaronweymd.com/';
 
 const LOCAL = {
   'Choose every area where you have pain, numbness, tingling or weakness. The next step asks what it feels like.': {
@@ -76,15 +75,15 @@ const LOCAL = {
   'Right': { es: 'Derecho', zh: '右' },
   'What else describes it?': { es: '¿Qué más lo describe?', zh: '还有哪些描述符合？' },
   'Selected:': { es: 'Seleccionado:', zh: '已选择：' },
-  'Neck and back problems have their own intake form.': {
-    es: 'Los problemas de cuello y espalda tienen su propio formulario.',
-    zh: '颈部和背部问题有单独的问诊表。',
+  'Neck and back problems have their own questions.': {
+    es: 'Los problemas de cuello y espalda tienen sus propias preguntas.',
+    zh: '颈部和背部问题有单独的问题。',
   },
-  'If the neck or back is your main problem, please use the spine intake instead.': {
-    es: 'Si el cuello o la espalda es su problema principal, use el formulario de columna.',
-    zh: '如果颈部或背部是您的主要问题，请改用脊柱问诊表。',
+  'If the neck or back is your main problem, switch to the spine questions.': {
+    es: 'Si el cuello o la espalda es su problema principal, cambie a las preguntas de columna.',
+    zh: '如果颈部或背部是您的主要问题，请切换到脊柱问题。',
   },
-  'Open the spine intake': { es: 'Abrir el formulario de columna', zh: '打开脊柱问诊表' },
+  'Switch to the spine questions': { es: 'Cambiar a las preguntas de columna', zh: '切换到脊柱问题' },
   'If a joint is the main problem and the back pain is on the side, carry on here.': {
     es: 'Si una articulación es el problema principal y el dolor de espalda es secundario, continúe aquí.',
     zh: '如果关节是主要问题、背痛只是附带的，请在此继续。',
@@ -131,7 +130,7 @@ const LOCAL = {
  * specialty (CHIEF_COMPLAINT_TEXT).
  */
 export default function ChiefComplaint({ onNext, onBack }) {
-  const { data, setField } = useIntake();
+  const { data, setField, setNested, setStep } = useIntake();
   const svc = useService();
   const { SYMPTOM_REGIONS, JOINT_ROWS, REGION_GROUPS, CHIEF_COMPLAINT_TEXT: text } = svc.constants;
   const cc = data.chiefComplaint;
@@ -254,10 +253,24 @@ export default function ChiefComplaint({ onNext, onBack }) {
 
             {neckBack && selected.includes(neckBack.id) && (
               <div className={`rounded-xl px-4 py-3 text-sm ${spineOnly ? 'bg-amber-50 border border-amber-300 text-amber-900' : 'bg-gray-50 border border-gray-200 text-gray-600'}`}>
-                <p className="font-medium">{t('Neck and back problems have their own intake form.')}</p>
+                <p className="font-medium">{t('Neck and back problems have their own questions.')}</p>
                 <p className="mt-1">
-                  {t('If the neck or back is your main problem, please use the spine intake instead.')}{' '}
-                  <a href={SPINE_INTAKE_URL} className="font-semibold underline text-teal-600 hover:text-teal-700">{t('Open the spine intake')}</a>
+                  {t('If the neck or back is your main problem, switch to the spine questions.')}{' '}
+                  <button
+                    type="button"
+                    className="font-semibold underline text-teal-600 hover:text-teal-700"
+                    onClick={() => {
+                      // Same form, other service: the spine questions replace the joint ones from here on.
+                      setNested('service', { ...(data.service || {}), specialty: 'spine', key: data.service?.patient === 'child' ? 'peds_spine' : 'adult_spine', how: 'manual' });
+                      setField('chiefComplaint', 'symptomRegions', []);
+                      const here = data.currentStep || 0;
+                      setNested('completedSteps', (data.completedSteps || []).filter((i) => i < here));
+                      setStep(1);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
+                    {t('Switch to the spine questions')}
+                  </button>
                 </p>
                 <p className="mt-1 text-xs opacity-80">{t('If a joint is the main problem and the back pain is on the side, carry on here.')}</p>
               </div>
