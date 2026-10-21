@@ -88,6 +88,21 @@ export default function PostOpVisit({ onNext, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onFile.length]);
 
+  // The triage step already asked what is going on and where: its sentence is
+  // the reason for the visit (shown to check and edit, not asked again) and
+  // its regions start the symptom areas until an operation names them.
+  const description = String(data.triage?.description || '').trim();
+  useEffect(() => {
+    if (!p.reason && description) set('reason', description);
+    const regions = data.chiefComplaint?.symptomRegions || [];
+    const triageRegions = data.triage?.regions || [];
+    if (!regions.length && triageRegions.length && svc.constants.regionsFromTriage) {
+      const seed = svc.constants.regionsFromTriage(triageRegions).regions;
+      if (seed.length) setField('chiefComplaint', 'symptomRegions', seed);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const setOps = (next) => {
     set('operations', next);
     // The body region of the most recent operation steers the questionnaires
@@ -130,6 +145,9 @@ export default function PostOpVisit({ onNext, onBack }) {
             onChange={(v) => set('reason', v)}
             suggestions={VISIT_REASONS}
           />
+          {description && p.reason === description && (
+            <p className="text-xs text-gray-400 mt-1.5">{t('From your first screen. Edit it if you like.')}</p>
+          )}
         </div>
 
         {ops.map((o, idx) => (

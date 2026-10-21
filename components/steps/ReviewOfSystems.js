@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
@@ -17,6 +18,7 @@ const LOCAL = {
     zh: '请点选过去一个月内您出现过的任何情况。如果都没有，请点选“以上都没有”。',
   },
   'None of these': { es: 'Ninguno de estos', zh: '以上都没有' },
+  'Already answered earlier in the form:': { es: 'Ya respondido antes en el formulario:', zh: '已在表格前面回答：' },
   'Prefer the complete review? It asks about every body system (about 50 quick yes/no questions).': {
     es: '¿Prefiere la revisión completa? Pregunta sobre cada sistema del cuerpo (unas 50 preguntas rápidas de sí/no).',
     zh: '想做完整回顾？它会询问每个身体系统（约 50 个快速是/否问题）。',
@@ -59,7 +61,7 @@ export default function ReviewOfSystems({ onNext, onBack }) {
   const ros = data.reviewOfSystems;
   const svc = useService();
   const {
-    ROS_SECTIONS, ROS_SCREEN, COMPLETE_ROS_THRESHOLD, isSectionComplete, countReviewedSystems, rosSectionOf, TRANSLATIONS,
+    ROS_SECTIONS, ROS_SCREEN, COMPLETE_ROS_THRESHOLD, isSectionComplete, countReviewedSystems, rosSectionOf, TRANSLATIONS, prefilledROS,
   } = svc.rosSystems;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL, ...TRANSLATIONS }, lang);
@@ -67,6 +69,24 @@ export default function ReviewOfSystems({ onNext, onBack }) {
   const updateROS = (section, questionId, value) => {
     setNested(`reviewOfSystems.${section}.${questionId}`, value);
   };
+
+  // Answers the form already has: the safety check on the symptom-details
+  // step and the past medical history (the service's SAFETY_TO_ROS and
+  // PMH_TO_ROS). They are written into the review when this step opens — a
+  // blank answer is filled, and a "yes" is never lost to an earlier "no" — and
+  // their short-list chips are not shown again.
+  const prefilled = prefilledROS ? prefilledROS(data) : {};
+  useEffect(() => {
+    for (const [id, v] of Object.entries(prefilled)) {
+      const section = rosSectionOf(id);
+      if (!section) continue;
+      const cur = ros?.[section]?.[id];
+      if (!cur || (v === 'yes' && cur !== 'yes')) updateROS(section, id, v);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const asked = ROS_SCREEN.filter((q) => !(q.id in prefilled));
+  const carried = ROS_SCREEN.filter((q) => q.id in prefilled);
 
   /**
    * A review of systems is overwhelmingly negatives, so answering each one
@@ -87,19 +107,19 @@ export default function ReviewOfSystems({ onNext, onBack }) {
   const mode = ros.mode === 'full' ? 'full' : 'screen';
   const setMode = (m) => setNested('reviewOfSystems.mode', m);
   const screenValue = (q) => ros?.[rosSectionOf(q.id)]?.[q.id];
-  const positives = ROS_SCREEN.filter((q) => screenValue(q) === 'yes');
-  const screenAnswered = ROS_SCREEN.some((q) => !!screenValue(q));
+  const positives = asked.filter((q) => screenValue(q) === 'yes');
+  const screenAnswered = asked.some((q) => !!screenValue(q));
   const noneSelected = screenAnswered && positives.length === 0;
   const tapScreen = (q) => {
     const v = screenValue(q) === 'yes' ? 'no' : 'yes';
     updateROS(rosSectionOf(q.id), q.id, v);
     // Once anything is answered, the rest of the list counts as asked.
-    for (const other of ROS_SCREEN) {
+    for (const other of asked) {
       if (other.id !== q.id && !screenValue(other)) updateROS(rosSectionOf(other.id), other.id, 'no');
     }
   };
   const tapNone = () => {
-    for (const q of ROS_SCREEN) updateROS(rosSectionOf(q.id), q.id, 'no');
+    for (const q of asked) updateROS(rosSectionOf(q.id), q.id, 'no');
   };
   // Continuing with nothing tapped records the list as reviewed and negative.
   const next = () => {
@@ -119,7 +139,7 @@ export default function ReviewOfSystems({ onNext, onBack }) {
 
         <div className="card">
           <div className="flex flex-wrap gap-2">
-            {ROS_SCREEN.map((q) => {
+            {asked.map((q) => {
               const on = screenValue(q) === 'yes';
               return (
                 <button
@@ -146,6 +166,23 @@ export default function ReviewOfSystems({ onNext, onBack }) {
               {t('None of these')}
             </button>
           </div>
+          {carried.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-400 mb-1.5">{t('Already answered earlier in the form:')}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {carried.map((q) => (
+                  <span
+                    key={q.id}
+                    className={`px-2.5 py-1 rounded-full text-xs border ${
+                      prefilled[q.id] === 'yes' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-gray-50 text-gray-500 border-gray-200'
+                    }`}
+                  >
+                    {t(q.label)} — {prefilled[q.id] === 'yes' ? t('Yes') : t('No')}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="card mt-4">

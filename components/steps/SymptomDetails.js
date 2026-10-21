@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { PainScale } from '../ui/Fields';
@@ -113,28 +114,24 @@ const LOCAL = {
   'Dropping things more than usual?': { es: '¿Se le caen las cosas más de lo habitual?', zh: '比平时更容易掉东西？' },
   'Unsteady on your feet?': { es: '¿Inestable al caminar?', zh: '站立或行走不稳？' },
   'Electric shock down your spine when you bend your neck?': { es: '¿Sensación de descarga eléctrica por la columna al doblar el cuello?', zh: '低头时脊柱有触电感？' },
-  'How would you like to describe your symptoms?': { es: '¿Cómo prefiere describir sus síntomas?', zh: '您想如何描述您的症状？' },
-  'Either way takes about five minutes. Pick whichever feels easier.': {
-    es: 'Cualquiera de las dos toma unos cinco minutos. Elija la que le resulte más fácil.',
-    zh: '两种方式都大约需要五分钟。选择您觉得更容易的一种。',
-  },
+  'Prefer to talk it through?': { es: '¿Prefiere contarlo en una conversación?', zh: '更想通过对话来讲述？' },
   'Tell it in your own words': { es: 'Cuéntelo con sus propias palabras', zh: '用您自己的话讲述' },
-  'A short back-and-forth: our assistant asks about five questions and you answer however you like.': {
-    es: 'Una conversación corta: nuestro asistente hace unas cinco preguntas y usted responde como quiera.',
-    zh: '简短的问答：我们的助手会问大约五个问题，您可以随意作答。',
+  'Optional. A short back-and-forth: our assistant asks about five questions and you answer however you like.': {
+    es: 'Opcional. Una conversación corta: nuestro asistente hace unas cinco preguntas y usted responde como quiera.',
+    zh: '可选。简短的问答：我们的助手会问大约五个问题，您可以随意作答。',
   },
-  'Answer quick questions': { es: 'Responder preguntas rápidas', zh: '回答快速问题' },
-  'Tap through a few multiple-choice questions for each area that hurts.': {
-    es: 'Responda unas pocas preguntas de opción múltiple por cada zona que le duele.',
-    zh: '为每个疼痛部位点选几个选择题。',
-  },
-  'Tap through a few multiple-choice questions for each joint that hurts.': {
-    es: 'Responda unas pocas preguntas de opción múltiple por cada articulación que le duele.',
-    zh: '为每个疼痛的关节点选几个选择题。',
-  },
-  'Prefer to talk it through instead?': { es: '¿Prefiere contarlo en una conversación?', zh: '更想通过对话来讲述？' },
   'Prefer quick questions instead?': { es: '¿Prefiere las preguntas rápidas?', zh: '更想回答快速问题？' },
   'Switch': { es: 'Cambiar', zh: '切换' },
+  // The "anything else?" box (formerly its own step)
+  'Anything else you want the team to know?': { es: '¿Algo más que quiera que el equipo sepa?', zh: '还有什么想让团队知道的吗？' },
+  'Optional. Your goals for the visit, questions you have, or anything the questions above missed.': {
+    es: 'Opcional. Sus objetivos para la consulta, sus preguntas o cualquier cosa que las preguntas anteriores no hayan cubierto.',
+    zh: '可选。您的就诊目标、疑问，或上面的问题没有涵盖的内容。',
+  },
+  "For example: I'm most worried about the numbness in my hand, and I'd like to understand my options before considering surgery...": {
+    es: 'Por ejemplo: Lo que más me preocupa es el entumecimiento en la mano, y me gustaría entender mis opciones antes de considerar una cirugía...',
+    zh: '例如：我最担心手部的麻木，希望在考虑手术之前先了解我的选择……',
+  },
   // Section header
   'Symptom Details': { es: 'Detalles de los síntomas', zh: '症状详情' },
   "Let's go through the symptoms you told us about. You can fill this out for all of your symptoms on this one page — answer what you can and skip anything that doesn't apply.":
@@ -301,7 +298,15 @@ const LOCAL = {
  *   - The safety questions are asked a single time; which ones appear comes
  *     from the service's SAFETY_QUESTIONS (the myelopathy and cauda equina
  *     screens for the spine; the infection, circulation, clot and
- *     joint-specific screens for a bone or joint).
+ *     joint-specific screens for a bone or joint). The review-of-systems
+ *     step copies these answers (rosSystems SAFETY_TO_ROS) and does not ask
+ *     them again.
+ *   - The structured questions are the default. A short guided conversation
+ *     is offered as an option, never as a gate: nothing here blocks Continue.
+ *   - A problem that began with an injury (the chief complaint's injury chip,
+ *     or a work or accident claim) starts with "how it started" pre-answered
+ *     (the service's injuryDefaults); the patient can change it.
+ *   - The "anything else?" box that used to be its own step is at the end.
  *
  * Everything that differs by service is read from `useService().problems`.
  */
@@ -325,51 +330,61 @@ export default function SymptomDetails({ onNext, onBack }) {
   const safetyContext = { problems: new Set(problems.map((p) => p.id)), anyInjury };
   const primary = hpi.primaryProblem || (problems.length === 1 ? problems[0].id : '');
 
-  // One path or the other, never both: a short guided conversation, or the
-  // structured questions. The choice is kept so coming back shows the same.
-  const mode = hpi.detailMode || '';
+  // The structured questions unless the patient chose the conversation. The
+  // choice is kept so coming back shows the same.
+  const mode = hpi.detailMode === 'conversation' ? 'conversation' : 'questions';
   const setMode = (m) => setNested('hpiData.detailMode', m);
+
+  // An injury already told to us: the chief complaint's injury chip, or a
+  // claim. A problem the patient has not touched yet starts from the
+  // service's injury defaults; once its record exists it is never re-seeded.
+  const trauma = selectedRegions.includes('trauma');
+  const claim = ['workers_comp', 'personal_injury'].includes(data.visit?.type) || (!!data.visit?.workInjury && data.visit.workInjury !== 'No');
+  const problemKey = problems.map((p) => p.id).join(',');
+  useEffect(() => {
+    if (!(trauma || claim) || !defs.injuryDefaults) return;
+    const patch = defs.injuryDefaults({ trauma, claim });
+    for (const p of problems) {
+      if (hpi.problems?.[p.id]) continue;
+      for (const [k, v] of Object.entries(patch)) setNested(`hpiData.problems.${p.id}.${k}`, v);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trauma, claim, problemKey]);
 
   const safety = (
     <SafetyCheck t={t} overall={overall} update={updateOverall} questions={defs.SAFETY_QUESTIONS} context={safetyContext} />
   );
 
-  if (selectedRegions.length > 0 && !mode) {
-    return (
-      <div className="animate-fade-in">
-        <div className="mb-8">
-          <h2 className="section-title">{t('How would you like to describe your symptoms?')}</h2>
-          <p className="section-subtitle">{t('Either way takes about five minutes. Pick whichever feels easier.')}</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button type="button" onClick={() => setMode('conversation')} className="text-left p-6 rounded-2xl border-2 border-gray-200 bg-white hover:border-teal-300 transition-all">
-            <span className="block text-base font-semibold text-navy-600">{t('Tell it in your own words')}</span>
-            <span className="block text-sm text-gray-500 mt-1 leading-relaxed">{t('A short back-and-forth: our assistant asks about five questions and you answer however you like.')}</span>
-          </button>
-          <button type="button" onClick={() => setMode('questions')} className="text-left p-6 rounded-2xl border-2 border-gray-200 bg-white hover:border-teal-300 transition-all">
-            <span className="block text-base font-semibold text-navy-600">{t('Answer quick questions')}</span>
-            <span className="block text-sm text-gray-500 mt-1 leading-relaxed">{t(text.quick)}</span>
-          </button>
-        </div>
-        <StepNavigation onNext={onNext} onBack={onBack} canGoNext={false} />
-      </div>
-    );
-  }
+  // Formerly its own step; the same field, so the note and the office read it as before.
+  const anythingElse = (
+    <div className="card mt-4">
+      <label className="form-label text-base">{t('Anything else you want the team to know?')}</label>
+      <p className="text-sm text-gray-400 mb-3">{t('Optional. Your goals for the visit, questions you have, or anything the questions above missed.')}</p>
+      <textarea
+        value={hpi.additionalConcerns || ''}
+        onChange={(e) => setNested('hpiData.additionalConcerns', e.target.value)}
+        placeholder={t("For example: I'm most worried about the numbness in my hand, and I'd like to understand my options before considering surgery...")}
+        rows={3}
+        className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-800 resize-none"
+      />
+    </div>
+  );
 
   if (selectedRegions.length > 0 && mode === 'conversation') {
-    const answered = (hpi.conversationHistory || []).filter((m) => m.role === 'user').length;
     return (
       <div className="animate-fade-in">
         <div className="mb-6">
           <h2 className="section-title">{t('Symptom Details')}</h2>
           <p className="section-subtitle">
+            {t('Optional. A short back-and-forth: our assistant asks about five questions and you answer however you like.')}{' '}
             {t('Prefer quick questions instead?')}{' '}
             <button type="button" onClick={() => setMode('questions')} className="text-teal-600 hover:underline font-medium">{t('Switch')}</button>
           </p>
         </div>
         <HPIChat intakeData={data} hpiData={hpi} setNested={setNested} maxTurns={5} autoStart />
         {safety}
-        <StepNavigation onNext={onNext} onBack={onBack} canGoNext={answered >= 1} nextLabel={t('Continue')} />
+        {anythingElse}
+        <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue')} />
       </div>
     );
   }
@@ -392,11 +407,13 @@ export default function SymptomDetails({ onNext, onBack }) {
     <div className="animate-fade-in">
       <div className="mb-6">
         <h2 className="section-title">{t('Symptom Details')}</h2>
-        <p className="section-subtitle">
-          {t(text.intro)}{' '}
-          {t('Prefer to talk it through instead?')}{' '}
-          <button type="button" onClick={() => setMode('conversation')} className="text-teal-600 hover:underline font-medium">{t('Switch')}</button>
-        </p>
+        <p className="section-subtitle">{t(text.intro)}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+          <span>{t('Prefer to talk it through?')}</span>
+          <button type="button" onClick={() => setMode('conversation')} className="btn-secondary text-sm py-1.5 px-3">
+            {t('Tell it in your own words')}
+          </button>
+        </div>
       </div>
 
       {problems.length > 1 && (
@@ -435,6 +452,7 @@ export default function SymptomDetails({ onNext, onBack }) {
       </div>
 
       {safety}
+      {anythingElse}
 
       <StepNavigation onNext={onNext} onBack={onBack} canGoNext nextLabel={t('Continue')} />
     </div>
@@ -446,8 +464,9 @@ export default function SymptomDetails({ onNext, onBack }) {
 // One problem: when, how it started, the trend, how bad, what it feels like.
 // For a joint (the ortho service's option lists are non-empty): also what the
 // patient thinks it is, what the joint does, and for an injury the date,
-// weight bearing and any cast or splint. The chief-complaint step already
-// asked how long it has been going on, so a single problem does not ask again.
+// weight bearing and any cast or splint. When it started is asked here, once
+// per problem (an older draft that answered the chief-complaint step's
+// retired duration chips is not asked again for a single problem).
 // ===========================================================================
 function ProblemCard({ t, defs, painQualities, problem, value, update, single, isPrimary, duration }) {
   const {

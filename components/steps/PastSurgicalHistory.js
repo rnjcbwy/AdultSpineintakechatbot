@@ -15,6 +15,14 @@ const LOCAL = {
     es: 'Enumere las cirugías que haya tenido, especialmente cualquier cirugía de la columna.',
     zh: '请列出您以前做过的任何手术，尤其是脊柱手术。',
   },
+  'You told us you have had spine surgery before. Tell us what it was and roughly when; the rest is optional.': {
+    es: 'Nos indicó que ya le han operado de la columna. Díganos qué fue y aproximadamente cuándo; el resto es opcional.',
+    zh: '您告诉我们您以前做过脊柱手术。请告诉我们是什么手术以及大约什么时候；其余内容可选填。',
+  },
+  'You told us you have had an operation on this bone or joint before. Tell us what it was and roughly when; the rest is optional.': {
+    es: 'Nos indicó que ya le han operado este hueso o articulación. Díganos qué fue y aproximadamente cuándo; el resto es opcional.',
+    zh: '您告诉我们您以前做过这个骨骼或关节的手术。请告诉我们是什么手术以及大约什么时候；其余内容可选填。',
+  },
   'Region:': { es: 'Región:', zh: '部位：' },
   'Date:': { es: 'Fecha:', zh: '日期：' },
   'Hospital:': { es: 'Hospital:', zh: '医院：' },
@@ -51,8 +59,23 @@ const LOCAL = {
   'Heart': { es: 'Corazón', zh: '心脏' },
   'Brain/Head': { es: 'Cerebro/Cabeza', zh: '脑部/头部' },
   'Other': { es: 'Otro', zh: '其他' },
-  'Approximate date': { es: 'Fecha aproximada', zh: '大致日期' },
-  'e.g., March 2022, or 2020': { es: 'p. ej., marzo de 2022, o 2020', zh: '例如：2022年3月，或2020年' },
+  'When was it? (if known)': { es: '¿Cuándo fue? (si lo sabe)', zh: '什么时候做的？（如果知道）' },
+  'Year': { es: 'Año', zh: '年' },
+  'Month (if known)': { es: 'Mes (si lo sabe)', zh: '月（如果知道）' },
+  'Or write the date another way': { es: 'O escriba la fecha de otra manera', zh: '或以其他方式填写日期' },
+  'e.g., About 10 years ago': { es: 'p. ej., hace unos 10 años', zh: '例如：大约10年前' },
+  'January': { es: 'Enero', zh: '一月' },
+  'February': { es: 'Febrero', zh: '二月' },
+  'March': { es: 'Marzo', zh: '三月' },
+  'April': { es: 'Abril', zh: '四月' },
+  'May': { es: 'Mayo', zh: '五月' },
+  'June': { es: 'Junio', zh: '六月' },
+  'July': { es: 'Julio', zh: '七月' },
+  'August': { es: 'Agosto', zh: '八月' },
+  'September': { es: 'Septiembre', zh: '九月' },
+  'October': { es: 'Octubre', zh: '十月' },
+  'November': { es: 'Noviembre', zh: '十一月' },
+  'December': { es: 'Diciembre', zh: '十二月' },
   'Hospital (if known)': { es: 'Hospital (si lo sabe)', zh: '医院（如果知道）' },
   'Hospital name': { es: 'Nombre del hospital', zh: '医院名称' },
   'Surgeon (if known)': { es: 'Cirujano (si lo sabe)', zh: '外科医生（如果知道）' },
@@ -105,6 +128,7 @@ const LOCAL = {
 const COPY = {
   spine: {
     subtitle: "List any prior surgeries you've had, especially any spine surgeries.",
+    priorHint: 'You told us you have had spine surgery before. Tell us what it was and roughly when; the rest is optional.',
     typePlaceholder: 'e.g., Lumbar fusion, Knee replacement, Appendectomy',
     regions: ['Cervical spine (neck)', 'Thoracic spine (upper back)', 'Lumbar spine (low back)', 'Hip', 'Knee', 'Shoulder', 'Abdomen', 'Heart', 'Brain/Head', 'Other'],
     flagLabel: 'This was a spine surgery',
@@ -115,6 +139,7 @@ const COPY = {
   },
   ortho: {
     subtitle: "List any prior surgeries you've had, especially any bone, joint, tendon or ligament surgery.",
+    priorHint: 'You told us you have had an operation on this bone or joint before. Tell us what it was and roughly when; the rest is optional.',
     typePlaceholder: 'e.g., ACL reconstruction, Knee replacement, Appendectomy',
     regions: ['Shoulder', 'Elbow', 'Hand or wrist', 'Hip', 'Knee', 'Ankle or foot', 'Spine (neck or back)', 'Abdomen', 'Heart', 'Brain/Head', 'Other'],
     flagLabel: 'This was a bone, joint, tendon or ligament surgery',
@@ -125,54 +150,78 @@ const COPY = {
   },
 };
 
+const THIS_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 80 }, (_, i) => String(THIS_YEAR - i));
+
+function emptySurgery(isSpineSurgery = false) {
+  return {
+    type: '',
+    bodyRegion: '',
+    date: '',
+    hospital: '',
+    surgeon: '',
+    complications: '',
+    helped: '',
+    isSpineSurgery,
+    spineLevel: '',
+  };
+}
+
 export default function PastSurgicalHistory({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const { data, setSection } = useIntake();
   const svc = useService();
+  const { MONTHS, monthYearText, monthYearParts } = svc.operations;
   const copy = COPY[svc.specialty] || COPY.spine;
   const psh = data.pastSurgicalHistory;
-  const [showForm, setShowForm] = useState(false);
+  const surgeries = psh.surgeries || [];
+  // The chief complaint already said there was a spine (or joint) operation:
+  // open with that entry started, flagged, so only the what and when are asked.
+  const priorKnown = !!data.chiefComplaint?.hasPriorSpineSurgery && surgeries.length === 0;
+  const [showForm, setShowForm] = useState(priorKnown);
   const [editIndex, setEditIndex] = useState(-1);
-  const [form, setForm] = useState(emptySurgery());
+  const [form, setForm] = useState(() => emptySurgery(priorKnown));
+  // The date as the picker holds it; `date` on the entry stays the text the
+  // note, the PDF and the office read ("March 2022", "2022", or as typed).
+  const [when, setWhen] = useState({ year: '', month: '' });
 
-  function emptySurgery() {
-    return {
-      type: '',
-      bodyRegion: '',
-      date: '',
-      hospital: '',
-      surgeon: '',
-      complications: '',
-      helped: '',
-      isSpineSurgery: false,
-      spineLevel: '',
-    };
-  }
-
-  const saveSurgery = () => {
-    if (!form.type) return;
-    const surgeries = [...(psh.surgeries || [])];
-    if (editIndex >= 0) {
-      surgeries[editIndex] = form;
-    } else {
-      surgeries.push(form);
-    }
-    setSection('pastSurgicalHistory', { surgeries });
-    setForm(emptySurgery());
-    setShowForm(false);
-    setEditIndex(-1);
-  };
-
-  const editSurgery = (index) => {
-    setForm(psh.surgeries[index]);
+  const openForm = (entry, index = -1) => {
+    setForm(entry);
+    setWhen(monthYearParts(entry.date));
     setEditIndex(index);
     setShowForm(true);
   };
 
+  const setPicker = (patch) => {
+    const next = { ...when, ...patch };
+    setWhen(next);
+    setForm((prev) => ({ ...prev, date: next.year ? monthYearText(next.year, next.month) : '' }));
+  };
+  const setDateText = (text) => {
+    setWhen(monthYearParts(text));
+    setForm((prev) => ({ ...prev, date: text }));
+  };
+
+  const saveSurgery = () => {
+    if (!form.type) return;
+    const next = [...surgeries];
+    if (editIndex >= 0) {
+      next[editIndex] = form;
+    } else {
+      next.push(form);
+    }
+    setSection('pastSurgicalHistory', { surgeries: next });
+    setForm(emptySurgery());
+    setWhen({ year: '', month: '' });
+    setShowForm(false);
+    setEditIndex(-1);
+  };
+
+  const editSurgery = (index) => openForm(surgeries[index], index);
+
   const removeSurgery = (index) => {
-    const surgeries = (psh.surgeries || []).filter((_, i) => i !== index);
-    setSection('pastSurgicalHistory', { surgeries });
+    setSection('pastSurgicalHistory', { surgeries: surgeries.filter((_, i) => i !== index) });
   };
 
   return (
@@ -186,9 +235,9 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
 
       <div className="space-y-6">
         {/* Existing surgeries */}
-        {(psh.surgeries || []).length > 0 && (
+        {surgeries.length > 0 && (
           <div className="space-y-3">
-            {psh.surgeries.map((surgery, i) => (
+            {surgeries.map((surgery, i) => (
               <div key={i} className={`card card-hover ${surgery.isSpineSurgery ? 'border-l-4 border-l-teal-400' : ''}`}>
                 <div className="flex items-start justify-between">
                   <div>
@@ -230,10 +279,13 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
         {/* Add surgery form */}
         {showForm ? (
           <div className="card border-2 border-teal-200">
-            <h3 className="text-lg font-medium text-navy-600 mb-4">
+            <h3 className="text-lg font-medium text-navy-600 mb-1">
               {editIndex >= 0 ? t('Edit Surgery') : t('Add Surgery')}
             </h3>
-            <div className="space-y-4">
+            {priorKnown && editIndex < 0 && form.isSpineSurgery && (
+              <p className="text-sm text-teal-700 mb-4">{t(copy.priorHint)}</p>
+            )}
+            <div className="space-y-4 mt-3">
               <div>
                 <label className="form-label">{t('Surgery type *')}</label>
                 <input
@@ -241,6 +293,7 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
                   value={form.type}
                   onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value }))}
                   placeholder={t(copy.typePlaceholder)}
+                  autoFocus={priorKnown}
                 />
               </div>
 
@@ -256,13 +309,28 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">{t('Approximate date')}</label>
-                  <input
-                    type="text"
-                    value={form.date}
-                    onChange={(e) => setForm(prev => ({ ...prev, date: e.target.value }))}
-                    placeholder={t('e.g., March 2022, or 2020')}
-                  />
+                  <label className="form-label">{t('When was it? (if known)')}</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={when.year} onChange={(e) => setPicker({ year: e.target.value })} aria-label={t('Year')}>
+                      <option value="">{t('Year')}</option>
+                      {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                    <select value={when.month} onChange={(e) => setPicker({ month: e.target.value })} aria-label={t('Month (if known)')} disabled={!when.year}>
+                      <option value="">{t('Month (if known)')}</option>
+                      {MONTHS.map((m, i) => <option key={m} value={String(i + 1)}>{t(m)}</option>)}
+                    </select>
+                  </div>
+                  {!when.year && (
+                    <div className="mt-2">
+                      <label className="form-label text-sm">{t('Or write the date another way')}</label>
+                      <input
+                        type="text"
+                        value={form.date}
+                        onChange={(e) => setDateText(e.target.value)}
+                        placeholder={t('e.g., About 10 years ago')}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="form-label">{t('Hospital (if known)')}</label>
@@ -339,6 +407,7 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
                   onClick={() => {
                     setShowForm(false);
                     setForm(emptySurgery());
+                    setWhen({ year: '', month: '' });
                     setEditIndex(-1);
                   }}
                   className="btn-secondary"
@@ -349,7 +418,7 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
             </div>
           </div>
         ) : (
-          <button onClick={() => setShowForm(true)} className="card card-hover w-full text-center py-8 border-dashed border-2 border-gray-300">
+          <button onClick={() => openForm(emptySurgery())} className="card card-hover w-full text-center py-8 border-dashed border-2 border-gray-300">
             <svg className="w-8 h-8 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -358,7 +427,7 @@ export default function PastSurgicalHistory({ onNext, onBack }) {
           </button>
         )}
 
-        {(psh.surgeries || []).length === 0 && !showForm && (
+        {surgeries.length === 0 && !showForm && (
           <p className="text-sm text-gray-400 text-center">
             {t('No surgeries added. If you have no prior surgeries, you can continue to the next section.')}
           </p>

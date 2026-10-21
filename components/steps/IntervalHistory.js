@@ -1,9 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextField, TextArea, PainScale } from '../ui/Fields';
+
+// Display-only translations for this step's own strings; the field labels
+// below go through the shared tables (lib/translations) as before.
+const LOCAL = {
+  'You can add the report or the images on the Records step, a little further on.': {
+    es: 'Puede agregar el informe o las imágenes en el paso de Registros, un poco más adelante.',
+    zh: '您可以在稍后的“记录”步骤中添加报告或影像。',
+  },
+};
 
 const LAST_VISIT = ['About 2 weeks ago', 'About 6 weeks ago', 'About 3 months ago', 'About 6 months ago', 'About a year ago', 'Longer than a year ago'];
 const CHANGE = ['Much better', 'Somewhat better', 'About the same', 'Somewhat worse', 'Much worse'];
@@ -21,7 +31,7 @@ export default function IntervalHistory({ onNext, onBack }) {
   const { SYMPTOM_REGIONS } = svc.constants;
   const ortho = svc.specialty === 'ortho';
   const lang = useLang();
-  const t = makeT(COMMON, lang);
+  const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const f = data.visit?.followup || {};
   const set = (k, v) => setNested(`visit.followup.${k}`, v);
   const regions = data.chiefComplaint?.symptomRegions || [];
@@ -31,6 +41,18 @@ export default function IntervalHistory({ onNext, onBack }) {
     if (!data.chiefComplaint?.mainReason) setField('chiefComplaint', 'mainReason', ortho ? 'Follow-up of a known bone or joint problem' : 'Follow-up of a known spine problem');
   };
   const canGoNext = !!f.overallChange;
+
+  // The triage step already asked where the problem is and what is going on.
+  // Its regions pre-select the areas below (a joint without a side stays for
+  // the patient to tap), and its sentence is shown rather than asked again.
+  const description = String(data.triage?.description || '').trim();
+  const triageRegions = data.triage?.regions || [];
+  useEffect(() => {
+    if (regions.length || !triageRegions.length || !svc.constants.regionsFromTriage) return;
+    const seed = svc.constants.regionsFromTriage(triageRegions).regions.filter((id) => SYMPTOM_REGIONS.some((r) => r.id === id));
+    if (seed.length) setField('chiefComplaint', 'symptomRegions', seed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="animate-fade-in">
@@ -45,6 +67,11 @@ export default function IntervalHistory({ onNext, onBack }) {
         <div className="card space-y-4">
           <Chips label="When was your last visit for this problem?" options={LAST_VISIT} value={f.lastVisitWhen} onChange={(v) => set('lastVisitWhen', v)} />
           <Chips label="Overall, compared with your last visit, you are:" options={CHANGE} value={f.overallChange} onChange={(v) => set('overallChange', v)} />
+          {description && (
+            <p className="text-sm text-gray-600 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
+              <span className="font-medium text-gray-500">{t('You told us:')}</span> {description}
+            </p>
+          )}
           <TextArea
             label="What has changed? Tell us in your own words"
             value={f.whatChanged}
@@ -97,8 +124,9 @@ export default function IntervalHistory({ onNext, onBack }) {
           {(f.treatments || []).includes('New or changed medication') && (
             <TextField label="Medication: what changed and did it help?" value={f.medicationDetails} onChange={(v) => set('medicationDetails', v)} placeholder="e.g., Started gabapentin 300 mg at night; less burning" />
           )}
+          {/* The records step asks for new imaging since the last visit, so it is not asked here. */}
           {(f.treatments || []).includes('New imaging (MRI, CT, X-ray)') && (
-            <TextField label="Imaging: what, when, and where (please bring the report)" value={f.imagingDetails} onChange={(v) => set('imagingDetails', v)} placeholder={ortho ? 'e.g., Right knee MRI, May 2026, Holy Name Imaging' : 'e.g., Lumbar MRI, May 2026, Holy Name Imaging'} />
+            <p className="text-xs text-gray-400">{t('You can add the report or the images on the Records step, a little further on.')}</p>
           )}
           {(f.treatments || []).includes('Surgery elsewhere') && (
             <TextField label="Surgery elsewhere: what, when and where" value={f.surgeryDetails} onChange={(v) => set('surgeryDetails', v)} />

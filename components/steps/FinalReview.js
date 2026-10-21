@@ -46,6 +46,8 @@ const LOCAL = {
   'Incision': { es: 'Incisión', zh: '切口' },
   'Pain vs. before surgery': { es: 'Dolor vs. antes de la cirugía', zh: '与术前相比的疼痛' },
   'Chief Complaint': { es: 'Motivo principal de consulta', zh: '主诉' },
+  'Your main concern': { es: 'Su preocupación principal', zh: '您的主要问题' },
+  'Your symptoms and what you have tried': { es: 'Sus síntomas y lo que ha probado', zh: '您的症状和已尝试的治疗' },
   'Symptom Details & Treatment History': { es: 'Detalles de los síntomas e historial de tratamiento', zh: '症状详情与治疗史' },
   'Past Medical History': { es: 'Antecedentes médicos', zh: '既往病史' },
   'Past Surgical History': { es: 'Antecedentes quirúrgicos', zh: '既往手术史' },
@@ -497,11 +499,11 @@ export default function FinalReview({ onBack, onGoToStep }) {
         {has('chief-complaint') && (
           <ReviewCard
             t={t}
-            title="Chief Complaint"
+            title="Your main concern"
             onEdit={() => go('chief-complaint')}
             items={[
               { label: 'Main concern', value: data.chiefComplaint.mainReason },
-              { label: 'Duration', value: data.chiefComplaint.duration },
+              ...(data.chiefComplaint.duration ? [{ label: 'Duration', value: data.chiefComplaint.duration }] : []),
               { label: 'Symptom areas', value: regionsLabel },
             ]}
           />
@@ -510,7 +512,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
         {has('symptom-details') && (
           <ReviewCard
             t={t}
-            title="Symptom Details & Treatment History"
+            title="Your symptoms and what you have tried"
             onEdit={() => go('symptom-details')}
             items={[
               { label: 'Problems described', value: String(Object.keys(data.hpiData.problems || {}).length || Object.keys(data.hpiData.symptoms || {}).length) },

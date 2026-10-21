@@ -13,8 +13,6 @@ const LOCAL = {
   },
   'Nothing yet': { es: 'Nada todavía', zh: '尚未尝试' },
   'Injections': { es: 'Inyecciones', zh: '注射' },
-  'Imaging (X-ray, MRI, CT)': { es: 'Imágenes (radiografía, resonancia, tomografía)', zh: '影像检查（X光、核磁、CT）' },
-  'Imaging (X-ray, MRI, CT, ultrasound)': { es: 'Imágenes (radiografía, resonancia, tomografía, ecografía)', zh: '影像检查（X光、核磁、CT、超声）' },
   'A few details about each, as much as you remember:': {
     es: 'Algunos detalles de cada uno, lo que recuerde:',
     zh: '请尽量回忆每项的一些细节：',
@@ -105,8 +103,11 @@ const LOCAL = {
   'Back brace or cervical collar': { es: 'Faja lumbar o collarín cervical', zh: '腰背支具或颈托' },
   'Brace, splint, cast, boot or sling': { es: 'Ortesis, férula, yeso, bota o cabestrillo', zh: '支具、夹板、石膏、步行靴或吊带' },
   'Injections': { es: 'Inyecciones', zh: '注射' },
-  'Prior Imaging': { es: 'Estudios de imagen previos', zh: '既往影像检查' },
   'EMG or nerve conduction study': { es: 'EMG o estudio de conducción nerviosa', zh: '肌电图或神经传导检查' },
+  'Your X-rays, MRI or other imaging are asked about on the next page, with the records.': {
+    es: 'Sus radiografías, resonancia u otros estudios de imagen se preguntan en la página siguiente, junto con los registros.',
+    zh: '您的X光、核磁或其他影像检查将在下一页与记录一起询问。',
+  },
 
   // Field labels
   'Where? (clinic name & city)': { es: '¿Dónde? (nombre de la clínica y ciudad)', zh: '在哪里？（诊所名称和城市）' },
@@ -130,15 +131,6 @@ const LOCAL = {
   'Guided by a therapist': { es: 'Guiado por un terapeuta', zh: '由治疗师指导' },
   'App or online program': { es: 'Aplicación o programa en línea', zh: '应用或在线课程' },
   'Handout / printed exercises': { es: 'Folleto / ejercicios impresos', zh: '讲义／纸质练习' },
-
-  // Imaging chips
-  'X-rays': { es: 'Radiografías', zh: 'X光片' },
-  'MRI': { es: 'Resonancia magnética (MRI)', zh: '磁共振（MRI）' },
-  'CT scan': { es: 'Tomografía (TC)', zh: 'CT扫描' },
-  'Myelogram': { es: 'Mielografía', zh: '脊髓造影' },
-  'Ultrasound': { es: 'Ecografía', zh: '超声' },
-  'Bone density scan (DEXA)': { es: 'Densitometría ósea (DEXA)', zh: '骨密度扫描（DEXA）' },
-  'None': { es: 'Ninguno', zh: '无' },
 
   // Injection section
   'Have you had any injections for this problem (cortisone, gel, PRP)? Add each one with as much detail as you can — this is important for insurance authorization.': {
@@ -175,10 +167,6 @@ const LOCAL = {
   'How many? (e.g., 3)': { es: '¿Cuántas? (p. ej., 3)', zh: '多少次？（例如 3）' },
   'How long did relief last? (e.g., 2 weeks)': { es: '¿Cuánto duró el alivio? (p. ej., 2 semanas)', zh: '缓解持续了多久？（例如 2周）' },
   '+ Add Injection': { es: '+ Agregar inyección', zh: '+ 添加注射' },
-
-  // Prior imaging section
-  'What imaging studies have you had for your spine?': { es: '¿Qué estudios de imagen se ha hecho de la columna?', zh: '您为脊柱做过哪些影像检查？' },
-  'What imaging studies have you had for this problem?': { es: '¿Qué estudios de imagen se ha hecho para este problema?', zh: '您为这个问题做过哪些影像检查？' },
 
   // Records notes
   'PT visit notes or a discharge summary: upload them at the Records step, or bring them to your visit.': {
@@ -237,9 +225,6 @@ const COPY = {
     hepFocus: ['Core strengthening', 'Stretching', 'Walking program'],
     injectionsPrompt: 'Have you had any spine injections? Add each one with as much detail as you can — this is important for insurance authorization.',
     injectionWhere: 'Where? (e.g., L4-L5, left side)',
-    imagingLabel: 'Imaging (X-ray, MRI, CT)',
-    imagingPrompt: 'What imaging studies have you had for your spine?',
-    imagingStudies: ['X-rays', 'MRI', 'CT scan', 'Myelogram', 'Bone density scan (DEXA)'],
     emgPlaceholder: 'e.g., Mild nerve irritation on the right at L5',
   },
   ortho: {
@@ -251,9 +236,6 @@ const COPY = {
     hepFocus: ['Strengthening', 'Stretching', 'Range of motion', 'Balance exercises'],
     injectionsPrompt: 'Have you had any injections for this problem (cortisone, gel, PRP)? Add each one with as much detail as you can — this is important for insurance authorization.',
     injectionWhere: 'Where? (e.g., right knee, left shoulder)',
-    imagingLabel: 'Imaging (X-ray, MRI, CT, ultrasound)',
-    imagingPrompt: 'What imaging studies have you had for this problem?',
-    imagingStudies: ['X-rays', 'MRI', 'CT scan', 'Ultrasound', 'Bone density scan (DEXA)'],
     emgPlaceholder: 'e.g., Carpal tunnel on the right, moderate',
   },
 };
@@ -291,8 +273,9 @@ export default function PriorTreatments({ onNext, onBack }) {
   };
 
   // The chip row. The object-shaped treatments keep their `tried` flag; the
-  // list-shaped ones (injections, imaging) count as tried while they hold
-  // anything, plus a local flag for "tapped but nothing added yet".
+  // list-shaped one (injections) counts as tried while it holds anything,
+  // plus a local flag for "tapped but nothing added yet". Imaging is not
+  // here: the Records step asks about it once, with the dates and the report.
   const [opened, setOpened] = useState({});
   const GROUPS = [
     { key: 'physicalTherapy', label: 'Physical therapy', flag: 'physicalTherapy.tried' },
@@ -301,7 +284,6 @@ export default function PriorTreatments({ onNext, onBack }) {
     { key: 'acupuncture', label: 'Acupuncture', flag: 'acupuncture.tried' },
     { key: 'braces', label: copy.braceLabel, flag: 'braces.tried' },
     { key: 'injections', label: 'Injections', list: 'injections' },
-    { key: 'priorImaging', label: copy.imagingLabel, list: 'priorImaging' },
     { key: 'priorEMG', label: 'EMG or nerve conduction study', flag: 'priorEMG.done' },
   ];
   const isOn = (g) => (g.flag ? !!tx[g.key]?.[g.flag.split('.')[1]] : (tx[g.list] || []).filter((x) => x && x !== 'None').length > 0 || !!opened[g.key]);
@@ -351,6 +333,7 @@ export default function PriorTreatments({ onNext, onBack }) {
             {t('Nothing yet')}
           </button>
         </div>
+        <p className="text-xs text-gray-400 mt-3">{t('Your X-rays, MRI or other imaging are asked about on the next page, with the records.')}</p>
       </div>
 
       {anyOn && (
@@ -494,31 +477,6 @@ export default function PriorTreatments({ onNext, onBack }) {
               {t('+ Add Injection')}
             </button>
             <RecordsNote text={t('Injection records or procedure notes: upload them at the Records step, or bring them to your visit.')} />
-          </div>
-
-          )}
-
-          {/* Prior Imaging */}
-          {show('priorImaging') && (
-          <div className="border border-gray-200 rounded-xl p-4">
-            <h4 className="text-base font-medium text-navy-600 mb-3">{t('Prior Imaging')}</h4>
-            <p className="text-sm text-gray-400 mb-3">{t(copy.imagingPrompt)}</p>
-            <div className="flex flex-wrap gap-2">
-              {copy.imagingStudies.map((img) => {
-                const selected = (tx.priorImaging || []).includes(img);
-                return (
-                  <button key={img}
-                    onClick={() => {
-                      const current = tx.priorImaging || [];
-                      setNested('hpiData.conservativeTreatments.priorImaging',
-                        selected ? current.filter((x) => x !== img) : [...current, img]);
-                    }}
-                    className={`chip ${selected ? 'chip-selected' : 'chip-unselected'}`}>
-                    {t(img)}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           )}

@@ -2,8 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { useIntake, useService } from '../../lib/store';
+import { stepsForVisit } from '../../lib/flows';
 import StepNavigation from '../ui/StepNavigation';
 import UploadToFill from '../UploadToFill';
+import SuggestedAnswers from '../ui/SuggestedAnswers';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 
 const LOCAL = {
@@ -40,14 +42,17 @@ const LOCAL = {
     zh: '开始输入药物名称...',
   },
   'Dose (if known)': { es: 'Dosis (si se conoce)', zh: '剂量（如果知道）' },
-  'e.g., 500mg': { es: 'p. ej., 500 mg', zh: '例如，500 毫克' },
-  'Frequency': { es: 'Frecuencia', zh: '频率' },
+  'e.g., 500 mg': { es: 'p. ej., 500 mg', zh: '例如，500 毫克' },
+  'How often?': { es: '¿Con qué frecuencia?', zh: '多久一次？' },
   'Once daily': { es: 'Una vez al día', zh: '每天一次' },
   'Twice daily': { es: 'Dos veces al día', zh: '每天两次' },
   'Three times daily': { es: 'Tres veces al día', zh: '每天三次' },
+  'At bedtime': { es: 'Al acostarse', zh: '睡前' },
   'As needed': { es: 'Según sea necesario', zh: '按需服用' },
   'Weekly': { es: 'Semanalmente', zh: '每周' },
   'Other': { es: 'Otro', zh: '其他' },
+  'Describe how often': { es: 'Describa con qué frecuencia', zh: '请描述服用频率' },
+  'e.g., Every other day, or twice a month': { es: 'p. ej., cada dos días, o dos veces al mes', zh: '例如，隔天一次，或每月两次' },
   'Reason (if known)': { es: 'Motivo (si se conoce)', zh: '原因（如果知道）' },
   'e.g., Back pain': { es: 'p. ej., Dolor de espalda', zh: '例如，背部疼痛' },
   'Cancel': { es: 'Cancelar', zh: '取消' },
@@ -56,20 +61,82 @@ const LOCAL = {
     es: 'No se preocupe por las dosis exactas: haga lo mejor que pueda.',
     zh: '不必担心确切的剂量——尽力而为即可。',
   },
-  'Continue to Allergies': { es: 'Continuar a Alergias', zh: '继续到过敏史' },
+  // Navigation: the next step's name is filled in from the flow
+  'Continue to {step}': { es: 'Continuar a {step}', zh: '继续到{step}' },
+  'Allergies': { es: 'Alergias', zh: '过敏' },
+  'Additional Details': { es: 'Detalles adicionales', zh: '其他详情' },
+  'Review of Systems': { es: 'Revisión de sistemas', zh: '系统回顾' },
 };
+
+const FREQUENCIES = ['Once daily', 'Twice daily', 'Three times daily', 'At bedtime', 'As needed', 'Weekly'];
+
+/**
+ * The doses a medication is usually taken in, offered as one-tap answers
+ * once the name is known. The generic row covers everything else; the field
+ * stays free text so any dose can be typed.
+ */
+const DOSE_SUGGESTIONS = [
+  [/ibuprofen|advil|motrin/i, ['200 mg', '400 mg', '600 mg', '800 mg']],
+  [/naproxen|aleve|naprosyn/i, ['220 mg', '250 mg', '375 mg', '500 mg']],
+  [/meloxicam|mobic/i, ['7.5 mg', '15 mg']],
+  [/diclofenac|voltaren/i, ['50 mg', '75 mg', '1% gel']],
+  [/celecoxib|celebrex/i, ['100 mg', '200 mg']],
+  [/acetaminophen|tylenol|paracetamol/i, ['325 mg', '500 mg', '650 mg', '1000 mg']],
+  [/aspirin/i, ['81 mg', '325 mg']],
+  [/gabapentin|neurontin/i, ['100 mg', '300 mg', '600 mg', '900 mg']],
+  [/pregabalin|lyrica/i, ['50 mg', '75 mg', '150 mg']],
+  [/duloxetine|cymbalta/i, ['30 mg', '60 mg']],
+  [/cyclobenzaprine|flexeril/i, ['5 mg', '10 mg']],
+  [/tizanidine|zanaflex/i, ['2 mg', '4 mg']],
+  [/methocarbamol|robaxin/i, ['500 mg', '750 mg']],
+  [/baclofen/i, ['5 mg', '10 mg', '20 mg']],
+  [/tramadol|ultram/i, ['50 mg', '100 mg']],
+  [/oxycodone|percocet/i, ['5 mg', '10 mg']],
+  [/hydrocodone|norco|vicodin/i, ['5 mg', '7.5 mg', '10 mg']],
+  [/prednisone/i, ['5 mg', '10 mg', '20 mg']],
+  [/lisinopril/i, ['5 mg', '10 mg', '20 mg', '40 mg']],
+  [/losartan/i, ['25 mg', '50 mg', '100 mg']],
+  [/amlodipine|norvasc/i, ['2.5 mg', '5 mg', '10 mg']],
+  [/metoprolol/i, ['25 mg', '50 mg', '100 mg']],
+  [/atorvastatin|lipitor/i, ['10 mg', '20 mg', '40 mg', '80 mg']],
+  [/simvastatin|zocor/i, ['10 mg', '20 mg', '40 mg']],
+  [/rosuvastatin|crestor/i, ['5 mg', '10 mg', '20 mg']],
+  [/metformin|glucophage/i, ['500 mg', '850 mg', '1000 mg']],
+  [/levothyroxine|synthroid/i, ['25 mcg', '50 mcg', '75 mcg', '100 mcg']],
+  [/omeprazole|prilosec/i, ['20 mg', '40 mg']],
+  [/pantoprazole|protonix/i, ['20 mg', '40 mg']],
+  [/apixaban|eliquis/i, ['2.5 mg', '5 mg']],
+  [/rivaroxaban|xarelto/i, ['10 mg', '15 mg', '20 mg']],
+  [/clopidogrel|plavix/i, ['75 mg']],
+  [/warfarin|coumadin/i, ['1 mg', '2 mg', '2.5 mg', '5 mg']],
+  [/sertraline|zoloft/i, ['25 mg', '50 mg', '100 mg']],
+  [/escitalopram|lexapro/i, ['5 mg', '10 mg', '20 mg']],
+  [/vitamin d/i, ['1000 IU', '2000 IU', '5000 IU', '50,000 IU']],
+];
+const GENERIC_DOSES = ['5 mg', '10 mg', '20 mg', '25 mg', '50 mg', '100 mg', '500 mg'];
+const doseSuggestionsFor = (name) => (DOSE_SUGGESTIONS.find(([re]) => re.test(String(name || ''))) || [null, GENERIC_DOSES])[1];
 
 export default function Medications({ onNext, onBack }) {
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const { data, setSection } = useIntake();
-  const { COMMON_MEDICATIONS, ANTICOAGULANTS } = useService().constants;
-  // A follow-up or post-operative visit reconciles the list rather than taking it fresh.
-  const reconcile = ['followup', 'postop'].includes(data.visit?.type);
+  const svc = useService();
+  const { COMMON_MEDICATIONS, ANTICOAGULANTS } = svc.constants;
+  // A patient this doctor has seen before (a follow-up, a post-operative
+  // visit, or a new problem) reconciles the list rather than taking it fresh.
+  const reconcile = ['followup', 'postop', 'new_problem'].includes(data.visit?.type);
   const meds = data.medications;
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ name: '', dose: '', frequency: '', reason: '', status: 'current' });
+  const emptyForm = () => ({ name: '', dose: '', frequency: '', frequencyOther: false, reason: '', status: 'current' });
+  const [form, setForm] = useState(emptyForm);
+
+  // The step after this one, by name, so the button says where it goes
+  // (allergies for a new patient; the additional details or the review of
+  // systems when the rest of the history is on file).
+  const steps = stepsForVisit(data.visit?.type, svc, data);
+  const nextStep = steps[steps.findIndex((s) => s.id === 'medications') + 1];
+  const nextLabel = nextStep ? t('Continue to {step}').replace('{step}', t(nextStep.label)) : t('Continue');
 
   const isAnticoagulant = (name) => {
     const lower = name.toLowerCase();
@@ -98,7 +165,7 @@ export default function Medications({ onNext, onBack }) {
       current: [...current, med],
       noMedications: false,
     });
-    setForm({ name: '', dose: '', frequency: '', reason: '', status: 'current' });
+    setForm(emptyForm());
     setSearch('');
     setShowForm(false);
   };
@@ -118,6 +185,10 @@ export default function Medications({ onNext, onBack }) {
   };
 
   const anticoagMeds = (meds.current || []).filter((m) => m.isAnticoagulant);
+  const doseChips = doseSuggestionsFor(form.name);
+  // The frequency is one of the chips, or whatever was typed under "Other".
+  const frequencyIsChip = FREQUENCIES.includes(form.frequency);
+  const otherFrequency = form.frequencyOther || (!!form.frequency && !frequencyIsChip);
 
   return (
     <div className="animate-fade-in">
@@ -188,7 +259,7 @@ export default function Medications({ onNext, onBack }) {
                           )}
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {[med.dose, med.frequency, med.reason].filter(Boolean).join(' · ')}
+                          {[med.dose, med.frequency && t(med.frequency), med.reason].filter(Boolean).join(' · ')}
                         </p>
                       </div>
                       <button onClick={() => removeMedication(i)} className="text-gray-400 hover:text-red-500">
@@ -237,27 +308,16 @@ export default function Medications({ onNext, onBack }) {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="form-label">{t('Dose (if known)')}</label>
                       <input
                         type="text"
                         value={form.dose}
                         onChange={(e) => setForm(prev => ({ ...prev, dose: e.target.value }))}
-                        placeholder={t('e.g., 500mg')}
+                        placeholder={t('e.g., 500 mg')}
                       />
-                    </div>
-                    <div>
-                      <label className="form-label">{t('Frequency')}</label>
-                      <select value={form.frequency} onChange={(e) => setForm(prev => ({ ...prev, frequency: e.target.value }))}>
-                        <option value="">{t('Select...')}</option>
-                        <option value="Once daily">{t('Once daily')}</option>
-                        <option value="Twice daily">{t('Twice daily')}</option>
-                        <option value="Three times daily">{t('Three times daily')}</option>
-                        <option value="As needed">{t('As needed')}</option>
-                        <option value="Weekly">{t('Weekly')}</option>
-                        <option value="Other">{t('Other')}</option>
-                      </select>
+                      <SuggestedAnswers suggestions={doseChips} value={form.dose} onPick={(v) => setForm(prev => ({ ...prev, dose: v }))} />
                     </div>
                     <div>
                       <label className="form-label">{t('Reason (if known)')}</label>
@@ -268,6 +328,38 @@ export default function Medications({ onNext, onBack }) {
                         placeholder={t('e.g., Back pain')}
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="form-label">{t('How often?')}</label>
+                    <div className="flex flex-wrap gap-2">
+                      {FREQUENCIES.map((f) => {
+                        const active = form.frequency === f;
+                        return (
+                          <button key={f} type="button" aria-pressed={active}
+                            onClick={() => setForm(prev => ({ ...prev, frequency: active ? '' : f, frequencyOther: false }))}
+                            className={`chip ${active ? 'chip-selected' : 'chip-unselected'}`}>
+                            {t(f)}
+                          </button>
+                        );
+                      })}
+                      <button type="button" aria-pressed={otherFrequency}
+                        onClick={() => setForm(prev => ({ ...prev, frequency: otherFrequency ? '' : (frequencyIsChip ? '' : prev.frequency), frequencyOther: !otherFrequency }))}
+                        className={`chip ${otherFrequency ? 'chip-selected' : 'chip-unselected'}`}>
+                        {t('Other')}
+                      </button>
+                    </div>
+                    {otherFrequency && (
+                      <div className="mt-2">
+                        <label className="form-label text-sm">{t('Describe how often')}</label>
+                        <input
+                          type="text"
+                          value={frequencyIsChip ? '' : form.frequency}
+                          onChange={(e) => setForm(prev => ({ ...prev, frequency: e.target.value, frequencyOther: true }))}
+                          placeholder={t('e.g., Every other day, or twice a month')}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-3">
@@ -281,7 +373,7 @@ export default function Medications({ onNext, onBack }) {
                     <button
                       onClick={() => {
                         setShowForm(false);
-                        setForm({ name: '', dose: '', frequency: '', reason: '', status: 'current' });
+                        setForm(emptyForm());
                         setSearch('');
                       }}
                       className="btn-secondary"
@@ -311,7 +403,7 @@ export default function Medications({ onNext, onBack }) {
         onNext={onNext}
         onBack={onBack}
         canGoNext={true}
-        nextLabel={reconcile ? t('Continue') : t('Continue to Allergies')}
+        nextLabel={nextLabel}
         showSkip={true}
       />
     </div>

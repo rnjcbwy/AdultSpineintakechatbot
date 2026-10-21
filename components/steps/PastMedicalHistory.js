@@ -21,6 +21,10 @@ const LOCAL = {
 
   // Condition checklist
   'Medical Conditions': { es: 'Afecciones médicas', zh: '疾病' },
+  'None of these — I have no medical conditions': {
+    es: 'Ninguna de estas — no tengo afecciones médicas',
+    zh: '以上都没有——我没有任何疾病',
+  },
   'Add another condition not listed above...':
     { es: 'Agregar otra afección que no aparece arriba...', zh: '添加上面未列出的其他疾病...' },
   '+ Add': { es: '+ Agregar', zh: '+ 添加' },
@@ -123,8 +127,20 @@ export default function PastMedicalHistory({ onNext, onBack }) {
       setSection('pastMedicalHistory', {
         ...pmh,
         conditions: [...current, { name: condition, details: '', yearDiagnosed: '' }],
+        noConditions: false,
       });
     }
+  };
+
+  // "None of these": clears the list and records that the patient said so,
+  // so an empty list is an answer rather than a skipped section.
+  const noConditions = pmh.noConditions === true && !(pmh.conditions || []).length;
+  const toggleNone = () => {
+    setSection('pastMedicalHistory', {
+      ...pmh,
+      conditions: noConditions ? pmh.conditions : [],
+      noConditions: !noConditions,
+    });
   };
 
   const updateConditionDetail = (conditionName, field, value) => {
@@ -141,6 +157,7 @@ export default function PastMedicalHistory({ onNext, onBack }) {
         setSection('pastMedicalHistory', {
           ...pmh,
           conditions: [...current, { name: customCondition.trim(), details: '', yearDiagnosed: '' }],
+          noConditions: false,
         });
       }
       setCustomCondition('');
@@ -189,6 +206,23 @@ export default function PastMedicalHistory({ onNext, onBack }) {
         {/* Condition checklist */}
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-4">{t('Medical Conditions')}</h3>
+          <label
+            className={`flex items-center gap-3 p-3 mb-3 rounded-xl border cursor-pointer transition-all ${
+              noConditions ? 'border-gray-700 bg-gray-700 text-white' : 'border-gray-200 hover:border-teal-200'
+            }`}
+          >
+            <input type="checkbox" checked={noConditions} onChange={toggleNone} className="sr-only" />
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+              noConditions ? 'border-white bg-white' : 'border-gray-300'
+            }`}>
+              {noConditions && (
+                <svg className="w-3 h-3 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            <span className="text-sm font-medium">{t('None of these — I have no medical conditions')}</span>
+          </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[400px] overflow-y-auto pr-2">
             {filteredConditions.map((condition) => {
               const isSelected = selectedConditions.some((c) => c.name === condition);

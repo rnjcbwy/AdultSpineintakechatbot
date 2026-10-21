@@ -11,13 +11,13 @@ const LOCAL = {
     es: 'Indique cualquier alergia conocida, incluyendo medicamentos, alimentos y alergias ambientales.',
     zh: '请列出任何已知的过敏，包括药物、食物和环境过敏。',
   },
-  'No Known Drug Allergies (NKDA)': {
-    es: 'Sin alergias a medicamentos conocidas (NKDA)',
-    zh: '无已知药物过敏 (NKDA)',
+  'I am not allergic to any medicines': {
+    es: 'No soy alérgico a ningún medicamento',
+    zh: '我对任何药物都不过敏',
   },
-  'Check this if you have no known allergies to medications': {
-    es: 'Marque esta casilla si no tiene alergias conocidas a medicamentos',
-    zh: '如果您没有已知的药物过敏，请勾选此项',
+  'Tick this if no medicine has ever given you a reaction.': {
+    es: 'Marque esta casilla si ningún medicamento le ha causado una reacción.',
+    zh: '如果从未有药物让您产生过反应，请勾选此项。',
   },
   'Your Allergies': { es: 'Sus alergias', zh: '您的过敏' },
   'Severe': { es: 'Grave', zh: '严重' },
@@ -34,10 +34,16 @@ const LOCAL = {
   'Environmental': { es: 'Ambiental', zh: '环境' },
   'Latex': { es: 'Látex', zh: '乳胶' },
   'Other': { es: 'Otro', zh: '其他' },
-  'What reaction do you have?': { es: '¿Qué reacción tiene?', zh: '您有什么反应？' },
-  'e.g., Rash, Hives, Swelling, Difficulty breathing': {
-    es: 'ej., Erupción, Ronchas, Hinchazón, Dificultad para respirar',
-    zh: '例如：皮疹、荨麻疹、肿胀、呼吸困难',
+  'What reaction do you have? Tap all that apply.': { es: '¿Qué reacción tiene? Toque todas las que apliquen.', zh: '您有什么反应？请点选所有适用项。' },
+  'Rash': { es: 'Erupción', zh: '皮疹' },
+  'Hives': { es: 'Ronchas', zh: '荨麻疹' },
+  'Swelling': { es: 'Hinchazón', zh: '肿胀' },
+  'Trouble breathing': { es: 'Dificultad para respirar', zh: '呼吸困难' },
+  'Nausea or vomiting': { es: 'Náuseas o vómitos', zh: '恶心或呕吐' },
+  'Describe the reaction': { es: 'Describa la reacción', zh: '请描述反应' },
+  'e.g., Dizziness, stomach upset, headache': {
+    es: 'ej., Mareos, malestar estomacal, dolor de cabeza',
+    zh: '例如：头晕、胃部不适、头痛',
   },
   'Severity': { es: 'Gravedad', zh: '严重程度' },
   'Mild (rash, itching)': { es: 'Leve (erupción, picazón)', zh: '轻度（皮疹、瘙痒）' },
@@ -59,19 +65,32 @@ const LOCAL = {
   },
 };
 
+/** The common reactions, one tap each; "Other" opens a box. Stored in English, joined into the entry's `reaction` text. */
+const REACTIONS = ['Rash', 'Hives', 'Swelling', 'Trouble breathing', 'Nausea or vomiting', 'Other'];
+
+const emptyForm = () => ({ allergen: '', reactions: [], reactionOther: '', severity: '', type: 'Medication' });
+
 export default function Allergies({ onNext, onBack }) {
   const { data, setSection } = useIntake();
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const allergies = data.allergies;
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ allergen: '', reaction: '', severity: '', type: 'Medication' });
+  const [form, setForm] = useState(emptyForm);
+
+  const toggleReaction = (r) => setForm((prev) => ({
+    ...prev,
+    reactions: prev.reactions.includes(r) ? prev.reactions.filter((x) => x !== r) : [...prev.reactions, r],
+  }));
 
   const addAllergy = () => {
     if (!form.allergen) return;
-    const entries = [...(allergies.entries || []), { ...form }];
+    // The reaction stays one line of text, as the note, the PDF and the office read it.
+    const reaction = [...form.reactions.filter((r) => r !== 'Other'), form.reactionOther.trim()].filter(Boolean).join(', ');
+    const entry = { allergen: form.allergen, reaction, severity: form.severity, type: form.type };
+    const entries = [...(allergies.entries || []), entry];
     setSection('allergies', { ...allergies, entries, nkda: false });
-    setForm({ allergen: '', reaction: '', severity: '', type: 'Medication' });
+    setForm(emptyForm());
     setShowForm(false);
   };
 
@@ -98,7 +117,7 @@ export default function Allergies({ onNext, onBack }) {
       </div>
 
       <div className="space-y-6">
-        {/* NKDA toggle */}
+        {/* No known drug allergies, in plain words (stored as `nkda`) */}
         <div className="card">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
@@ -107,8 +126,8 @@ export default function Allergies({ onNext, onBack }) {
               onChange={toggleNKDA}
             />
             <div>
-              <span className="text-base font-medium text-gray-700">{t('No Known Drug Allergies (NKDA)')}</span>
-              <p className="text-sm text-gray-400">{t('Check this if you have no known allergies to medications')}</p>
+              <span className="text-base font-medium text-gray-700">{t('I am not allergic to any medicines')}</span>
+              <p className="text-sm text-gray-400">{t('Tick this if no medicine has ever given you a reaction.')}</p>
             </div>
           </label>
         </div>
@@ -141,7 +160,9 @@ export default function Allergies({ onNext, onBack }) {
                           )}
                         </p>
                         {allergy.reaction && (
-                          <p className="text-xs text-gray-500 mt-0.5">{t('Reaction:')} {allergy.reaction}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {t('Reaction:')} {String(allergy.reaction).split(', ').map((r) => t(r)).join(', ')}
+                          </p>
                         )}
                       </div>
                       <button onClick={() => removeAllergy(i)} className="text-gray-400 hover:text-red-500">
@@ -177,6 +198,7 @@ export default function Allergies({ onNext, onBack }) {
                       {['Medication', 'Food', 'Environmental', 'Latex', 'Other'].map((opt) => (
                         <button
                           key={opt}
+                          type="button"
                           onClick={() => setForm(prev => ({ ...prev, type: opt }))}
                           className={`chip ${form.type === opt ? 'chip-selected' : 'chip-unselected'}`}
                         >
@@ -187,13 +209,29 @@ export default function Allergies({ onNext, onBack }) {
                   </div>
 
                   <div>
-                    <label className="form-label">{t('What reaction do you have?')}</label>
-                    <input
-                      type="text"
-                      value={form.reaction}
-                      onChange={(e) => setForm(prev => ({ ...prev, reaction: e.target.value }))}
-                      placeholder={t('e.g., Rash, Hives, Swelling, Difficulty breathing')}
-                    />
+                    <label className="form-label">{t('What reaction do you have? Tap all that apply.')}</label>
+                    <div className="flex flex-wrap gap-2">
+                      {REACTIONS.map((r) => {
+                        const active = form.reactions.includes(r);
+                        return (
+                          <button key={r} type="button" aria-pressed={active} onClick={() => toggleReaction(r)}
+                            className={`chip ${active ? 'chip-selected' : 'chip-unselected'}`}>
+                            {t(r)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {form.reactions.includes('Other') && (
+                      <div className="mt-2">
+                        <label className="form-label text-sm">{t('Describe the reaction')}</label>
+                        <input
+                          type="text"
+                          value={form.reactionOther}
+                          onChange={(e) => setForm(prev => ({ ...prev, reactionOther: e.target.value }))}
+                          placeholder={t('e.g., Dizziness, stomach upset, headache')}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -202,6 +240,7 @@ export default function Allergies({ onNext, onBack }) {
                       {['Mild (rash, itching)', 'Moderate (significant symptoms)', 'Severe/Anaphylaxis', 'Intolerance (side effect, not true allergy)', 'Unknown'].map((s) => (
                         <button
                           key={s}
+                          type="button"
                           onClick={() => setForm(prev => ({ ...prev, severity: s }))}
                           className={`chip ${form.severity === s ? 'chip-selected' : 'chip-unselected'}`}
                         >
@@ -218,7 +257,7 @@ export default function Allergies({ onNext, onBack }) {
                     <button
                       onClick={() => {
                         setShowForm(false);
-                        setForm({ allergen: '', reaction: '', severity: '', type: 'Medication' });
+                        setForm(emptyForm());
                       }}
                       className="btn-secondary"
                     >

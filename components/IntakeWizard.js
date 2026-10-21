@@ -6,8 +6,9 @@ import { useLang, makeT, tx, isRtl } from '../lib/i18n';
 import { stepsForVisit } from '../lib/flows';
 
 const CHROME = {
-  'Your Spine Story': { es: 'La historia de su columna', zh: '您的脊柱故事' },
+  'Before Your Visit': { es: 'Antes de su visita', zh: '就诊之前' },
   'Finish later': { es: 'Terminar más tarde', zh: '稍后完成' },
+  'Go to a step': { es: 'Ir a un paso', zh: '跳转到某一步' },
   'Your progress is automatically saved. You can return later to continue.': {
     es: 'Su progreso se guarda automáticamente. Puede regresar más tarde para continuar.',
     zh: '您的进度会自动保存。您可以稍后返回继续。',
@@ -16,7 +17,26 @@ const CHROME = {
     es: 'Este formulario es solo para recopilar información y no reemplaza una evaluación médica directa. Sus respuestas se guardan automáticamente. Si necesita atención médica urgente, llame al 911 o acuda a la sala de emergencias más cercana.',
     zh: '此表格仅用于收集信息，不能替代直接的医疗评估。您的回答会自动保存。如需紧急医疗救助，请拨打 911 或前往最近的急诊室。',
   },
-  // Step labels (shown in the header)
+  // Step labels (lib/flows.js STEP_LABELS; shown in the header and the progress strip)
+  'Getting Started': { es: 'Para empezar', zh: '开始' },
+  'About you': { es: 'Sobre usted', zh: '关于您' },
+  'Your work injury': { es: 'Su lesión laboral', zh: '您的工伤' },
+  'The accident': { es: 'El accidente', zh: '事故' },
+  'Since your last visit': { es: 'Desde su última visita', zh: '自上次就诊以来' },
+  'Your operation': { es: 'Su operación', zh: '您的手术' },
+  'Your main concern': { es: 'Su principal preocupación', zh: '您的主要困扰' },
+  'Where it hurts': { es: 'Dónde le duele', zh: '疼痛部位' },
+  'Your symptoms': { es: 'Sus síntomas', zh: '您的症状' },
+  'What you have tried': { es: 'Lo que ha probado', zh: '您尝试过的治疗' },
+  'Records': { es: 'Registros', zh: '记录' },
+  'Health conditions': { es: 'Afecciones de salud', zh: '健康状况' },
+  'Operations': { es: 'Operaciones', zh: '手术' },
+  'Daily life': { es: 'Vida diaria', zh: '日常生活' },
+  'Family history': { es: 'Antecedentes familiares', zh: '家族史' },
+  'Other symptoms': { es: 'Otros síntomas', zh: '其他症状' },
+  'How you are doing': { es: 'Cómo se encuentra', zh: '您的状况' },
+  'Review and send': { es: 'Revisar y enviar', zh: '检查并发送' },
+  // Older labels, kept for the steps a service adds and for saved drafts
   'Type of Visit': { es: 'Tipo de visita', zh: '就诊类型' },
   'Work Injury & Claim': { es: 'Lesión laboral y reclamo', zh: '工伤与理赔' },
   'The Accident & Your Claim': { es: 'El accidente y su reclamo', zh: '事故与您的索赔' },
@@ -62,7 +82,6 @@ import PainMap from './steps/PainMap';
 import SymptomDetails from './steps/SymptomDetails';
 import PriorTreatments from './steps/PriorTreatments';
 import RecordsUpload from './steps/RecordsUpload';
-import AdditionalConcerns from './steps/AdditionalConcerns';
 import PastMedicalHistory from './steps/PastMedicalHistory';
 import PastSurgicalHistory from './steps/PastSurgicalHistory';
 import Medications from './steps/Medications';
@@ -87,7 +106,6 @@ const STEP_COMPONENTS = {
   'symptom-details': SymptomDetails,
   treatments: PriorTreatments,
   records: RecordsUpload,
-  additional: AdditionalConcerns,
   pmh: PastMedicalHistory,
   psh: PastSurgicalHistory,
   medications: Medications,
@@ -172,7 +190,7 @@ export default function IntakeWizard() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-sm font-semibold text-navy-600">{t('Your Spine Story')}</h1>
+                  <h1 className="text-sm font-semibold text-navy-600">{t('Before Your Visit')}</h1>
                   <p className="text-xs text-gray-400">
                     {stepOf(currentStep, steps.length - 1)}
                     {' · '}

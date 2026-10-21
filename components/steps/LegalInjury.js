@@ -1,6 +1,6 @@
 'use client';
 
-import { useIntake } from '../../lib/store';
+import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextField, TextArea } from '../ui/Fields';
@@ -13,19 +13,45 @@ const ONSET = ['Right away', 'Within hours', 'The next day', 'Within a week', 'M
 const WORK_STATUS = ['Working as before', 'Working with limits', 'Out of work because of the injury', 'Was not working before the injury'];
 const RECEIVED = ['Ambulance to the hospital', 'Went to an emergency room', 'Urgent care', 'Saw my own doctor', 'No care that day'];
 
+const LOCAL = {
+  'Have you had any earlier injury claim or lawsuit for your neck or back?': {
+    es: '¿Ha tenido alguna reclamación por lesión o demanda anterior por el cuello o la espalda?',
+    zh: '您以前是否因颈部或背部提出过伤害索赔或诉讼？',
+  },
+  'Have you had any earlier injury claim or lawsuit for this bone or joint?': {
+    es: '¿Ha tenido alguna reclamación por lesión o demanda anterior por este hueso o articulación?',
+    zh: '您以前是否因这个骨骼或关节提出过伤害索赔或诉讼？',
+  },
+  'Any spine surgery or spine injections before this injury?': {
+    es: '¿Alguna cirugía o inyección en la columna antes de esta lesión?',
+    zh: '在这次受伤之前，是否做过脊柱手术或脊柱注射？',
+  },
+  'Any surgery or injections on this bone or joint before this injury?': {
+    es: '¿Alguna cirugía o inyección en este hueso o articulación antes de esta lesión?',
+    zh: '在这次受伤之前，是否对这个骨骼或关节做过手术或注射？',
+  },
+  'The treatment you have had since the injury is asked on the Prior Treatments and Records pages.': {
+    es: 'El tratamiento que ha recibido desde la lesión se pregunta en las páginas de Tratamientos previos y Registros.',
+    zh: '您受伤后接受的治疗将在"既往治疗"和"记录"页面询问。',
+  },
+};
+
 /**
  * An injury with a legal claim (a crash, a fall, an assault). The record made
  * at the first visit is what the claim is argued on later, so this gathers
  * the event, what happened right after it, the state of the same body region
  * BEFORE the injury, everything since, and the parties: in the patient's own
- * words wherever it matters. Nothing here is a legal opinion; the two
- * acknowledgments at the end are the only legal text, and they are marked
- * for the surgeon's attorney to approve.
+ * words wherever it matters. The treatment since the injury is NOT asked
+ * here: the Prior Treatments and Records steps collect it in detail. Nothing
+ * here is a legal opinion; the two acknowledgments at the end are the only
+ * legal text, and they are marked for the surgeon's attorney to approve.
  */
 export default function LegalInjury({ onNext, onBack }) {
   const { data, setNested } = useIntake();
+  const svc = useService();
+  const ortho = svc.specialty === 'ortho';
   const lang = useLang();
-  const t = makeT(COMMON, lang);
+  const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const pi = data.visit?.pi || {};
   const set = (k, v) => setNested(`visit.pi.${k}`, v);
   const canGoNext = !!pi.dateOfInjury && !!pi.accidentType && !!pi.mechanism && pi.ackRelease === true && pi.ackRecords === true;
@@ -85,11 +111,20 @@ export default function LegalInjury({ onNext, onBack }) {
           {pi.priorSameRegion === 'Yes' && (
             <TextArea label="What, and when? Any treatment for it?" value={pi.priorSameRegionDetails} onChange={(v) => set('priorSameRegionDetails', v)} rows={2} placeholder="e.g., Occasional low back pain after lifting, saw a chiropractor in 2022, no imaging" />
           )}
-          <Chips label="Have you had any earlier injury claim or lawsuit for your neck or back?" options={YES_NO} value={pi.priorClaims} onChange={(v) => set('priorClaims', v)} />
+          {/* Worded for the service; translated here, so the field kit shows them as given. */}
+          <Chips
+            label={t(ortho
+              ? 'Have you had any earlier injury claim or lawsuit for this bone or joint?'
+              : 'Have you had any earlier injury claim or lawsuit for your neck or back?')}
+            options={YES_NO} value={pi.priorClaims} onChange={(v) => set('priorClaims', v)} />
           {pi.priorClaims === 'Yes' && (
             <TextField label="Briefly, when and for what" value={pi.priorClaimsDetails} onChange={(v) => set('priorClaimsDetails', v)} />
           )}
-          <Chips label="Any spine surgery or spine injections before this injury?" options={YES_NO} value={pi.priorSpineTreatment} onChange={(v) => set('priorSpineTreatment', v)} />
+          <Chips
+            label={t(ortho
+              ? 'Any surgery or injections on this bone or joint before this injury?'
+              : 'Any spine surgery or spine injections before this injury?')}
+            options={YES_NO} value={pi.priorSpineTreatment} onChange={(v) => set('priorSpineTreatment', v)} />
           {pi.priorSpineTreatment === 'Yes' && (
             <TextField label="What and when" value={pi.priorSpineTreatmentDetails} onChange={(v) => set('priorSpineTreatmentDetails', v)} />
           )}
@@ -104,7 +139,7 @@ export default function LegalInjury({ onNext, onBack }) {
             placeholder="e.g., ER at Hackensack the same day; Dr. Patel (primary care) a week later; physical therapy at Teaneck PT since August"
             rows={3}
           />
-          <TextArea label="Treatment so far and how it helped" value={pi.treatmentSince} onChange={(v) => set('treatmentSince', v)} rows={2} placeholder="e.g., 12 PT visits, some relief; naproxen; one epidural injection in September, helped for two weeks" />
+          <p className="text-xs text-gray-400">{t('The treatment you have had since the injury is asked on the Prior Treatments and Records pages.')}</p>
           <Chips label="Work" options={WORK_STATUS} value={pi.workStatus} onChange={(v) => set('workStatus', v)} />
           {(pi.workStatus === 'Out of work because of the injury' || pi.workStatus === 'Working with limits') && (
             <TextField label="Since when, and what are the limits?" value={pi.workDetails} onChange={(v) => set('workDetails', v)} />

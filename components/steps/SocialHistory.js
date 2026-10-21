@@ -1,6 +1,7 @@
 'use client';
 
-import { useIntake } from '../../lib/store';
+import { useEffect } from 'react';
+import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import StepNavigation from '../ui/StepNavigation';
 
@@ -11,6 +12,32 @@ const LOCAL = {
     es: 'Esta información ayuda a su cirujano a comprender su salud general y su estilo de vida. Todas las respuestas son confidenciales.',
     zh: '这些信息有助于您的外科医生了解您的整体健康和生活方式。所有回答均保密。',
   },
+
+  // Nicotine (the same answers the Records step used to collect)
+  'Nicotine Use': { es: 'Consumo de nicotina', zh: '尼古丁使用情况' },
+  'Some spine procedures have specific nicotine requirements, so we need a little more detail than usual.':
+    {
+      es: 'Algunos procedimientos de columna tienen requisitos específicos sobre la nicotina, por lo que necesitamos un poco más de detalle de lo habitual.',
+      zh: '某些脊柱手术对尼古丁有特定要求，因此我们需要比平时更详细的信息。',
+    },
+  'Nicotine slows bone and tendon healing, and some procedures have specific nicotine requirements, so we need a little more detail than usual.':
+    {
+      es: 'La nicotina retrasa la curación de huesos y tendones, y algunos procedimientos tienen requisitos específicos sobre la nicotina, por lo que necesitamos un poco más de detalle de lo habitual.',
+      zh: '尼古丁会延缓骨骼和肌腱愈合，某些手术对尼古丁有特定要求，因此我们需要比平时更详细的信息。',
+    },
+  'Do you currently use any nicotine?': { es: '¿Consume nicotina actualmente?', zh: '您目前使用尼古丁吗？' },
+  'Never used': { es: 'Nunca he consumido', zh: '从未使用' },
+  'Yes, currently': { es: 'Sí, actualmente', zh: '是，目前在用' },
+  'Quit in the past': { es: 'Lo dejé en el pasado', zh: '过去已戒除' },
+  'What product?': { es: '¿Qué producto?', zh: '哪种产品？' },
+  'Cigarettes, vape, chew, patch, etc.': { es: 'Cigarrillos, vapeador, tabaco de mascar, parche, etc.', zh: '香烟、电子烟、嚼烟、贴片等' },
+  'When did you quit?': { es: '¿Cuándo lo dejó?', zh: '您何时戒除的？' },
+  'e.g., June 2025': { es: 'p. ej., junio de 2025', zh: '例如 2025年6月' },
+  'Would you be willing to stop before surgery?': {
+    es: '¿Estaría dispuesto a dejarlo antes de la cirugía?',
+    zh: '您愿意在手术前戒除吗？',
+  },
+  'Not sure': { es: 'No estoy seguro', zh: '不确定' },
 
   // Alcohol
   'Alcohol Use': { es: 'Consumo de alcohol', zh: '饮酒' },
@@ -36,6 +63,10 @@ const LOCAL = {
   'Occupation': { es: 'Ocupación', zh: '职业' },
   'Your job or profession': { es: 'Su trabajo o profesión', zh: '您的工作或职业' },
   'Current work status': { es: 'Situación laboral actual', zh: '目前的工作状况' },
+  'Filled in from your claim answers. Change it if it is not right.': {
+    es: 'Completado a partir de sus respuestas sobre la reclamación. Cámbielo si no es correcto.',
+    zh: '已根据您关于索赔的回答填写。如不正确请修改。',
+  },
   'Working full-time': { es: 'Trabajando tiempo completo', zh: '全职工作' },
   'Working part-time': { es: 'Trabajando medio tiempo', zh: '兼职工作' },
   'Working with restrictions': { es: 'Trabajando con restricciones', zh: '有限制地工作' },
@@ -77,26 +108,55 @@ const LOCAL = {
   'Moderate exercise': { es: 'Ejercicio moderado', zh: '适度运动' },
   'Very active': { es: 'Muy activo', zh: '非常活跃' },
   'Limited by symptoms': { es: 'Limitado por los síntomas', zh: '受症状限制' },
-  'Sports or hobbies affected by symptoms': {
-    es: 'Deportes o pasatiempos afectados por los síntomas',
-    zh: '受症状影响的运动或爱好',
-  },
-  'e.g., Golf, gardening, hiking': {
-    es: 'p. ej., golf, jardinería, senderismo',
-    zh: '例如：高尔夫、园艺、徒步',
-  },
 
   // Navigation
   'Continue to Family History': { es: 'Continuar a la historia familiar', zh: '继续填写家族史' },
 };
 
+/**
+ * The work status already given on the claim step, in this step's words.
+ * The claim steps ask it in the claim's terms (full duty, light duty, out of
+ * work because of the injury); the answers that do not map ("not working for
+ * another reason") are left for the patient to pick here.
+ */
+const WORK_STATUS_FROM_CLAIM = {
+  'Working full duty': 'Working full-time',
+  'Working as before': 'Working full-time',
+  'Working light duty': 'Working with restrictions',
+  'Working with limits': 'Working with restrictions',
+  'Out of work because of this injury': 'Not working due to symptoms',
+  'Out of work because of the injury': 'Not working due to symptoms',
+};
+
 export default function SocialHistory({ onNext, onBack }) {
-  const { data, setField } = useIntake();
+  const { data, setField, setNested } = useIntake();
+  const svc = useService();
+  const ortho = svc.specialty === 'ortho';
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
   const sh = data.socialHistory;
+  const ev = data.authEvidence || {};
 
   const update = (field, value) => setField('socialHistory', field, value);
+  const updateEv = (field, value) => setNested(`authEvidence.${field}`, value);
+  // The nicotine answer is kept where the readiness engine, the note and the
+  // PDF read it (authEvidence) and mirrored into the social history's own field.
+  const setNicotine = (value) => {
+    updateEv('nicotineCurrent', value);
+    update('tobaccoUse', value);
+  };
+
+  // What the claim step already asked: the job title and whether the patient
+  // is working. Shown here filled in and editable rather than asked again.
+  const claim = data.visit?.type === 'workers_comp' ? data.visit?.wc : data.visit?.type === 'personal_injury' ? data.visit?.pi : null;
+  const claimOccupation = String(claim?.jobTitle || '').trim();
+  const claimWorkStatus = WORK_STATUS_FROM_CLAIM[claim?.workStatus] || '';
+  useEffect(() => {
+    if (claimOccupation && !sh.occupation) update('occupation', claimOccupation);
+    if (claimWorkStatus && !sh.workStatus) update('workStatus', claimWorkStatus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimOccupation, claimWorkStatus]);
+  const fromClaim = (claimOccupation && sh.occupation === claimOccupation) || (claimWorkStatus && sh.workStatus === claimWorkStatus);
 
   return (
     <div className="animate-fade-in">
@@ -108,6 +168,63 @@ export default function SocialHistory({ onNext, onBack }) {
       </div>
 
       <div className="space-y-6">
+        {/* Nicotine */}
+        <div className="card">
+          <h3 className="text-lg font-medium text-navy-600 mb-1">{t('Nicotine Use')}</h3>
+          <p className="text-sm text-gray-400 mb-4">
+            {t(ortho
+              ? 'Nicotine slows bone and tendon healing, and some procedures have specific nicotine requirements, so we need a little more detail than usual.'
+              : 'Some spine procedures have specific nicotine requirements, so we need a little more detail than usual.')}
+          </p>
+          <label className="form-label">{t('Do you currently use any nicotine?')}</label>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {['Never used', 'Yes, currently', 'Quit in the past'].map((opt) => (
+              <button key={opt} type="button" onClick={() => setNicotine(opt)} aria-pressed={ev.nicotineCurrent === opt}
+                className={`chip ${ev.nicotineCurrent === opt ? 'chip-selected' : 'chip-unselected'}`}>
+                {t(opt)}
+              </button>
+            ))}
+          </div>
+
+          {ev.nicotineCurrent === 'Yes, currently' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="form-label text-sm">{t('What product?')}</label>
+                <input type="text" value={ev.nicotineProduct || ''}
+                  onChange={(e) => updateEv('nicotineProduct', e.target.value)}
+                  placeholder={t('Cigarettes, vape, chew, patch, etc.')} />
+              </div>
+              <div>
+                <label className="form-label text-sm">{t('Would you be willing to stop before surgery?')}</label>
+                <select value={ev.nicotineWillingToQuit || ''}
+                  onChange={(e) => updateEv('nicotineWillingToQuit', e.target.value)}>
+                  <option value="">{t('Select...')}</option>
+                  {['Yes', 'No', 'Not sure'].map((o) => (
+                    <option key={o} value={o}>{t(o)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {ev.nicotineCurrent === 'Quit in the past' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="form-label text-sm">{t('When did you quit?')}</label>
+                <input type="text" value={ev.nicotineQuitDate || ''}
+                  onChange={(e) => updateEv('nicotineQuitDate', e.target.value)}
+                  placeholder={t('e.g., June 2025')} />
+              </div>
+              <div>
+                <label className="form-label text-sm">{t('What product?')}</label>
+                <input type="text" value={ev.nicotineProduct || ''}
+                  onChange={(e) => updateEv('nicotineProduct', e.target.value)}
+                  placeholder={t('Cigarettes, vape, chew, patch, etc.')} />
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Work & Occupation */}
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Work & Occupation')}</h3>
@@ -137,6 +254,9 @@ export default function SocialHistory({ onNext, onBack }) {
               </select>
             </div>
           </div>
+          {fromClaim && (
+            <p className="text-xs text-teal-700 mt-2">{t('Filled in from your claim answers. Change it if it is not right.')}</p>
+          )}
 
           <div className="mt-4">
             <label className="form-label">{t('Disability status')}</label>
@@ -144,6 +264,7 @@ export default function SocialHistory({ onNext, onBack }) {
               {['None', 'Applying for disability', 'On temporary disability', 'On permanent disability'].map((opt) => (
                 <button
                   key={opt}
+                  type="button"
                   onClick={() => update('disabilityStatus', opt)}
                   className={`chip ${sh.disabilityStatus === opt ? 'chip-selected' : 'chip-unselected'}`}
                 >
@@ -185,32 +306,23 @@ export default function SocialHistory({ onNext, onBack }) {
           </div>
         </div>
 
-        {/* Exercise & Activity */}
+        {/* Exercise & Activity. The sports and hobbies the symptoms affect are
+            covered by the outcome questionnaires, so they are not asked here. */}
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-3">{t('Exercise & Activity')}</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="form-label">{t('Current exercise level')}</label>
-              <div className="flex flex-wrap gap-2">
-                {['Sedentary', 'Light activity', 'Moderate exercise', 'Very active', 'Limited by symptoms'].map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => update('exerciseLevel', opt)}
-                    className={`chip ${sh.exerciseLevel === opt ? 'chip-selected' : 'chip-unselected'}`}
-                  >
-                    {t(opt)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="form-label">{t('Sports or hobbies affected by symptoms')}</label>
-              <input
-                type="text"
-                value={sh.sports || ''}
-                onChange={(e) => update('sports', e.target.value)}
-                placeholder={t('e.g., Golf, gardening, hiking')}
-              />
+          <div>
+            <label className="form-label">{t('Current exercise level')}</label>
+            <div className="flex flex-wrap gap-2">
+              {['Sedentary', 'Light activity', 'Moderate exercise', 'Very active', 'Limited by symptoms'].map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => update('exerciseLevel', opt)}
+                  className={`chip ${sh.exerciseLevel === opt ? 'chip-selected' : 'chip-unselected'}`}
+                >
+                  {t(opt)}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -222,6 +334,7 @@ export default function SocialHistory({ onNext, onBack }) {
             {['None', 'Social/occasional', 'Moderate (a few per week)', 'Daily', 'Former heavy use'].map((opt) => (
               <button
                 key={opt}
+                type="button"
                 onClick={() => update('alcoholUse', opt)}
                 className={`chip ${sh.alcoholUse === opt ? 'chip-selected' : 'chip-unselected'}`}
               >
@@ -246,6 +359,7 @@ export default function SocialHistory({ onNext, onBack }) {
             {['None', 'Marijuana/cannabis', 'Other', 'Prefer not to answer'].map((opt) => (
               <button
                 key={opt}
+                type="button"
                 onClick={() => update('drugUse', opt)}
                 className={`chip ${sh.drugUse === opt ? 'chip-selected' : 'chip-unselected'}`}
               >

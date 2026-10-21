@@ -12,11 +12,10 @@ const LOCAL = {
     es: 'Si se ha hecho radiografías, una resonancia, una tomografía o una ecografía por este problema, nos gustaría verlas. Agregue aquí el informe escrito, una foto o una captura de pantalla de las imágenes: suba un archivo, tome una foto con su teléfono, elija de su carrete de fotos o pegue una captura con Ctrl+V.',
     zh: '如果您曾因这个问题做过X光、核磁、CT或超声检查，我们希望看到它们。请在此添加书面报告、影像的照片或截图：上传文件、用手机拍照、从相册中选择，或用 Ctrl+V 粘贴截图。',
   },
-  'If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.': {
-    es: 'Si no indicó sus estudios de imagen en la página anterior, vuelva una página atrás y agréguelos, con la fecha y el lugar donde se hicieron.',
-    zh: '如果您在上一页没有列出您的影像检查，请返回上一页添加，并注明日期和检查地点。',
+  'Below, tap each kind of study you have had and add the approximate date and where it was done.': {
+    es: 'Abajo, toque cada tipo de estudio que se haya hecho y agregue la fecha aproximada y el lugar donde se hizo.',
+    zh: '请在下方点选您做过的每种检查，并填写大约日期和检查地点。',
   },
-  'Go back one page': { es: 'Volver una página', zh: '返回上一页' },
   'Please add the date and where each study was done below.': {
     es: 'Agregue abajo la fecha y el lugar donde se hizo cada estudio.',
     zh: '请在下方填写每项检查的日期和地点。',
@@ -48,10 +47,11 @@ const CATEGORY = 'imaging_reports';
  * The imaging box: upload a report or a picture of the images, take a photo,
  * or paste a screenshot anywhere on the page. `interval` words it for a
  * follow-up or post-operative visit (new imaging since the last visit),
- * without the "go back and list your imaging" prompt. `children` render under
- * the prompt (the per-study date and facility fields on the Records step).
+ * without the prompt to list the studies. `children` render under the prompt
+ * (the study chips and the per-study date and facility fields on the Records
+ * step); `hasListedImaging` says the patient has already tapped a study.
  */
-export default function ImagingUpload({ interval = false, onBack, hasListedImaging = false, children }) {
+export default function ImagingUpload({ interval = false, hasListedImaging = false, children }) {
   const { data, setNested } = useIntake();
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
@@ -159,16 +159,13 @@ export default function ImagingUpload({ interval = false, onBack, hasListedImagi
       )}
 
       <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600 space-y-2">
-        {!interval && (hasListedImaging ? (
-          <p>{t('Please add the date and where each study was done below.')}</p>
-        ) : (
+        {!interval && (
           <p>
-            {t('If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.')}{' '}
-            {onBack && (
-              <button type="button" onClick={onBack} className="text-teal-600 font-medium hover:underline">{t('Go back one page')}</button>
-            )}
+            {t(hasListedImaging
+              ? 'Please add the date and where each study was done below.'
+              : 'Below, tap each kind of study you have had and add the approximate date and where it was done.')}
           </p>
-        ))}
+        )}
         <p>
           {interval
             ? t("Please also bring the images themselves to your visit, on a CD or through the imaging center's patient portal, so your surgeon can review the images and not only the report.")

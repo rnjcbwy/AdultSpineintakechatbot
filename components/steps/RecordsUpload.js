@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useIntake, useService } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
+import { stepsForVisit } from '../../lib/flows';
 import StepNavigation from '../ui/StepNavigation';
 import ImagingUpload from '../ImagingUpload';
+import SuggestedAnswers from '../ui/SuggestedAnswers';
 import {
   documentCategoriesFor,
   ACCEPTED_TYPES,
@@ -24,6 +26,30 @@ const MED_CLASSES = [
   'Opioid pain medication',
 ];
 
+/**
+ * What a medication on the patient's list says about the classes above, so a
+ * class the patient already takes is ticked for them rather than asked again.
+ */
+const MED_CLASS_PATTERNS = {
+  'Anti-inflammatories (NSAIDs)': /ibuprofen|advil|motrin|naproxen|aleve|naprosyn|meloxicam|mobic|diclofenac|voltaren|celecoxib|celebrex|ketorolac|toradol|indomethacin|etodolac|nabumetone|piroxicam|aspirin|nsaid/i,
+  'Acetaminophen (Tylenol)': /acetaminophen|tylenol|paracetamol/i,
+  'Oral steroids': /prednisone|prednisolone|methylprednisolone|medrol|dexamethasone/i,
+  'Nerve pain medication (gabapentin, pregabalin)': /gabapentin|neurontin|gralise|pregabalin|lyrica|duloxetine|cymbalta|amitriptyline|nortriptyline/i,
+  'Muscle relaxants': /cyclobenzaprine|flexeril|methocarbamol|robaxin|tizanidine|zanaflex|baclofen|carisoprodol|soma\b|metaxalone|skelaxin/i,
+  'Opioid pain medication': /oxycodone|oxycontin|percocet|hydrocodone|vicodin|norco|tramadol|ultram|morphine|codeine|tapentadol|nucynta|hydromorphone|dilaudid|fentanyl|methadone|buprenorphine|suboxone/i,
+};
+
+const medClassOf = (name) => MED_CLASSES.find((cls) => MED_CLASS_PATTERNS[cls].test(String(name || ''))) || '';
+
+/** The studies the Records step offers, by specialty. Stored in English. */
+const IMAGING_STUDIES = {
+  spine: ['X-rays', 'MRI', 'CT scan', 'Myelogram', 'Bone density scan (DEXA)'],
+  ortho: ['X-rays', 'MRI', 'CT scan', 'Ultrasound', 'Bone density scan (DEXA)'],
+};
+
+/** The kinds of visit that ask about the care before this one (not a follow-up or a post-operative visit). */
+const NEW_KINDS = ['new', 'new_problem', 'workers_comp', 'personal_injury'];
+
 const LOCAL = {
   'Records & Documents': { es: 'Registros y documentos', zh: '记录与文件' },
   'Insurance companies require proof of what you have already tried before they will approve spine treatment. The more of this you can give us now, the less likely your care is delayed later.':
@@ -38,27 +64,11 @@ const LOCAL = {
     },
 
   // Imaging
-  'Your Imaging': { es: 'Sus estudios de imagen', zh: '您的影像检查' },
-  'If you have had X-rays, an MRI, a CT or an ultrasound for this problem, we would like to see it. Add the written report, a photo or a screenshot of the images here: upload a file, take a picture with your phone, choose from your camera roll, or paste a screenshot with Ctrl+V.': {
-    es: 'Si se ha hecho radiografías, una resonancia, una tomografía o una ecografía por este problema, nos gustaría verlas. Agregue aquí el informe escrito, una foto o una captura de pantalla de las imágenes: suba un archivo, tome una foto con su teléfono, elija de su carrete de fotos o pegue una captura con Ctrl+V.',
-    zh: '如果您曾因这个问题做过X光、核磁、CT或超声检查，我们希望看到它们。请在此添加书面报告、影像的照片或截图：上传文件、用手机拍照、从相册中选择，或用 Ctrl+V 粘贴截图。',
+  'Which imaging have you had for this problem? Tap all that apply.': {
+    es: '¿Qué estudios de imagen se ha hecho para este problema? Toque todos los que apliquen.',
+    zh: '您为这个问题做过哪些影像检查？请点选所有适用项。',
   },
-  'Upload files': { es: 'Subir archivos', zh: '上传文件' },
-  'Take a photo': { es: 'Tomar una foto', zh: '拍照' },
-  'Pasted image': { es: 'Imagen pegada', zh: '粘贴的图片' },
-  'If you did not list your imaging on the previous page, please go back one page and add it, with the date and where it was done.': {
-    es: 'Si no indicó sus estudios de imagen en la página anterior, vuelva una página atrás y agréguelos, con la fecha y el lugar donde se hicieron.',
-    zh: '如果您在上一页没有列出您的影像检查，请返回上一页添加，并注明日期和检查地点。',
-  },
-  'Go back one page': { es: 'Volver una página', zh: '返回上一页' },
-  'Please add the date and where each study was done below.': {
-    es: 'Agregue abajo la fecha y el lugar donde se hizo cada estudio.',
-    zh: '请在下方填写每项检查的日期和地点。',
-  },
-  "If you can get a copy of the actual images on a CD, or through the imaging center's patient portal, bringing them to your visit would be greatly appreciated.": {
-    es: 'Si puede conseguir una copia de las imágenes reales en un CD, o a través del portal de pacientes del centro de imágenes, le agradeceríamos mucho que las trajera a su cita.',
-    zh: '如果您能取得实际影像的光盘副本，或通过影像中心的患者门户获取，恳请您就诊时带来，我们将非常感谢。',
-  },
+  'No imaging yet': { es: 'Ninguno todavía', zh: '尚未做过' },
   'Approximate date': { es: 'Fecha aproximada', zh: '大约日期' },
   'Where was it done?': { es: '¿Dónde se realizó?', zh: '在哪里做的？' },
   'e.g., June 2025': { es: 'p. ej., junio de 2025', zh: '例如 2025年6月' },
@@ -76,8 +86,18 @@ const LOCAL = {
       es: 'Las aseguradoras suelen querer ver que se probaron medicamentos antes de la cirugía. Seleccione los que haya usado para estos síntomas.',
       zh: '保险公司通常希望看到手术前曾尝试过药物治疗。请选择您为这些症状使用过的药物。',
     },
+  'Ticked from your medication list. Add how long you took it and whether it helped.': {
+    es: 'Marcado a partir de su lista de medicamentos. Agregue cuánto tiempo lo tomó y si le ayudó.',
+    zh: '已根据您的用药清单勾选。请补充服用了多久以及是否有帮助。',
+  },
+  'From your medication list': { es: 'De su lista de medicamentos', zh: '来自您的用药清单' },
   'How long did you take it?': { es: '¿Por cuánto tiempo lo tomó?', zh: '您服用了多久？' },
   'e.g., 6 weeks': { es: 'p. ej., 6 semanas', zh: '例如 6周' },
+  '2 weeks': { es: '2 semanas', zh: '2周' },
+  '6 weeks': { es: '6 semanas', zh: '6周' },
+  '3 months': { es: '3 meses', zh: '3个月' },
+  '6 months': { es: '6 meses', zh: '6个月' },
+  'More than a year': { es: 'Más de un año', zh: '一年以上' },
 
   // Conservative care window
   'When did you start and stop non-surgical treatment?': {
@@ -92,31 +112,10 @@ const LOCAL = {
   'Started around': { es: 'Comenzó alrededor de', zh: '大约开始于' },
   'Most recent treatment': { es: 'Tratamiento más reciente', zh: '最近一次治疗' },
   'Still ongoing': { es: 'Aún en curso', zh: '仍在进行' },
-
-  // Nicotine
-  'Nicotine Use': { es: 'Consumo de nicotina', zh: '尼古丁使用情况' },
-  'Some spine procedures have specific nicotine requirements, so we need a little more detail than usual.':
-    {
-      es: 'Algunos procedimientos de columna tienen requisitos específicos sobre la nicotina, por lo que necesitamos un poco más de detalle de lo habitual.',
-      zh: '某些脊柱手术对尼古丁有特定要求，因此我们需要比平时更详细的信息。',
-    },
-  'Nicotine slows bone and tendon healing, and some procedures have specific nicotine requirements, so we need a little more detail than usual.':
-    {
-      es: 'La nicotina retrasa la curación de huesos y tendones, y algunos procedimientos tienen requisitos específicos sobre la nicotina, por lo que necesitamos un poco más de detalle de lo habitual.',
-      zh: '尼古丁会延缓骨骼和肌腱愈合，某些手术对尼古丁有特定要求，因此我们需要比平时更详细的信息。',
-    },
-  'Do you currently use any nicotine?': { es: '¿Consume nicotina actualmente?', zh: '您目前使用尼古丁吗？' },
-  'Never used': { es: 'Nunca he consumido', zh: '从未使用' },
-  'Yes, currently': { es: 'Sí, actualmente', zh: '是，目前在用' },
-  'Quit in the past': { es: 'Lo dejé en el pasado', zh: '过去已戒除' },
-  'What product?': { es: '¿Qué producto?', zh: '哪种产品？' },
-  'Cigarettes, vape, chew, patch, etc.': { es: 'Cigarrillos, vapeador, tabaco de mascar, parche, etc.', zh: '香烟、电子烟、嚼烟、贴片等' },
-  'When did you quit?': { es: '¿Cuándo lo dejó?', zh: '您何时戒除的？' },
-  'Would you be willing to stop before surgery?': {
-    es: '¿Estaría dispuesto a dejarlo antes de la cirugía?',
-    zh: '您愿意在手术前戒除吗？',
+  'Taken from the dates you gave for your treatments. Change it if that is wrong.': {
+    es: 'Tomado de las fechas que indicó para sus tratamientos. Cámbielo si no es correcto.',
+    zh: '根据您为各项治疗填写的日期得出。如有误请修改。',
   },
-  'Not sure': { es: 'No estoy seguro', zh: '不确定' },
 
   // Uploads
   'Upload Your Records': { es: 'Suba sus registros', zh: '上传您的记录' },
@@ -211,31 +210,85 @@ const LOCAL = {
     zh: '您认为有帮助的任何其他记录。',
   },
 
-  // Imaging study names (mirrors the options offered in Prior Treatments)
+  // Imaging study names
   'X-rays': { es: 'Radiografías', zh: 'X光片' },
   'MRI': { es: 'Resonancia magnética (MRI)', zh: '磁共振（MRI）' },
   'CT scan': { es: 'Tomografía (TC)', zh: 'CT扫描' },
   'Myelogram': { es: 'Mielografía', zh: '脊髓造影' },
+  'Ultrasound': { es: 'Ecografía', zh: '超声' },
   'Bone density scan (DEXA)': { es: 'Densitometría ósea (DEXA)', zh: '骨密度扫描（DEXA）' },
 
-  'Continue to Additional Details': { es: 'Continuar a detalles adicionales', zh: '继续到其他详情' },
+  // Navigation: the next step's name is filled in from the flow
+  'Continue to {step}': { es: 'Continuar a {step}', zh: '继续到{step}' },
+  'Additional Details': { es: 'Detalles adicionales', zh: '其他详情' },
+  'Past Medical History': { es: 'Antecedentes médicos', zh: '既往病史' },
+  'Medications': { es: 'Medicamentos', zh: '药物' },
   'Skip — I have no records to add': { es: 'Omitir — no tengo registros que agregar', zh: '跳过 — 我没有记录要添加' },
 };
+
+// ---------------------------------------------------------------------------
+// Reading a month and year out of what the patient typed about a treatment
+// ("3 months, spring 2024", "June 2024", "03/2024", "2023"), so the start of
+// non-surgical care can be worked out instead of asked again.
+// ---------------------------------------------------------------------------
+const MONTH_NAMES = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const SEASONS = { spring: 3, summer: 6, fall: 9, autumn: 9, winter: 12, early: 1, mid: 6, late: 10 };
+
+function monthYearIn(text) {
+  const s = String(text || '').toLowerCase();
+  const year = (y) => parseInt(y, 10);
+  let m = /\b([a-z]+)\.?,?\s+((?:19|20)\d{2})\b/.exec(s);
+  if (m) {
+    const word = m[1];
+    const idx = word.length >= 3 ? MONTH_NAMES.findIndex((name) => name.startsWith(word)) : -1;
+    if (idx >= 0) return { y: year(m[2]), m: idx + 1 };
+    if (SEASONS[word]) return { y: year(m[2]), m: SEASONS[word] };
+  }
+  m = /\b(\d{1,2})\/((?:19|20)\d{2})\b/.exec(s);
+  if (m && +m[1] >= 1 && +m[1] <= 12) return { y: year(m[2]), m: +m[1] };
+  m = /\b((?:19|20)\d{2})-(\d{1,2})\b/.exec(s);
+  if (m && +m[2] >= 1 && +m[2] <= 12) return { y: year(m[1]), m: +m[2] };
+  m = /\b((?:19|20)\d{2})\b/.exec(s);
+  if (m) return { y: year(m[1]), m: 0 };
+  return null;
+}
+
+/** The earliest month/year among the texts, as "June 2024" or "2024"; '' when none holds a date. */
+function earliestDate(texts, MONTHS) {
+  const found = texts.map(monthYearIn).filter(Boolean);
+  if (!found.length) return '';
+  found.sort((a, b) => a.y - b.y || (a.m || 7) - (b.m || 7));
+  const first = found[0];
+  return first.m ? `${MONTHS[first.m - 1]} ${first.y}` : String(first.y);
+}
+
+const MED_DURATIONS = ['2 weeks', '6 weeks', '3 months', '6 months', 'More than a year'];
 
 export default function RecordsUpload({ onNext, onBack }) {
   const { data, setNested } = useIntake();
   const svc = useService();
   const categories = documentCategoriesFor(svc.specialty);
   const ortho = svc.specialty === 'ortho';
+  const { MONTHS } = svc.operations;
   const lang = useLang();
   const t = makeT({ ...COMMON, ...LOCAL }, lang);
 
   const ev = data.authEvidence || {};
   const tx = data.hpiData?.conservativeTreatments || {};
-  const selectedImaging = (tx.priorImaging || []).filter((i) => i && i !== 'None');
-  // A follow-up is asked about new imaging since the last visit.
-  const interval = ['followup', 'postop'].includes(data.visit?.type);
+  const priorImaging = tx.priorImaging || [];
+  const selectedImaging = priorImaging.filter((i) => i && i !== 'None');
+  const noImaging = priorImaging.includes('None') && selectedImaging.length === 0;
+  const studies = IMAGING_STUDIES[svc.specialty] || IMAGING_STUDIES.spine;
+  // A follow-up or post-operative visit is asked only about new imaging since
+  // the last visit; the medicines tried and the care window belong to a new problem.
+  const newKind = NEW_KINDS.includes(data.visit?.type || 'new');
+  const interval = !newKind;
   const suggested = suggestedCategories(data);
+
+  // The step after this one, by name, so the button says where it goes.
+  const steps = stepsForVisit(data.visit?.type, svc, data);
+  const nextStep = steps[steps.findIndex((s) => s.id === 'records') + 1];
+  const nextLabel = nextStep ? t('Continue to {step}').replace('{step}', t(nextStep.label)) : t('Continue');
 
   const [docs, setDocs] = useState([]);
   const [error, setError] = useState('');
@@ -290,7 +343,17 @@ export default function RecordsUpload({ onNext, onBack }) {
     setNested('documents', list);
   };
 
-  // --- Imaging detail helpers -------------------------------------------
+  // --- Imaging: which studies, then the detail of each ------------------
+  // The list of studies is the field the Prior Treatments step used to write
+  // (hpiData.conservativeTreatments.priorImaging), so the note, the PDF, the
+  // readiness engine and the document suggestions read it unchanged.
+  const setPriorImaging = (list) => setNested('hpiData.conservativeTreatments.priorImaging', list);
+  const toggleStudy = (study) => {
+    const on = selectedImaging.includes(study);
+    setPriorImaging(on ? selectedImaging.filter((s) => s !== study) : [...selectedImaging, study]);
+  };
+  const tapNoImaging = () => setPriorImaging(noImaging ? [] : ['None']);
+
   const imagingEntry = (study) =>
     (ev.imagingStudies || []).find((s) => s.study === study) || {};
 
@@ -303,7 +366,7 @@ export default function RecordsUpload({ onNext, onBack }) {
     updateEv('imagingStudies', next);
   };
 
-  // --- Medication trial helpers -----------------------------------------
+  // --- Medication trials: pre-ticked from the medication list ----------
   const medEntry = (cls) => (ev.medicationTrials || []).find((m) => m.drugClass === cls) || null;
 
   const toggleMed = (cls) => {
@@ -320,6 +383,58 @@ export default function RecordsUpload({ onNext, onBack }) {
     updateEv('medicationTrials', current.map((m) => (m.drugClass === cls ? { ...m, [field]: value } : m)));
   };
 
+  // A class the patient already takes (the medication list, when it exists:
+  // from the chart, an upload, or a draft) is ticked for them, once per
+  // medication, so an untick is not undone the next time the step opens.
+  const medNames = (data.medications?.current || []).map((m) => String(m?.name || '').trim()).filter(Boolean).join('|');
+  useEffect(() => {
+    if (!newKind || !medNames) return;
+    const seeded = ev.medicationTrialsSeeded || [];
+    const current = ev.medicationTrials || [];
+    const add = [];
+    const newlySeeded = [];
+    for (const name of medNames.split('|')) {
+      if (seeded.includes(name)) continue;
+      newlySeeded.push(name);
+      const cls = medClassOf(name);
+      if (!cls || current.some((m) => m.drugClass === cls) || add.some((m) => m.drugClass === cls)) continue;
+      add.push({ drugClass: cls, name, duration: '', helped: '' });
+    }
+    if (!newlySeeded.length) return;
+    updateEv('medicationTrialsSeeded', [...seeded, ...newlySeeded]);
+    if (add.length) updateEv('medicationTrials', [...current, ...add]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [medNames, newKind]);
+
+  // --- Care window: the start from the earliest treatment date given -----
+  const derivedStart = useMemo(() => earliestDate([
+    tx.physicalTherapy?.tried && tx.physicalTherapy.duration,
+    tx.homeExercise?.tried && tx.homeExercise.duration,
+    tx.chiropracticCare?.tried && tx.chiropracticCare.duration,
+    tx.acupuncture?.tried && tx.acupuncture.duration,
+    tx.braces?.tried && tx.braces.type,
+    ...(tx.injections || []).map((i) => i?.when),
+    tx.priorEMG?.done && tx.priorEMG.when,
+    ...selectedImaging.map((s) => imagingEntry(s).date),
+  ].filter(Boolean), MONTHS), [tx, ev.imagingStudies, MONTHS]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Written into the same field the patient used to type into, so nothing
+  // downstream changes. A value the patient typed or cleared is left alone.
+  useEffect(() => {
+    if (!newKind || !derivedStart) return;
+    if (ev.conservativeCareStartDerived === false) return;
+    if (ev.conservativeCareStart && !ev.conservativeCareStartDerived) return;
+    if (ev.conservativeCareStart === derivedStart) return;
+    updateEv('conservativeCareStart', derivedStart);
+    updateEv('conservativeCareStartDerived', true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [derivedStart, newKind]);
+  const startDerived = !!derivedStart && ev.conservativeCareStartDerived === true && ev.conservativeCareStart === derivedStart;
+  const setStart = (value) => {
+    updateEv('conservativeCareStart', value);
+    updateEv('conservativeCareStartDerived', false);
+  };
+
   const docsIn = (categoryId) => docs.filter((d) => d.category === categoryId);
 
   return (
@@ -334,7 +449,27 @@ export default function RecordsUpload({ onNext, onBack }) {
       </div>
 
       {/* ---------------- Imaging ---------------- */}
-      <ImagingUpload interval={interval} onBack={onBack} hasListedImaging={selectedImaging.length > 0}>
+      <ImagingUpload interval={interval} hasListedImaging={selectedImaging.length > 0}>
+        {!interval && (
+        <div className="mt-4">
+          <label className="form-label text-sm">{t('Which imaging have you had for this problem? Tap all that apply.')}</label>
+          <div className="flex flex-wrap gap-2">
+            {studies.map((study) => {
+              const on = selectedImaging.includes(study);
+              return (
+                <button key={study} type="button" onClick={() => toggleStudy(study)} aria-pressed={on}
+                  className={`chip ${on ? 'chip-selected' : 'chip-unselected'}`}>
+                  {t(study)}
+                </button>
+              );
+            })}
+            <button type="button" onClick={tapNoImaging} aria-pressed={noImaging}
+              className={`px-3.5 py-2.5 rounded-full text-sm border transition-colors ${noImaging ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-700 border-gray-200 hover:border-teal-300'}`}>
+              {t('No imaging yet')}
+            </button>
+          </div>
+        </div>
+        )}
         {!interval && selectedImaging.length > 0 && (
         <div className="space-y-4 mt-4">
           {selectedImaging.map((study) => {
@@ -376,7 +511,7 @@ export default function RecordsUpload({ onNext, onBack }) {
       </ImagingUpload>
 
       {/* ---------------- Medication trials (a new problem only) ---------------- */}
-      {!interval && (
+      {newKind && (
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">
           {t('Medications You Have Tried for This Problem')}
@@ -392,6 +527,11 @@ export default function RecordsUpload({ onNext, onBack }) {
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={!!entry} onChange={() => toggleMed(cls)} />
                   <span className="text-sm font-medium text-gray-700">{t(cls)}</span>
+                  {entry?.name && (
+                    <span className="text-[11px] text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full" title={entry.name}>
+                      {t('From your medication list')}: {entry.name}
+                    </span>
+                  )}
                 </label>
                 {entry && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pl-8">
@@ -400,6 +540,7 @@ export default function RecordsUpload({ onNext, onBack }) {
                       <input type="text" value={entry.duration || ''}
                         onChange={(e) => updateMed(cls, 'duration', e.target.value)}
                         placeholder={t('e.g., 6 weeks')} />
+                      <SuggestedAnswers suggestions={MED_DURATIONS} value={entry.duration} onPick={(v) => updateMed(cls, 'duration', v)} />
                     </div>
                     <div>
                       <label className="form-label text-sm">{t('Did it help?')}</label>
@@ -419,7 +560,8 @@ export default function RecordsUpload({ onNext, onBack }) {
       </div>
       )}
 
-      {/* ---------------- Conservative care window ---------------- */}
+      {/* ---------------- Conservative care window (a new problem only) ---------------- */}
+      {newKind && (
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">
           {t('When did you start and stop non-surgical treatment?')}
@@ -431,74 +573,22 @@ export default function RecordsUpload({ onNext, onBack }) {
           <div>
             <label className="form-label text-sm">{t('Started around')}</label>
             <input type="text" value={ev.conservativeCareStart || ''}
-              onChange={(e) => updateEv('conservativeCareStart', e.target.value)}
+              onChange={(e) => setStart(e.target.value)}
               placeholder={t('e.g., June 2025')} />
+            {startDerived && (
+              <p className="text-xs text-teal-700 mt-1.5">{t('Taken from the dates you gave for your treatments. Change it if that is wrong.')}</p>
+            )}
           </div>
           <div>
             <label className="form-label text-sm">{t('Most recent treatment')}</label>
             <input type="text" value={ev.conservativeCareEnd || ''}
               onChange={(e) => updateEv('conservativeCareEnd', e.target.value)}
               placeholder={t('Still ongoing')} />
+            <SuggestedAnswers suggestions={['Still ongoing']} value={ev.conservativeCareEnd} onPick={(v) => updateEv('conservativeCareEnd', v)} />
           </div>
         </div>
       </div>
-
-      {/* ---------------- Nicotine ---------------- */}
-      <div className="card mb-4">
-        <h3 className="text-base font-medium text-navy-600 mb-1">{t('Nicotine Use')}</h3>
-        <p className="text-sm text-gray-400 mb-4">
-          {t(ortho
-            ? 'Nicotine slows bone and tendon healing, and some procedures have specific nicotine requirements, so we need a little more detail than usual.'
-            : 'Some spine procedures have specific nicotine requirements, so we need a little more detail than usual.')}
-        </p>
-        <label className="form-label">{t('Do you currently use any nicotine?')}</label>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {['Never used', 'Yes, currently', 'Quit in the past'].map((opt) => (
-            <button key={opt} onClick={() => updateEv('nicotineCurrent', opt)}
-              className={`chip ${ev.nicotineCurrent === opt ? 'chip-selected' : 'chip-unselected'}`}>
-              {t(opt)}
-            </button>
-          ))}
-        </div>
-
-        {ev.nicotineCurrent === 'Yes, currently' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="form-label text-sm">{t('What product?')}</label>
-              <input type="text" value={ev.nicotineProduct || ''}
-                onChange={(e) => updateEv('nicotineProduct', e.target.value)}
-                placeholder={t('Cigarettes, vape, chew, patch, etc.')} />
-            </div>
-            <div>
-              <label className="form-label text-sm">{t('Would you be willing to stop before surgery?')}</label>
-              <select value={ev.nicotineWillingToQuit || ''}
-                onChange={(e) => updateEv('nicotineWillingToQuit', e.target.value)}>
-                <option value="">{t('Select...')}</option>
-                {['Yes', 'No', 'Not sure'].map((o) => (
-                  <option key={o} value={o}>{t(o)}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-
-        {ev.nicotineCurrent === 'Quit in the past' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="form-label text-sm">{t('When did you quit?')}</label>
-              <input type="text" value={ev.nicotineQuitDate || ''}
-                onChange={(e) => updateEv('nicotineQuitDate', e.target.value)}
-                placeholder={t('e.g., June 2025')} />
-            </div>
-            <div>
-              <label className="form-label text-sm">{t('What product?')}</label>
-              <input type="text" value={ev.nicotineProduct || ''}
-                onChange={(e) => updateEv('nicotineProduct', e.target.value)}
-                placeholder={t('Cigarettes, vape, chew, patch, etc.')} />
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* ---------------- Uploads ---------------- */}
       <div className="card mb-4">
@@ -625,7 +715,7 @@ export default function RecordsUpload({ onNext, onBack }) {
         onNext={onNext}
         onBack={onBack}
         canGoNext
-        nextLabel={t('Continue to Additional Details')}
+        nextLabel={nextLabel}
         showSkip
         skipLabel={t('Skip — I have no records to add')}
       />
