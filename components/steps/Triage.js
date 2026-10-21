@@ -65,8 +65,11 @@ export default function Triage({ onNext, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [byRegions]);
 
+  // The first-visit answer changes the kind: a first visit is always a full
+  // new-patient visit; a returning patient's new problem is its own kind.
   useEffect(() => {
     if (firstTime && kind !== 'new') applyVisit({ kind: 'new' });
+    else if (kind) applyVisit({ kind });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstTime]);
 
@@ -88,7 +91,7 @@ export default function Triage({ onNext, onBack }) {
   const applyVisit = ({ kind: k = kind, claim: c = claim }) => {
     const choice = k === 'new' ? 'new' : k ? 'followup' : v.choice || '';
     const hadSurgery = k === 'postop' ? 'Yes' : k === 'followup' ? 'No' : k === 'new' ? '' : v.hadSurgery || '';
-    const type = visitTypeFor({ choice, workInjury: c, hadSurgery });
+    const type = visitTypeFor({ choice, workInjury: c, hadSurgery, established: returning });
     if (choice !== v.choice) setNested('visit.choice', choice);
     if (hadSurgery !== (v.hadSurgery || '')) setNested('visit.hadSurgery', hadSurgery);
     if (c !== (v.workInjury || '')) setNested('visit.workInjury', c);
@@ -203,7 +206,7 @@ export default function Triage({ onNext, onBack }) {
                 options={KIND}
                 value={KIND_OF[kind] || ''}
                 onChange={(x) => applyVisit({ kind: VISIT_KIND_OF[x] })}
-                hint={kind === 'followup' || kind === 'postop' ? 'Your history is on file, so the form will only ask what has changed.' : undefined}
+                hint={kind === 'new' ? 'The form asks about the new problem in full; the history already on file is only brought up to date.' : kind === 'followup' || kind === 'postop' ? 'Your history is on file, so the form will only ask what has changed.' : undefined}
               />
             ) : (
               <p className="text-sm text-gray-600">{t('A first visit with this doctor: the form asks for your full history, even if another doctor here has seen you.')}</p>
