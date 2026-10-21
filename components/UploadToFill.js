@@ -16,6 +16,16 @@ const LOCAL = {
     es: 'Si tiene una lista larga de afecciones, puede ser más fácil tomarle una foto o subir el documento. Lo leeremos, completaremos lo que corresponda y usted solo lo confirma.',
     zh: '如果您的病史清单很长，拍照或上传文档可能更方便。我们会读取并填入相关内容，您只需确认即可。',
   },
+  'Have your insurance card handy?': { es: '¿Tiene a mano su tarjeta del seguro?', zh: '手边有保险卡吗？' },
+  'Take a photo of the front of the card and we will fill in the plan and the numbers for you to check. The photo is kept with your form so the office has it.': {
+    es: 'Tome una foto del frente de la tarjeta y completaremos el plan y los números para que usted los revise. La foto se guarda con su formulario para que la oficina la tenga.',
+    zh: '拍下保险卡正面，我们会帮您填入保险计划和号码，供您核对。照片会随表格保存，以便办公室查看。',
+  },
+  'Filled in {n} insurance details': { es: 'Se completaron {n} datos del seguro', zh: '已填入 {n} 项保险信息' },
+  'Could not read the card. You can try a clearer photo, or type the details instead.': {
+    es: 'No se pudo leer la tarjeta. Pruebe con una foto más clara o escriba los datos.',
+    zh: '无法读取保险卡。您可以尝试更清晰的照片，或改为手动输入。',
+  },
   'Take a photo': { es: 'Tomar una foto', zh: '拍照' },
   'Upload a file': { es: 'Subir un archivo', zh: '上传文件' },
   'Reading your document…': { es: 'Leyendo su documento…', zh: '正在读取您的文档……' },
@@ -57,6 +67,17 @@ export default function UploadToFill({ section = 'medications' }) {
 
   const merge = (found) => {
     const added = [];
+    if (found.insurance) {
+      // The card's fields land on the demographics step, filling only what is empty.
+      const d = data.demographics || {};
+      const ins = found.insurance;
+      const map = { insuranceProvider: [ins.insurer, ins.planName].filter(Boolean).join(' '), memberId: ins.memberId, groupNumber: ins.groupNumber, insurancePhone: ins.memberServicesPhone, policyHolderName: ins.policyHolderName };
+      const next = { ...d };
+      let n = 0;
+      for (const [k, v] of Object.entries(map)) { if (v && !String(d[k] || '').trim()) { next[k] = v; n += 1; } }
+      if (n) { setSection('demographics', next); added.push(t('Filled in {n} insurance details').replace('{n}', n)); }
+      return added;
+    }
     if (found.medications?.length) {
       const current = data.medications?.current || [];
       const have = new Set(current.map((m) => lower(m.name)));
@@ -92,18 +113,19 @@ export default function UploadToFill({ section = 'medications' }) {
     try {
       const fd = new FormData();
       fd.append('file', file, file.name);
+      if (section === 'insurance') fd.append('kind', 'insurance');
       const res = await fetch('/api/extract', { method: 'POST', body: fd });
       const found = await res.json();
       if (!res.ok) throw new Error(found.error || 'failed');
       const added = merge(found);
       // Keep the original with the attached records, so the office gets it.
       try {
-        await addDocument({ sessionId: data.sessionId, category: 'other', file, note: `Uploaded on the ${section} step` });
+        await addDocument({ sessionId: data.sessionId, category: section === 'insurance' ? 'insurance_card' : 'other', file, note: `Uploaded on the ${section} step` });
         setNested('documents', await listDocuments(data.sessionId));
       } catch { /* the answers were still filled in */ }
       setResult(added.length ? `${added.join(', ')}. ${t('Please check what was added and correct anything that is wrong. The document itself is attached to your form as a record.')}` : t('Nothing to add from that document.'));
     } catch (err) {
-      setError(t('Could not read that document. You can try a clearer photo, or type the list instead.'));
+      setError(t(section === 'insurance' ? 'Could not read the card. You can try a clearer photo, or type the details instead.' : 'Could not read that document. You can try a clearer photo, or type the list instead.'));
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -112,13 +134,16 @@ export default function UploadToFill({ section = 'medications' }) {
   };
 
   const meds = section === 'medications';
+  const insurance = section === 'insurance';
   return (
     <div className={`rounded-2xl border border-dashed border-teal-200 bg-teal-50/40 px-5 py-4 mb-6`}>
-      <p className="text-base font-medium text-navy-600">{meds ? t('Have a list already?') : t('Is your medical history written down somewhere?')}</p>
+      <p className="text-base font-medium text-navy-600">{insurance ? t('Have your insurance card handy?') : meds ? t('Have a list already?') : t('Is your medical history written down somewhere?')}</p>
       <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-        {meds
-          ? t('Take a photo of your medication list, pill bottles or a pharmacy printout, or upload a PDF or Word document, and we will fill this in for you to check.')
-          : t('If you have a long list of conditions, it may be easier to take a photo of it or upload the document. We will read it and fill in what fits, and you just confirm it.')}
+        {insurance
+          ? t('Take a photo of the front of the card and we will fill in the plan and the numbers for you to check. The photo is kept with your form so the office has it.')
+          : meds
+            ? t('Take a photo of your medication list, pill bottles or a pharmacy printout, or upload a PDF or Word document, and we will fill this in for you to check.')
+            : t('If you have a long list of conditions, it may be easier to take a photo of it or upload the document. We will read it and fill in what fits, and you just confirm it.')}
       </p>
       <div className="flex flex-wrap gap-2 mt-3">
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handle(e.target.files?.[0])} />

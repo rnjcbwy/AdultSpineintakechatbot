@@ -12,6 +12,7 @@ import { submitIntake, pollStatus, fetchStatus, finalizeSubmission } from '../..
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 import { CONSENT_ITEMS, consentTextVia, consentComplete, signatureDrawn } from '../../lib/consent';
 import SignaturePad from '../SignaturePad';
+import { GROWTH_STRINGS, MENARCHE_ONSET } from './peds/Growth';
 
 // Patient-facing UI strings for this component (display-only translation).
 const LOCAL = {
@@ -88,6 +89,29 @@ const LOCAL = {
   'None applicable': { es: 'No aplica', zh: '不适用' },
   'Not completed': { es: 'No completado', zh: '未完成' },
   'Partial': { es: 'Parcial', zh: '部分完成' },
+
+  // A child's visit
+  'Completed by': { es: 'Completado por', zh: '填写人' },
+  'The patient': { es: 'El paciente', zh: '患者本人' },
+  'Mother': { es: 'Madre', zh: '母亲' },
+  'Father': { es: 'Padre', zh: '父亲' },
+  'Stepmother': { es: 'Madrastra', zh: '继母' },
+  'Stepfather': { es: 'Padrastro', zh: '继父' },
+  'Grandmother': { es: 'Abuela', zh: '祖母／外祖母' },
+  'Grandfather': { es: 'Abuelo', zh: '祖父／外祖父' },
+  'Legal Guardian': { es: 'Tutor legal', zh: '法定监护人' },
+  'Foster Parent': { es: 'Padre o madre de acogida', zh: '寄养家长' },
+  'Other': { es: 'Otro', zh: '其他' },
+  'Weight': { es: 'Peso', zh: '体重' },
+  'Periods': { es: 'Menstruación', zh: '月经' },
+  'Growth spurt': { es: 'Estirón', zh: '快速长高' },
+  'Handedness': { es: 'Mano dominante', zh: '惯用手' },
+  'Sports': { es: 'Deportes', zh: '运动' },
+  'Clinical photos': { es: 'Fotos clínicas', zh: '临床照片' },
+  'Photos': { es: 'Fotos', zh: '照片' },
+  '{n} attached': { es: '{n} adjuntas', zh: '已附 {n} 张' },
+  'None added': { es: 'Ninguna agregada', zh: '未添加' },
+  'Additional details': { es: 'Detalles adicionales', zh: '其他详情' },
 
   // Card action
   'Edit': { es: 'Editar', zh: '编辑' },
@@ -196,13 +220,18 @@ export default function FinalReview({ onBack, onGoToStep }) {
   const { sortOperations, describeOperation } = service.operations;
   const { detectRedFlags } = service.redFlags;
   const lang = useLang();
-  const t = makeT({ ...COMMON, ...LOCAL }, lang);
+  const t = makeT({ ...COMMON, ...GROWTH_STRINGS, ...LOCAL }, lang);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitted, setIsSubmittedLocal] = useState(!!data.submittedAt);
   const [showSummary, setShowSummary] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
   const consentOk = consentComplete(data.consent) && signatureDrawn(data.consent);
+  // A child's visit: the parent or guardian who answered, and the growth step.
+  const child = service.patient === 'child';
+  const g = data.demographics?.guardian || {};
+  const byParent = child && g.completedBy !== 'patient';
+  const gr = data.demographics?.growth || {};
 
   /**
    * Submit for real: store the answers server-side, upload the attached
@@ -219,8 +248,17 @@ export default function FinalReview({ onBack, onGoToStep }) {
     const fingerprint = fingerprintAnswers(data);
     // The signature is dated the moment the patient submits.
     const signedAt = data.consent?.signedAt || new Date().toISOString();
-    const signed = { ...data, consent: { ...(data.consent || {}), signedAt } };
+    const consent = { ...(data.consent || {}), signedAt };
+    // A parent who named themselves on the first page signs for the child
+    // unless someone else was typed under the signature.
+    if (byParent) {
+      if (!consent.representativeName && g.name) consent.representativeName = g.name;
+      if (!consent.representativeRelationship && g.relationship) consent.representativeRelationship = g.relationship;
+    }
+    const signed = { ...data, consent };
     setNested('consent.signedAt', signedAt);
+    if (consent.representativeName !== data.consent?.representativeName) setNested('consent.representativeName', consent.representativeName);
+    if (consent.representativeRelationship !== data.consent?.representativeRelationship) setNested('consent.representativeRelationship', consent.representativeRelationship);
 
     try {
       let sub = data.submission;
@@ -308,6 +346,32 @@ export default function FinalReview({ onBack, onGoToStep }) {
   const regionsLabel = (data.chiefComplaint.symptomRegions || []).map(id =>
     t(SYMPTOM_REGIONS.find(r => r.id === id)?.label)).filter(Boolean).join(', ');
 
+  // The growth step's answers, as the parent sees them.
+  const onsetLabel = MENARCHE_ONSET.find(([id]) => id === gr.menarcheOnset)?.[1];
+  const growthItems = [
+    { label: 'Height', value: gr.heightFeet || gr.heightInches ? `${gr.heightFeet || 0} ${t('ft')} ${gr.heightInches || 0} ${t('in')}` : '' },
+    { label: 'Weight', value: gr.weightLbs ? `${gr.weightLbs} lbs` : '' },
+    ...(gr.hasMenarche ? [{ label: 'Periods', value: gr.hasMenarche === 'yes' ? [t('Yes'), onsetLabel && t(onsetLabel)].filter(Boolean).join(' · ') : t('No') }] : []),
+    { label: 'Growth spurt', value: { yes: t('Yes'), no: t('No'), unsure: t('Unsure') }[gr.recentGrowthSpurt] || '' },
+    { label: 'Handedness', value: gr.handedness ? t(gr.handedness) : '' },
+    { label: 'School', value: [gr.grade, gr.school].filter(Boolean).join(' · ') },
+    { label: 'Sports', value: [...(gr.sports || []).map((s) => t(s)), gr.otherActivities].filter(Boolean).join(', ') },
+  ];
+  const photos = (data.documents || []).filter((x) => x.category === 'clinical_photo');
+
+  // What the service adds to the review (lib/services/<service>/extras.js
+  // reviewItems): [{ label, value, step }], one card per run of the same
+  // step, after the shared cards. The pediatric services fill these in.
+  let extraItems = [];
+  try { extraItems = service.extras?.reviewItems?.(data, t) || []; } catch { extraItems = []; }
+  const extraCards = [];
+  for (const item of extraItems) {
+    if (!item || !item.label) continue;
+    const last = extraCards[extraCards.length - 1];
+    if (last && last.step === item.step) last.items.push(item);
+    else extraCards.push({ step: item.step, items: [item] });
+  }
+
   if (isSubmitted && data.generatedSummary) {
     return <SubmittedView data={data} onGoToStep={onGoToStep} />;
   }
@@ -356,12 +420,22 @@ export default function FinalReview({ onBack, onGoToStep }) {
           title="Patient Information"
           onEdit={() => go('demographics')}
           items={[
+            ...(child ? [{ label: 'Completed by', value: byParent ? [g.name, g.relationship && t(g.relationship)].filter(Boolean).join(' · ') : t('The patient') }] : []),
             { label: 'Name', value: `${data.demographics?.firstName || ''} ${data.demographics?.lastName || ''}`.trim() },
             { label: 'DOB', value: data.demographics.dob },
             { label: 'Sex', value: data.demographics.sex },
             { label: 'Phone', value: data.demographics.phone },
           ]}
         />
+
+        {has('growth') && (
+          <ReviewCard
+            t={t}
+            title="Growth and activities"
+            onEdit={() => go('growth')}
+            items={growthItems}
+          />
+        )}
 
         {has('work-injury') && (
           <ReviewCard
@@ -443,6 +517,15 @@ export default function FinalReview({ onBack, onGoToStep }) {
               { label: 'AI conversation messages', value: (data.hpiData.conversationHistory || []).length.toString() },
               ...(has('treatments') ? [{ label: 'Injections recorded', value: (data.hpiData.conservativeTreatments?.injections || []).length.toString() }] : []),
             ]}
+          />
+        )}
+
+        {has('clinical-photos') && (
+          <ReviewCard
+            t={t}
+            title="Clinical photos"
+            onEdit={() => go('clinical-photos')}
+            items={[{ label: 'Photos', value: photos.length ? t('{n} attached').replace('{n}', String(photos.length)) : t('None added') }]}
           />
         )}
 
@@ -549,10 +632,20 @@ export default function FinalReview({ onBack, onGoToStep }) {
             items={getPromsReviewItems(data.proms, t, service.promSummary)}
           />
         )}
+
+        {extraCards.map((card, i) => (
+          <ReviewCard
+            key={`${card.step || 'extra'}-${i}`}
+            t={t}
+            title={steps.find((s) => s.id === card.step)?.label || 'Additional details'}
+            onEdit={() => go(card.step)}
+            items={card.items}
+          />
+        ))}
       </div>
 
       {/* Acknowledgments and signature: the paper packet's signature pages, online */}
-      <ConsentCard t={t} lang={lang} consent={data.consent || {}} setNested={setNested} />
+      <ConsentCard t={t} lang={lang} consent={data.consent || {}} setNested={setNested} guardian={byParent ? g : null} />
 
       <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
         <p className="text-sm text-gray-600">
@@ -603,7 +696,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
  * signature. Every statement must be checked and a name typed before the form
  * can be submitted; the server checks the same thing.
  */
-function ConsentCard({ t, lang, consent, setNested }) {
+function ConsentCard({ t, lang, consent, setNested, guardian = null }) {
   const set = (key, value) => setNested(`consent.${key}`, value);
   return (
     <div className="card mt-6 border-teal-100">
@@ -655,11 +748,11 @@ function ConsentCard({ t, lang, consent, setNested }) {
         <div className="md:col-span-2 text-xs font-medium text-gray-500 mt-1">{t('If you are completing this for the patient')}</div>
         <div>
           <label className="form-label">{t('Your name')}</label>
-          <input type="text" value={consent.representativeName || ''} onChange={(e) => set('representativeName', e.target.value)} />
+          <input type="text" value={consent.representativeName || ''} onChange={(e) => set('representativeName', e.target.value)} placeholder={guardian?.name || ''} />
         </div>
         <div>
           <label className="form-label">{t('Relationship to the patient')}</label>
-          <input type="text" value={consent.representativeRelationship || ''} onChange={(e) => set('representativeRelationship', e.target.value)} />
+          <input type="text" value={consent.representativeRelationship || ''} onChange={(e) => set('representativeRelationship', e.target.value)} placeholder={guardian?.relationship ? t(guardian.relationship) : ''} />
         </div>
       </div>
     </div>

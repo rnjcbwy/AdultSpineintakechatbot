@@ -30,6 +30,20 @@ Reply with ONE JSON object and nothing else, no code fences:
 }
 "notes" is one sentence on anything you could not place (illegible lines, a section you skipped). Use empty arrays for sections the document does not cover.`;
 
+const INSURANCE_SYSTEM = `You read a photo of a patient's health insurance card (front, back, or both) and pull out what the office needs to verify benefits. Read only what is printed; never guess a number.
+
+Reply with ONE JSON object and nothing else, no code fences:
+{
+  "insurer": "",
+  "planName": "",
+  "memberId": "",
+  "groupNumber": "",
+  "memberServicesPhone": "",
+  "policyHolderName": "",
+  "notes": ""
+}
+"insurer" is the plan or company name as printed (e.g. "Aetna", "Horizon BCBS NJ"); "planName" the product line if printed (e.g. "PPO", "Medicare Advantage"); "memberId" the member / subscriber / ID number exactly as printed; "groupNumber" the group number if printed; "memberServicesPhone" the member services or customer service phone; "policyHolderName" the subscriber's name as printed; "notes" one sentence on anything unreadable. Leave a field empty when it is not on the card.`;
+
 /**
  * POST /api/extract — multipart with one `file`: a photo, PDF, Word or text
  * document the patient has. The model reads it and returns the medications,
@@ -47,6 +61,8 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Expected a file upload.' }, { status: 400 });
   }
   const file = form.get('file');
+  // 'insurance': a photo of the insurance card instead of a medical document.
+  const kind = String(form.get('kind') || 'history');
   if (!file || typeof file.arrayBuffer !== 'function') return NextResponse.json({ error: 'No file received.' }, { status: 400 });
   if (file.size > MAX_BYTES) return NextResponse.json({ error: 'That file is too large (15 MB limit). A photo or a PDF of the list works best.' }, { status: 413 });
   const contentType = String(file.type || '').toLowerCase();
@@ -59,6 +75,17 @@ export async function POST(request) {
   }
   try {
     const bytes = Buffer.from(await file.arrayBuffer());
+    const fileArg = imageFormat ? { kind: 'image', format: imageFormat, bytes } : { kind: 'document', format: docFormat, name: name.replace(/[^\w.\- ]+/g, '_').slice(0, 60), bytes };
+    if (kind === 'insurance') {
+      const { text } = await completeWithFile({ purpose: 'extract', system: INSURANCE_SYSTEM, prompt: 'Here is my insurance card. Please read the plan and the numbers printed on it.', file: fileArg, maxTokens: 600 });
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      const parsed = JSON.parse(text.slice(start, end + 1));
+      const field = (k) => String(parsed[k] ?? '').trim().slice(0, 120);
+      const out = { insurance: { insurer: field('insurer'), planName: field('planName'), memberId: field('memberId'), groupNumber: field('groupNumber'), memberServicesPhone: field('memberServicesPhone'), policyHolderName: field('policyHolderName') }, notes: String(parsed.notes || '').slice(0, 300) };
+      logEvent('extract.complete', { kind: 'insurance', filled: Object.values(out.insurance).filter(Boolean).length });
+      return NextResponse.json(out, { headers: { 'Cache-Control': 'private, no-store' } });
+    }
     const { text } = await completeWithFile({
       purpose: 'extract',
       system: SYSTEM,
