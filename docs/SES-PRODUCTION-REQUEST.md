@@ -1,5 +1,11 @@
 # Amazon SES: request production access (account 933164653563, us-east-1)
 
+**Status 2026-10-21:** case 179227456900079 ("SES: Production Access") was not closed; AWS's automated
+review had asked for six details. The reply below was posted on the case on 2026-10-21 18:10 EDT from the
+Support Center. AWS answers on the case and by email to the account root address and admin@aaronweymd.com,
+usually within a day. Check: `aws sesv2 get-account --region us-east-1 --query ProductionAccessEnabled`.
+If AWS asks for more, reply on the same case (Support Center → Your support cases).
+
 The account is still in the SES **sandbox**: it can only send to addresses or domains that are
 verified in SES. `aaronweymd.com` is verified (DKIM passing), so mail to any `@aaronweymd.com`
 address already works; mail to a patient's Gmail or Yahoo address is refused until AWS grants
