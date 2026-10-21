@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import SuggestedAnswers, { useAdoptExample } from './SuggestedAnswers';
 
@@ -101,6 +103,55 @@ export function TextField({ label, value, onChange, placeholder, suggestions, ty
   );
 }
 
+const SPEECH_LANG = { en: 'en-US', es: 'es-US', zh: 'zh-CN', pt: 'pt-BR', ru: 'ru-RU', pl: 'pl-PL', ar: 'ar-SA', he: 'he-IL', ko: 'ko-KR', ja: 'ja-JP', hi: 'hi-IN', ne: 'ne-NP' };
+
+/**
+ * "Say it instead": the browser's own speech recognition, where it exists
+ * (Chrome, Edge, Safari), in the form's language. Nothing is sent anywhere
+ * by this form; the browser does the listening. Typing always works too.
+ */
+export function DictateButton({ onText, lang }) {
+  const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(false);
+  const recRef = useRef(null);
+  const t = makeT(COMMON, lang);
+  useEffect(() => {
+    setSupported(typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition));
+    return () => { try { recRef.current?.stop(); } catch { /* ignore */ } };
+  }, []);
+  if (!supported) return null;
+  const toggle = () => {
+    if (listening) { try { recRef.current?.stop(); } catch { /* ignore */ } setListening(false); return; }
+    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new Rec();
+    rec.lang = SPEECH_LANG[lang] || 'en-US';
+    rec.interimResults = false;
+    rec.continuous = true;
+    rec.onresult = (e) => {
+      const text = Array.from(e.results).slice(e.resultIndex).map((r) => r[0]?.transcript || '').join(' ').trim();
+      if (text) onText(text);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recRef.current = rec;
+    try { rec.start(); setListening(true); } catch { setListening(false); }
+  };
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={listening}
+      className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1.5 border transition-colors ${listening ? 'bg-red-50 border-red-300 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'}`}
+    >
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <rect x="9" y="3" width="6" height="11" rx="3" />
+        <path d="M5 11a7 7 0 0 0 14 0M12 18v3" strokeLinecap="round" />
+      </svg>
+      {listening ? t('Listening… tap to stop') : t('Say it instead')}
+    </button>
+  );
+}
+
 export function TextArea({ label, value, onChange, placeholder, rows = 3, hint }) {
   const lang = useLang();
   const t = makeT(COMMON, lang);
@@ -113,7 +164,10 @@ export function TextArea({ label, value, onChange, placeholder, rows = 3, hint }
         placeholder={placeholder ? t(placeholder) : undefined}
         rows={rows}
       />
-      {hint && <p className="text-xs text-gray-400 mt-1.5">{t(hint)}</p>}
+      <div className="flex items-start justify-between gap-3 mt-1.5">
+        {hint ? <p className="text-xs text-gray-400">{t(hint)}</p> : <span />}
+        <DictateButton lang={lang} onText={(text) => onChange(`${String(value || '').trim()}${value ? ' ' : ''}${text}`)} />
+      </div>
     </div>
   );
 }

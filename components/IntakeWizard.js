@@ -5,7 +5,23 @@ import { useEffect, useState } from 'react';
 import { useLang, makeT, tx, isRtl } from '../lib/i18n';
 import { stepsForVisit } from '../lib/flows';
 
+// Rough minutes a patient spends on each step; the header adds up what is left.
+const STEP_MINUTES = {
+  triage: 1, demographics: 3, growth: 1, 'work-injury': 2, 'legal-injury': 3, interval: 2, postop: 2, injury: 2, 'injury-care': 2, 'fx-followup': 2,
+  'chief-complaint': 2, 'pain-map': 2, 'symptom-details': 3, 'spine-history': 3, treatments: 2, records: 2, 'clinical-photos': 1,
+  pmh: 2, psh: 1, medications: 2, allergies: 1, social: 1, family: 1, ros: 1, proms: 4, review: 2,
+};
+
 const CHROME = {
+  'Growth & Development': { es: 'Crecimiento y desarrollo', zh: '生长与发育' },
+  'Growth': { es: 'Crecimiento', zh: '生长' },
+  'Spine History': { es: 'Historia de la columna', zh: '脊柱病史' },
+  'Clinical Photos': { es: 'Fotos clínicas', zh: '临床照片' },
+  'Photos': { es: 'Fotos', zh: '照片' },
+  'What Happened': { es: 'Qué pasó', zh: '发生了什么' },
+  'Care So Far': { es: 'Atención hasta ahora', zh: '目前为止的处理' },
+  'Recovery So Far': { es: 'Recuperación hasta ahora', zh: '目前为止的恢复' },
+  'About {n} min left': { es: 'Faltan unos {n} min', zh: '还需约 {n} 分钟' },
   'Before Your Visit': { es: 'Antes de su visita', zh: '就诊之前' },
   'Finish later': { es: 'Terminar más tarde', zh: '稍后完成' },
   'Go to a step': { es: 'Ir a un paso', zh: '跳转到某一步' },
@@ -135,6 +151,7 @@ export default function IntakeWizard() {
   // The steps for this kind of visit. Until one is chosen the full sequence
   // is shown, so the progress strip does not jump around on the first screens.
   const steps = stepsForVisit(data.visit?.type, service, data);
+  const minutesLeft = steps.slice(Math.max(data.currentStep, 0)).reduce((sum, s) => sum + (STEP_MINUTES[s.id] ?? 2), 0);
   const currentStep = Math.min(data.currentStep, steps.length - 1);
   const stepId = steps[currentStep]?.id;
   const StepComponent = STEP_COMPONENTS[stepId] || Welcome;
@@ -176,7 +193,7 @@ export default function IntakeWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-cream-100">
+    <div className={`min-h-screen bg-cream-100${kiosk ? ' kiosk' : ''}`}>
       {/* Header */}
       {showChrome && (
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
@@ -195,6 +212,12 @@ export default function IntakeWizard() {
                     {stepOf(currentStep, steps.length - 1)}
                     {' · '}
                     {t(steps[currentStep]?.label)}
+                    {minutesLeft > 0 && (
+                      <>
+                        {' · '}
+                        <span className="text-teal-600">{t('About {n} min left').replace('{n}', minutesLeft)}</span>
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

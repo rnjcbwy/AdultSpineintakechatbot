@@ -222,7 +222,7 @@ export default function Triage({ onNext, onBack }) {
         </div>
       )}
 
-      <StepNavigation onNext={next} onBack={onBack} canGoNext={canGoNext} nextLabel={busy ? 'One moment…' : undefined} />
+      <StepNavigation onNext={next} onBack={onBack} canGoNext={canGoNext} nextLabel={busy ? t('One moment…') : undefined} />
     </div>
   );
 }

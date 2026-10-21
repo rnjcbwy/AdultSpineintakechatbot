@@ -13,13 +13,13 @@ const T = {
     banner:
       '⚠️ PROTOTYPE / DEMONSTRATION ONLY — Please do not enter real patient information. Use fictional names and details for testing purposes.',
     description:
-      'This takes about 10–15 minutes and covers:',
+      'A follow-up takes about 10 minutes; a first visit about 20. You can stop and finish later. It covers:',
     steps: [
-      'Basic demographic information',
-      'A guided conversation about your symptoms',
-      'Structured medical history forms',
-      'Quality of life questionnaires',
-      'Review and submission',
+      'A few taps so the form knows who you are and what this visit is about',
+      'Your story, in your own words, with questions that fit it',
+      'What you have tried, and any records you can add',
+      'Your health history, or a quick check if we already have it',
+      'A short questionnaire and a review before you send',
     ],
     begin: 'Begin Intake',
     continue: 'Continue Where You Left Off',
@@ -38,13 +38,13 @@ const T = {
     banner:
       '⚠️ SOLO PROTOTIPO / DEMOSTRACIÓN — Por favor, no ingrese información real de pacientes. Use nombres y datos ficticios con fines de prueba.',
     description:
-      'Toma entre 15 y 25 minutos y abarca:',
+      'Una visita de seguimiento toma unos 10 minutos; una primera visita unos 20. Puede detenerse y terminar más tarde. Incluye:',
     steps: [
-      'Información demográfica básica',
-      'Una conversación guiada sobre sus síntomas',
-      'Formularios estructurados de historia médica',
-      'Cuestionarios de calidad de vida',
-      'Revisión y envío',
+      'Unos toques para que el formulario sepa quién es usted y de qué trata esta visita',
+      'Su historia, con sus propias palabras, con preguntas que se ajustan a ella',
+      'Lo que ha probado y los registros que pueda agregar',
+      'Su historial de salud, o una revisión rápida si ya lo tenemos',
+      'Un cuestionario breve y una revisión antes de enviar',
     ],
     begin: 'Comenzar Admisión',
     continue: 'Continuar Donde lo Dejó',
@@ -63,13 +63,13 @@ const T = {
     banner:
       '⚠️ 仅供原型/演示 — 请勿输入真实患者信息。请使用虚构的姓名和信息进行测试。',
     description:
-      '大约需要 10–15 分钟，包括：',
+      '复诊约需 10 分钟，初诊约需 20 分钟。您可以随时暂停，稍后完成。内容包括：',
     steps: [
-      '基本人口统计信息',
-      '关于症状的引导式对话',
-      '结构化病史表格',
-      '生活质量问卷',
-      '查看并提交',
+      '几次点选，让表格了解您是谁以及本次就诊的目的',
+      '用您自己的话讲述情况，并回答与之相关的问题',
+      '您尝试过的治疗，以及可以添加的病历资料',
+      '您的健康史；如果我们已有记录，则只需快速核对',
+      '一份简短的问卷，发送前再查看一遍',
     ],
     begin: '开始登记',
     continue: '从上次中断处继续',
