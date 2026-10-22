@@ -107,6 +107,24 @@ new-problem, adult spine follow-up, child spine new, child ortho fracture.
 - Kiosk: `?kiosk=1` once per tablet; the language chosen on the welcome
   stays through "Start a new intake form" and the clinic code.
 
+## Patient education after submitting (2026-10-22)
+
+- `lib/education/guides.json` is the website's 163 guides (conditions,
+  treatments, for-patients) in en/es/pt/ko/zh, built by
+  `node scripts/build-guide-catalog.mjs` from the aaronweymd-site repo. Re-run
+  after adding guides there.
+- `lib/server/education.js` picks up to three guides per submission with the
+  model, from a list narrowed to the part of the body the patient described
+  (children's conditions never go to adults), and stores the pick as
+  `submissions/<id>/education.json`. Only for those five languages.
+- The thank-you screen shows them (`components/EducationOffer.js`, via
+  `GET /api/intake/:id/education`), with a QR code each on wide screens and
+  the clinic tablet; descriptions that name the surgeon are left off there.
+- The worker sends one thank-you email per submission with the same guides
+  (step 4 in `lib/server/intakeWorker.js`), from `EMAIL_FROM`. It stays off
+  until EMAIL_FROM is set on the worker (CDK context `emailFrom`) and on the
+  Amplify app, which needs SES production access first.
+
 ## Remaining
 
 1. The review-of-systems defaults in `lib/store.js` still come from the

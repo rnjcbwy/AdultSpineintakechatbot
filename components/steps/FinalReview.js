@@ -12,6 +12,7 @@ import { submitIntake, pollStatus, fetchStatus, finalizeSubmission } from '../..
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 import { CONSENT_ITEMS, consentTextVia, consentComplete, signatureDrawn } from '../../lib/consent';
 import SignaturePad from '../SignaturePad';
+import EducationOffer from '../EducationOffer';
 import { GROWTH_STRINGS, MENARCHE_ONSET } from './peds/Growth';
 
 // Patient-facing UI strings for this component (display-only translation).
@@ -902,6 +903,9 @@ function SubmittedView({ data, onGoToStep }) {
           </p>
         )}
       </div>
+
+      {/* Patient education chosen for what they told us, in their language. */}
+      <EducationOffer submission={sub} />
 
       {/* Red flags summary for patient */}
       {(summary.redFlags || []).filter(f => f.severity === 'urgent').length > 0 && (
