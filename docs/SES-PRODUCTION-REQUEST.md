@@ -6,6 +6,11 @@ Support Center. AWS answers on the case and by email to the account root address
 usually within a day. Check: `aws sesv2 get-account --region us-east-1 --query ProductionAccessEnabled`.
 If AWS asks for more, reply on the same case (Support Center → Your support cases).
 
+**Sender changed after the reply (2026-10-21):** patient email now comes from `no-reply@aaronweymd.com`
+("Dr. Aaron Wey's office"), not spine@. Every message says not to reply and gives the office number.
+Production access is granted for the whole account and the verified domain, so the change does not affect
+the case. If AWS asks, say the sender is no-reply@aaronweymd.com and questions go to (201) 836-1663.
+
 The account is still in the SES **sandbox**: it can only send to addresses or domains that are
 verified in SES. `aaronweymd.com` is verified (DKIM passing), so mail to any `@aaronweymd.com`
 address already works; mail to a patient's Gmail or Yahoo address is refused until AWS grants
@@ -51,6 +56,6 @@ production access. An earlier request (case 179227456900079, from the Practice H
 
 ## After approval
 
-Nothing else to change: both apps already send from `spine@aaronweymd.com`
-(`cdk.json` → `emailFrom` for the intake app; `deploy/terraform/terraform.tfvars` → `email_from`
-for Practice Hub). Send one test from the website chat to a Gmail address to confirm.
+Nothing else to change: both apps send from `no-reply@aaronweymd.com`
+(`cdk.json` → `emailFrom` for the intake app; the default of `email_from` in
+`deploy/terraform/ses.tf` for Practice Hub). Send one test from the website chat to a Gmail address to confirm.
