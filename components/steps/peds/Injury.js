@@ -72,7 +72,7 @@ export default function Injury({ onNext, onBack }) {
 
       <div className="space-y-6">
         <div className="card space-y-3">
-          {track ? (
+          {data.mode === 'fracture' ? null : track ? (
             <p className="text-sm text-gray-600">
               {t(track === 'fracture' ? 'You said this is about an injury or a broken bone.' : 'You said this is not about an injury or a broken bone.')}{' '}
               <button type="button" className="underline text-teal-600" onClick={() => setTrack('')}>{t('Change')}</button>

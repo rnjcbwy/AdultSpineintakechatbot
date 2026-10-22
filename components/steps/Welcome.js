@@ -21,6 +21,15 @@ const T = {
       'Your health history, or a quick check if we already have it',
       'A short questionnaire and a review before you send',
     ],
+    fxTitle: "Your Child's Injury",
+    fxSubtitle: 'A short form for a broken bone or a recent injury, so the visit can focus on getting your child better.',
+    fxDescription: 'This takes about 5 minutes. It asks:',
+    fxSteps: [
+      'A little about your child and how to reach you',
+      'What happened, and what has been done so far',
+      'Four quick health questions',
+      'Your signature, and you are done',
+    ],
     begin: 'Begin Intake',
     continue: 'Continue Where You Left Off',
     startNew: 'Start New Form',
@@ -46,6 +55,15 @@ const T = {
       'Su historial de salud, o una revisión rápida si ya lo tenemos',
       'Un cuestionario breve y una revisión antes de enviar',
     ],
+    fxTitle: 'La lesión de su hijo o hija',
+    fxSubtitle: 'Un formulario corto para un hueso roto o una lesión reciente, para que la visita se centre en que su hijo o hija se recupere.',
+    fxDescription: 'Toma unos 5 minutos. Pregunta:',
+    fxSteps: [
+      'Un poco sobre su hijo o hija y cómo comunicarnos con usted',
+      'Qué pasó y qué se ha hecho hasta ahora',
+      'Cuatro preguntas rápidas de salud',
+      'Su firma, y listo',
+    ],
     begin: 'Comenzar Admisión',
     continue: 'Continuar Donde lo Dejó',
     startNew: 'Comenzar Nuevo Formulario',
@@ -70,6 +88,15 @@ const T = {
       '您尝试过的治疗，以及可以添加的病历资料',
       '您的健康史；如果我们已有记录，则只需快速核对',
       '一份简短的问卷，发送前再查看一遍',
+    ],
+    fxTitle: '孩子的受伤情况',
+    fxSubtitle: '针对骨折或近期受伤的简短表格，让就诊专注于帮助孩子康复。',
+    fxDescription: '大约需要 5 分钟，包括：',
+    fxSteps: [
+      '孩子的基本信息和您的联系方式',
+      '发生了什么，以及目前已做过的处理',
+      '四个简短的健康问题',
+      '签名，然后就完成了',
     ],
     begin: '开始登记',
     continue: '从上次中断处继续',
@@ -141,6 +168,8 @@ export default function Welcome({ onNext }) {
   // Spanish and Chinese are written out below; the other languages come from
   // the loaded table, string by string, falling back to English.
   const t = T[lang] || translateDeep(T.en, lang);
+  // The short fracture form (lib/fracture.js) has its own welcome.
+  const fracture = data.mode === 'fracture';
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
@@ -151,10 +180,10 @@ export default function Welcome({ onNext }) {
         </div>
 
         <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">
-          {t.title}
+          {fracture ? t.fxTitle : t.title}
         </h1>
         <p className="text-base md:text-lg text-gray-500 leading-relaxed max-w-md mx-auto mb-7">
-          {t.subtitle}
+          {fracture ? t.fxSubtitle : t.subtitle}
         </p>
 
         {/* Language selector */}
@@ -188,11 +217,11 @@ export default function Welcome({ onNext }) {
 
         {/* No redirects: the next step works out who the form is for and what it is about. */}
         <p className="text-sm font-medium uppercase tracking-[0.12em] text-gray-400 mb-3 mt-6">
-          {t.description}
+          {fracture ? t.fxDescription : t.description}
         </p>
 
         <ul className="bg-white rounded-2xl border border-navy-100 p-2 mb-8 text-left">
-          {t.steps.map((label, i) => (
+          {(fracture ? t.fxSteps : t.steps).map((label, i) => (
             <li key={i} className="flex items-center gap-4 px-4 py-3 text-gray-700 rounded-xl">
               <span className="flex items-center justify-center w-7 h-7 flex-shrink-0 bg-navy-50 text-navy-600 rounded-full text-xs font-semibold tabular-nums">
                 {i + 1}

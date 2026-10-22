@@ -413,7 +413,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
         <ReviewCard
           t={t}
           title="Type of Visit"
-          onEdit={() => go('triage')}
+          onEdit={() => go(has('triage') ? 'triage' : 'fx-basics')}
           items={[{ label: 'Visit', value: t(VISIT_LABEL[visitType] || data.demographics.visitReason) }]}
         />
 
@@ -421,7 +421,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
         <ReviewCard
           t={t}
           title="Patient Information"
-          onEdit={() => go('demographics')}
+          onEdit={() => go(has('demographics') ? 'demographics' : 'fx-basics')}
           items={[
             ...(child ? [{ label: 'Completed by', value: byParent ? [g.name, g.relationship && t(g.relationship)].filter(Boolean).join(' · ') : t('The patient') }] : []),
             { label: 'Name', value: `${data.demographics?.firstName || ''} ${data.demographics?.lastName || ''}`.trim() },
@@ -430,6 +430,20 @@ export default function FinalReview({ onBack, onGoToStep }) {
             { label: 'Phone', value: data.demographics.phone },
           ]}
         />
+
+        {has('fx-health') && (
+          <ReviewCard
+            t={t}
+            title="Health check"
+            onEdit={() => go('fx-health')}
+            items={[
+              { label: 'Medicines', value: data.medications?.noMedications ? t('None') : (data.medications?.current || []).map((m) => m.name).join(', ') },
+              { label: 'Allergies', value: data.allergies?.nkda ? t('None') : (data.allergies?.entries || []).map((a) => a.allergen).join(', ') },
+              { label: 'Conditions', value: data.pastMedicalHistory?.noConditions ? t('None') : (data.pastMedicalHistory?.conditions || []).map((c) => c.name).join(', ') },
+              { label: 'Anesthesia problems', value: t(data.pedsOrtho?.health?.anesthesia || '') },
+            ]}
+          />
+        )}
 
         {has('growth') && (
           <ReviewCard

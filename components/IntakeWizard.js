@@ -10,9 +10,12 @@ const STEP_MINUTES = {
   triage: 1, demographics: 2, growth: 1, 'work-injury': 2, 'legal-injury': 2, interval: 2, postop: 2, injury: 2, 'injury-care': 2, 'fx-followup': 2,
   'chief-complaint': 1, 'pain-map': 1, 'symptom-details': 2, 'spine-history': 2, treatments: 1, records: 2, 'clinical-photos': 1,
   pmh: 1, psh: 1, medications: 1, allergies: 1, social: 1, family: 1, ros: 1, proms: 3, review: 1,
+  'fx-basics': 1, 'fx-health': 1,
 };
 
 const CHROME = {
+  'About your child': { es: 'Sobre su hijo o hija', zh: '关于您的孩子' },
+  'Health check': { es: 'Revisión de salud', zh: '健康情况' },
   'Growth & Development': { es: 'Crecimiento y desarrollo', zh: '生长与发育' },
   'Growth': { es: 'Crecimiento', zh: '生长' },
   'Spine History': { es: 'Historia de la columna', zh: '脊柱病史' },

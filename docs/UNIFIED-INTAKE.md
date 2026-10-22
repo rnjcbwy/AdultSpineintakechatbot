@@ -125,6 +125,26 @@ new-problem, adult spine follow-up, child spine new, child ortho fracture.
   until EMAIL_FROM is set on the worker (CDK context `emailFrom`) and on the
   Amplify app, which needs SES production access first.
 
+## The fracture form (2026-10-22)
+
+A short pediatric injury form for a simple fracture or a fresh injury, after
+a parent found the full form too long. It is the peds_ortho service on its
+fracture track with `data.mode = 'fracture'` (`lib/fracture.js`):
+
+- Address: https://intake.aaronweymd.com/fracture (and /fracture/es and the
+  other language codes). pedsortho.aaronweymd.com 301-redirects there (an
+  Amplify custom rule on app d3chu9dux7tr7z; DNS for aaronweymd.com is at
+  GoDaddy, so the subdomain stays on that app and redirects).
+- Flow (`lib/services/peds-ortho/flow.js`): new injury = about your child,
+  what happened, care so far, health check, review and send; a follow-up
+  for the same injury = about your child, recovery so far, review and send.
+  No triage step, no growth, history, symptom or questionnaire steps.
+- New screens: `components/steps/peds/FractureBasics.js` (parent, child,
+  contact, first visit or follow-up, optional insurance with the card photo)
+  and `FractureHealth.js` (daily medicines, medicine allergies, conditions
+  or operations, anesthesia problems; written into the usual lists).
+- "Start a new form" and the clinic tablet's reset stay on the fracture form.
+
 ## Remaining
 
 1. The review-of-systems defaults in `lib/store.js` still come from the

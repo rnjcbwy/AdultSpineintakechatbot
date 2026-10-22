@@ -7,6 +7,8 @@ import SpineHistory from './SpineHistory';
 import Injury from './Injury';
 import InjuryCare from './InjuryCare';
 import FractureFollowUp from './FractureFollowUp';
+import FractureBasics from './FractureBasics';
+import FractureHealth from './FractureHealth';
 
 export const PEDS_STEP_COMPONENTS = {
   'growth': Growth,
@@ -15,4 +17,6 @@ export const PEDS_STEP_COMPONENTS = {
   'injury': Injury,
   'injury-care': InjuryCare,
   'fx-followup': FractureFollowUp,
+  'fx-basics': FractureBasics,
+  'fx-health': FractureHealth,
 };

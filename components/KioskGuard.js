@@ -58,8 +58,9 @@ export default function KioskGuard() {
     } catch {
       /* ignore */
     }
-    // A fresh page: no invite code in the address, English, the welcome screen.
-    window.location.replace('/');
+    // A fresh page: no invite code in the address, English, the welcome screen;
+    // a fracture-form tablet stays on the fracture form.
+    window.location.replace(/^\/fracture(\/|$)/i.test(window.location.pathname) ? '/fracture' : '/');
   }, [resetIntake]);
 
   useEffect(() => {

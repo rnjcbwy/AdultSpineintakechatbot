@@ -48,7 +48,12 @@ const nextConfig = {
   // The printed cards link to /es, /ko and so on: serve the form there, in
   // that language (lib/store.js reads the code from the path).
   async rewrites() {
-    return [{ source: '/:lang(es|zh|pt|ru|pl|ar|he|ko|ja|hi|ne)', destination: '/' }];
+    return [
+      { source: '/:lang(es|zh|pt|ru|pl|ar|he|ko|ja|hi|ne)', destination: '/' },
+      // The short fracture form (lib/fracture.js), with or without a language.
+      { source: '/fracture', destination: '/' },
+      { source: '/fracture/:lang(es|zh|pt|ru|pl|ar|he|ko|ja|hi|ne)', destination: '/' },
+    ];
   },
   async headers() {
     // Headers on /express replace the general ones key by key; X-Frame-Options
