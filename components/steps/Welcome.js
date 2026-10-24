@@ -1,6 +1,7 @@
 'use client';
 
 import { useIntake } from '../../lib/store';
+import { lockedSpecialty, pedsSiteFor, otherAdultSite } from '../../lib/siteLock';
 import { useState } from 'react';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
@@ -30,6 +31,16 @@ const T = {
       'Four quick health questions',
       'Your signature, and you are done',
     ],
+    spineTitle: 'Your Spine Story',
+    spineSubtitle: 'A calm, step-by-step way to put your whole history in one place: your symptoms, what you have tried, and what matters to you.',
+    orthoTitle: 'Your Orthopaedic Visit',
+    orthoSubtitle: 'Start your experience with your orthopaedic team here. Tell us about your condition, what you have tried, and what matters to you, so your visit is ready for you before you arrive.',
+    under18Prefix: 'Younger and teenage patients can use the ',
+    under18Link: 'pediatric version, which asks more age-appropriate questions',
+    spinePrefix: 'Neck or back problem? Use the ',
+    spineLink: 'spine intake, which asks the right questions for the spine',
+    orthoPrefix: 'A bone or joint problem? Use the ',
+    orthoLink: 'orthopaedic intake, which asks the right questions for bones and joints',
     begin: 'Begin Intake',
     continue: 'Continue Where You Left Off',
     startNew: 'Start New Form',
@@ -64,6 +75,16 @@ const T = {
       'Cuatro preguntas rápidas de salud',
       'Su firma, y listo',
     ],
+    spineTitle: 'La historia de su columna',
+    spineSubtitle: 'Una forma tranquila, paso a paso, de reunir toda su historia en un solo lugar: sus síntomas, lo que ha probado y lo que le importa.',
+    orthoTitle: 'Su visita de ortopedia',
+    orthoSubtitle: 'Comience aquí su experiencia con su equipo de ortopedia. Cuéntenos sobre su afección, lo que ha probado y lo que le importa, para que su visita esté preparada antes de que llegue.',
+    under18Prefix: 'Los pacientes más jóvenes y adolescentes pueden usar la ',
+    under18Link: 'versión pediátrica, con preguntas más adecuadas a su edad',
+    spinePrefix: '¿Problema de cuello o espalda? Use el ',
+    spineLink: 'formulario de columna, que hace las preguntas adecuadas para la columna',
+    orthoPrefix: '¿Un problema de huesos o articulaciones? Use el ',
+    orthoLink: 'formulario de ortopedia, que hace las preguntas adecuadas para huesos y articulaciones',
     begin: 'Comenzar Admisión',
     continue: 'Continuar Donde lo Dejó',
     startNew: 'Comenzar Nuevo Formulario',
@@ -98,6 +119,16 @@ const T = {
       '四个简短的健康问题',
       '签名，然后就完成了',
     ],
+    spineTitle: '您的脊柱故事',
+    spineSubtitle: '以平静、循序渐进的方式，把您的全部病史放在一处：您的症状、尝试过的治疗，以及对您重要的事。',
+    orthoTitle: '您的骨科就诊',
+    orthoSubtitle: '从这里开始您与骨科团队的就诊体验。请告诉我们您的病情、尝试过的治疗，以及对您重要的事，让我们在您到达前为您做好准备。',
+    under18Prefix: '儿童和青少年患者可以使用',
+    under18Link: '儿科版本，其中的问题更适合他们的年龄',
+    spinePrefix: '颈部或背部问题？请使用',
+    spineLink: '脊柱问诊表，它会针对脊柱提出合适的问题',
+    orthoPrefix: '骨骼或关节问题？请使用',
+    orthoLink: '骨科问诊表，它会针对骨骼和关节提出合适的问题',
     begin: '开始登记',
     continue: '从上次中断处继续',
     startNew: '开始新表格',
@@ -139,6 +170,34 @@ function SpineLogo() {
   );
 }
 
+/** The orthopaedic site's mark: a knee, as on the original orthopaedic intake. */
+function KneeLogo() {
+  return (
+    <svg viewBox="0 0 100 120" className="spine-logo mx-auto" aria-hidden="true">
+      <defs>
+        <linearGradient id="kneeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#155842" />
+          <stop offset="100%" stopColor="#0E3F31" />
+        </linearGradient>
+      </defs>
+      {/* femur: shaft widening into the two condyles */}
+      <path
+        d="M42 2 Q42 0 50 0 Q58 0 58 2 L58 32 Q60 42 70 46 Q76 50 74 58 Q72 64 64 64 L58 64 Q54 60 50 60 Q46 60 42 64 L36 64 Q28 64 26 58 Q24 50 30 46 Q40 42 42 32 Z"
+        fill="url(#kneeGrad)" className="vertebra" style={{ animationDelay: '0s' }}
+      />
+      {/* tibia: plateau, then the shaft */}
+      <path
+        d="M28 72 Q28 69 32 69 L68 69 Q72 69 72 72 Q72 78 64 82 L60 84 L60 116 Q60 120 51 120 Q42 120 42 116 L42 84 L36 82 Q28 78 28 72 Z"
+        fill="url(#kneeGrad)" className="vertebra" style={{ animationDelay: '0.15s' }}
+      />
+      {/* fibula */}
+      <rect x="68" y="80" width="7" height="40" rx="3.5" fill="url(#kneeGrad)" className="vertebra" style={{ animationDelay: '0.25s' }} />
+      {/* patella, in front of the joint */}
+      <path d="M50 48 Q60 48 60 58 Q60 70 50 72 Q40 70 40 58 Q40 48 50 48 Z" fill="#6DCDB8" className="vertebra" style={{ animationDelay: '0.3s' }} />
+    </svg>
+  );
+}
+
 export default function Welcome({ onNext }) {
   const { data, resetIntake, setLanguage, kiosk } = useIntake();
   const hasExisting = data.lastUpdated && data.demographics?.firstName;
@@ -170,20 +229,22 @@ export default function Welcome({ onNext }) {
   const t = T[lang] || translateDeep(T.en, lang);
   // The short fracture form (lib/fracture.js) has its own welcome.
   const fracture = data.mode === 'fracture';
+  // A one-service site (lib/siteLock.js) has its own title, mark and links.
+  const lockSpec = lockedSpecialty();
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
       <div className="max-w-[560px] w-full mx-auto text-center animate-fade-in">
         {/* No name, no ownership: the page is the form. One plain mark for every patient. */}
         <div className="mb-7">
-          <SpineLogo />
+          {lockSpec === 'ortho' ? <KneeLogo /> : <SpineLogo />}
         </div>
 
         <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">
-          {fracture ? t.fxTitle : t.title}
+          {fracture ? t.fxTitle : lockSpec === 'spine' ? t.spineTitle : lockSpec === 'ortho' ? t.orthoTitle : t.title}
         </h1>
         <p className="text-base md:text-lg text-gray-500 leading-relaxed max-w-md mx-auto mb-7">
-          {fracture ? t.fxSubtitle : t.subtitle}
+          {fracture ? t.fxSubtitle : lockSpec === 'spine' ? t.spineSubtitle : lockSpec === 'ortho' ? t.orthoSubtitle : t.subtitle}
         </p>
 
         {/* Language selector */}
@@ -230,6 +291,19 @@ export default function Welcome({ onNext }) {
             </li>
           ))}
         </ul>
+
+        {lockSpec && !fracture && (
+          <div className="text-sm text-gray-600 mb-6 space-y-2">
+            <p>
+              {lockSpec === 'ortho' ? t.spinePrefix : t.orthoPrefix}
+              <a href={otherAdultSite(lockSpec)} className="font-semibold text-teal-500 underline hover:text-teal-600">{lockSpec === 'ortho' ? t.spineLink : t.orthoLink}</a>.
+            </p>
+            <p>
+              {t.under18Prefix}
+              <a href={pedsSiteFor(lockSpec)} className="font-semibold text-teal-500 underline hover:text-teal-600">{t.under18Link}</a>.
+            </p>
+          </div>
+        )}
 
         {kiosk && (
           <div className="space-y-3 mb-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { LOCKED_SERVICE, SITES } from '../../lib/siteLock';
 import { useIntake, useService } from '../../lib/store';
 import StepNavigation from '../ui/StepNavigation';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
@@ -294,6 +295,9 @@ export default function ChiefComplaint({ onNext, onBack }) {
                 <p className="font-medium">{t('Neck and back problems have their own questions.')}</p>
                 <p className="mt-1">
                   {t('If the neck or back is your main problem, switch to the spine questions.')}{' '}
+                  {LOCKED_SERVICE ? (
+                    <a href={SITES.adult_spine} className="font-semibold underline text-teal-600 hover:text-teal-700">{t('Open the spine form')}</a>
+                  ) : (
                   <button
                     type="button"
                     className="font-semibold underline text-teal-600 hover:text-teal-700"
@@ -310,6 +314,7 @@ export default function ChiefComplaint({ onNext, onBack }) {
                   >
                     {t('Switch to the spine questions')}
                   </button>
+                  )}
                 </p>
                 <p className="mt-1 text-xs opacity-80">{t('If a joint is the main problem and the back pain is on the side, carry on here.')}</p>
               </div>

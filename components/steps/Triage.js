@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import { TRIAGE_REGIONS, specialtyFromRegions, serviceKeyFor } from '../../lib/service';
+import { LOCKED_SERVICE, lockedSpecialty, pedsSiteFor, otherAdultSite } from '../../lib/siteLock';
 import { CLAIM_OPTIONS, VISIT_LABEL, visitTypeFor } from '../../lib/flows';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextArea } from '../ui/Fields';
@@ -48,6 +49,12 @@ export default function Triage({ onNext, onBack }) {
   const askedFor = useRef('');
 
   const patient = tri.who === WHO[1] ? 'child' : tri.who ? 'adult' : '';
+  // A one-service site (lib/siteLock.js): its own body areas only, and its
+  // service never changes here; a child or another specialty is sent on.
+  const lockSpec = lockedSpecialty();
+  const regionChoices = lockSpec ? TRIAGE_REGIONS.filter((r) => r.specialty === lockSpec || !r.specialty) : TRIAGE_REGIONS;
+  const childOnAdultSite = !!LOCKED_SERVICE && patient === 'child';
+  const [elsewhere, setElsewhere] = useState('');
   const regions = tri.regions || [];
   const byRegions = specialtyFromRegions(regions);
   const description = String(tri.description || '').trim();
@@ -59,6 +66,7 @@ export default function Triage({ onNext, onBack }) {
 
   // Keep the patient half of the service in step with the answer.
   useEffect(() => {
+    if (LOCKED_SERVICE) return;
     if (patient && svc.patient !== patient) applyService({ patient });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient]);
@@ -73,6 +81,7 @@ export default function Triage({ onNext, onBack }) {
   // Regions that all point one way settle the specialty without the model
   // (unless the patient or the office already chose).
   useEffect(() => {
+    if (LOCKED_SERVICE) return;
     if (byRegions && !['manual', 'invite'].includes(svc.how) && svc.specialty !== byRegions) applyService({ specialty: byRegions, how: 'regions' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [byRegions]);
@@ -126,7 +135,8 @@ export default function Triage({ onNext, onBack }) {
         body: JSON.stringify({ description, regions, who: tri.who || '', firstTime: tri.firstTime || '', language: lang }),
       }).then((x) => x.json());
       setNested('triage.suggestion', { specialty: r?.specialty || '', visitKind: r?.visitKind || '', claim: r?.claim || '', reason: r?.reason || '' });
-      if ((r?.specialty === 'spine' || r?.specialty === 'ortho') && !['manual', 'invite'].includes(svc.how) && !byRegions) applyService({ specialty: r.specialty, how: 'ai' });
+      if (LOCKED_SERVICE) setElsewhere(r?.specialty && r.specialty !== 'unsure' && r.specialty !== lockSpec ? r.specialty : '');
+      else if ((r?.specialty === 'spine' || r?.specialty === 'ortho') && !['manual', 'invite'].includes(svc.how) && !byRegions) applyService({ specialty: r.specialty, how: 'ai' });
       // A first visit with this doctor is a new-patient visit whatever the sentence says.
       const k = firstTime ? 'new' : ['new', 'followup', 'postop'].includes(r?.visitKind) ? r.visitKind : kind;
       const c = CLAIM_OF[r?.claim] || claim;
@@ -150,7 +160,7 @@ export default function Triage({ onNext, onBack }) {
   const track = data.pedsOrtho?.track || '';
   const allSet = !!svc.specialty && !!kind && !!claim && !!v.type && (!pedsOrtho || !!track);
   // Before the model has been asked, Continue asks it; afterwards it needs the three rows settled.
-  const canGoNext = basicsDone && !busy && (!asked || allSet);
+  const canGoNext = basicsDone && !busy && !childOnAdultSite && (!asked || allSet);
 
   const next = async () => {
     if (!asked && description.length >= 3 && !allSet) { await classify(); return; }
@@ -171,6 +181,12 @@ export default function Triage({ onNext, onBack }) {
 
       <div className="card">
         <Chips label="Who is this form for?" options={WHO} value={tri.who || ''} onChange={(x) => setNested('triage.who', x)} />
+        {childOnAdultSite && (
+          <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+            <p className="font-medium">{t('Children and teenagers have their own form, with questions made for their age.')}</p>
+            <a href={pedsSiteFor(lockSpec)} className="inline-block mt-2 font-semibold underline text-teal-700">{t('Open the pediatric form')}</a>
+          </div>
+        )}
       </div>
 
       <div className="card mt-4">
@@ -187,8 +203,8 @@ export default function Triage({ onNext, onBack }) {
         <CheckChips
           label="Where is the problem?"
           hint="Tap everything that applies."
-          options={TRIAGE_REGIONS.map((r) => r.label)}
-          value={regions.map((id) => TRIAGE_REGIONS.find((r) => r.id === id)?.label).filter(Boolean)}
+          options={regionChoices.map((r) => r.label)}
+          value={regions.map((id) => regionChoices.find((r) => r.id === id)?.label).filter(Boolean)}
           onChange={(labels) => { setNested('triage.regions', labels.map((l) => TRIAGE_REGIONS.find((r) => r.label === l)?.id).filter(Boolean)); setAsked(false); }}
         />
       </div>
@@ -208,12 +224,12 @@ export default function Triage({ onNext, onBack }) {
           <h3 className="text-base font-semibold text-navy-600">{t('Here is what we understood. Tap to change anything.')}</h3>
           {tri.suggestion?.reason && <p className="text-sm text-gray-500 mt-1">{tri.suggestion.reason}</p>}
           <div className="mt-3 space-y-4">
-            <Chips
+            {!LOCKED_SERVICE && <Chips
               label="The problem is with"
               options={AREA}
               value={AREA_OF[svc.specialty] || ''}
               onChange={(x) => applyService({ specialty: SPECIALTY_OF[x], how: 'manual' })}
-            />
+            />}
             {returning ? (
               <Chips
                 label="This visit is"
@@ -241,6 +257,12 @@ export default function Triage({ onNext, onBack }) {
               />
             )}
           </div>
+          {elsewhere && (
+            <p className="text-sm text-gray-600 mt-3">
+              {t(lockSpec === 'spine' ? 'If the problem is a bone or joint rather than the neck or back, the orthopaedic form asks the right questions.' : 'If the problem is the neck or back rather than a bone or joint, the spine form asks the right questions.')}{' '}
+              <a href={otherAdultSite(lockSpec)} className="font-semibold underline text-teal-700">{t(lockSpec === 'spine' ? 'Open the orthopaedic form' : 'Open the spine form')}</a>
+            </p>
+          )}
           {!allSet && <p className="text-sm text-amber-700 mt-3">{t(pedsOrtho ? 'Please answer each of the questions above to continue.' : 'Please answer each of the three above to continue.')}</p>}
         </div>
       )}
