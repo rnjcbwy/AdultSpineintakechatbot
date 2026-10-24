@@ -150,6 +150,31 @@ fracture track with `data.mode = 'fracture'` (`lib/fracture.js`):
   or operations, anesthesia problems; written into the usual lists).
 - "Start a new form" and the clinic tablet's reset stay on the fracture form.
 
+## One service per site again (2026-10-24)
+
+At the surgeon's request the sites are one per service again:
+
+| Address | What runs | Amplify |
+|---|---|---|
+| intake.aaronweymd.com | this code, `NEXT_PUBLIC_SERVICE_LOCK=adult_spine` | d1i6bgjzjkpt0h, branch feature/adult-spine-intake-app |
+| ortho.aaronweymd.com | this code, `NEXT_PUBLIC_SERVICE_LOCK=adult_ortho` | d382smsgd5xkup, branch `unified` of rnjcbwy/AdultOrthoIntake (its old master is untouched) |
+| pedsspine.aaronweymd.com | the original pediatric spine app | d1dsz5t255b12o, master of CHATBOTS/intake app |
+| pedsortho.aaronweymd.com | the original pediatric ortho app | d3chu9dux7tr7z, master of CHATBOTS/pedsorthointake |
+
+- The lock (`lib/siteLock.js`) keeps the new experience but offers only the
+  site's own body areas, gives each site its original title and mark (spine
+  on intake, knee on ortho) with links to the other forms, stops a child at
+  the triage step with a link to the pediatric form, and sends another
+  service's link, invite or /fracture to that service's site.
+- The ortho branch uses the intake app's compute role and the same bucket,
+  worker, Practice Hub URL and key secret (settings copied onto the branch).
+- Deploying the adult sites: push `feature/unified-intake` to
+  `feature/adult-spine-intake-app` on origin (intake) AND to `unified` on
+  https://github.com/rnjcbwy/AdultOrthoIntake.git (ortho). Both build the
+  same code; the Amplify setting picks the service.
+- Unset lock (local development) still runs every service, as the combined
+  form did. Set `NEXT_PUBLIC_SERVICE_LOCK` in `.env.local` to test a site.
+
 ## Remaining
 
 1. The review-of-systems defaults in `lib/store.js` still come from the
