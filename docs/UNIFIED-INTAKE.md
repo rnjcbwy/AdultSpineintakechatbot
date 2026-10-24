@@ -93,9 +93,10 @@ new-problem, adult spine follow-up, child spine new, child ortho fracture.
 - intake.aaronweymd.com (Amplify app d1i6bgjzjkpt0h, branch
   `feature/adult-spine-intake-app`) serves this app; `feature/unified-intake`
   is pushed onto that branch to deploy.
-- ortho.aaronweymd.com, pedsspine.aaronweymd.com and pedsortho.aaronweymd.com
-  redirect (301, path and query kept) to intake.aaronweymd.com via Amplify
-  custom rules on their apps (d382smsgd5xkup, d1dsz5t255b12o, d3chu9dux7tr7z).
+- ortho.aaronweymd.com and pedsspine.aaronweymd.com redirect (301, path and
+  query kept) to intake.aaronweymd.com via Amplify custom rules on their apps
+  (d382smsgd5xkup, d1dsz5t255b12o). pedsortho.aaronweymd.com serves the
+  original pediatric ortho app again (2026-10-24, see the fracture form).
 - A link may name the service: `?service=adult_ortho` (and the other keys)
   pre-sets the direction; the triage step still confirms it.
 - Practice Hub holds ONE intake address (Settings → Team) and builds chart
@@ -132,9 +133,13 @@ a parent found the full form too long. It is the peds_ortho service on its
 fracture track with `data.mode = 'fracture'` (`lib/fracture.js`):
 
 - Address: https://intake.aaronweymd.com/fracture (and /fracture/es and the
-  other language codes). pedsortho.aaronweymd.com 301-redirects there (an
-  Amplify custom rule on app d3chu9dux7tr7z; DNS for aaronweymd.com is at
-  GoDaddy, so the subdomain stays on that app and redirects).
+  other language codes).
+- 2026-10-24: at the surgeon's request pedsortho.aaronweymd.com serves the
+  ORIGINAL pediatric orthopaedic app again (Amplify app d3chu9dux7tr7z, repo
+  CHATBOTS/pedsorthointake, branch master; its custom rule is back to the
+  SPA 404-200 rule, no redirect). It has its own fracture-clinic track,
+  storage, worker and Practice Hub hand-off (source peds-ortho-intake).
+  Changes for that form go into that repo, not this branch.
 - Flow (`lib/services/peds-ortho/flow.js`): new injury = about your child,
   what happened, care so far, health check, review and send; a follow-up
   for the same injury = about your child, recovery so far, review and send.
