@@ -30,7 +30,7 @@ console.log(`POST /api/chat (express): HTTP ${chat.status} ${c.reply ? `-> "${c.
 const now = new Date().toISOString();
 const lead = {
   sessionId: 'e2e-express', createdAt: now, lastUpdated: now, currentStep: 0, completedSteps: [], language: 'en',
-  demographics: { firstName: 'Test', lastName: 'Expresslead', dob: '1980-03-05', phone: '(201) 555-0142', email: 'test.expresslead@example.com', insuranceProvider: 'Aetna', memberId: 'W123456789', visitReason: 'Express request from the website chat' },
+  demographics: { firstName: 'Test', lastName: 'Expresslead', dob: '1980-03-05', phone: '(201) 555-0142', email: 'test.expresslead@example.com', insuranceProvider: 'Aetna', memberId: 'W123456789', visitReason: 'Appointment request from the website form' },
   chiefComplaint: { mainReason: 'Neck pain with tingling into my left hand for six weeks. (fictional e2e)', symptomRegions: [], duration: '' },
   consent: { accurate: true, contact: true, signatureName: 'Test Expresslead', signedAt: now },
   express: {

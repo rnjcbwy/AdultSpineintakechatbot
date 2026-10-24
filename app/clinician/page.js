@@ -229,10 +229,10 @@ function StructuredTab({ data }) {
 
   return (
     <div className="space-y-6">
-      {/* The express request from the website chat: what the office needs to make the call. */}
+      {/* The appointment request from the website form: what the office needs to make the call. */}
       {isExpressLead(data) && (
         <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-amber-400">
-          <h3 className="font-semibold text-navy-600 mb-3">Express request (website chat)</h3>
+          <h3 className="font-semibold text-navy-600 mb-3">Appointment request (website form)</h3>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <div><dt className="text-gray-500">Reach by</dt><dd className="text-gray-800">{[data.demographics?.phone, data.demographics?.email].filter(Boolean).join(' · ') || '—'}</dd></div>
             <div><dt className="text-gray-500">Language for the call</dt><dd className="text-gray-800">{LANGUAGE_NAMES[x.callLanguage || data.language] || x.callLanguage || '—'}</dd></div>

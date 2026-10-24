@@ -11,20 +11,27 @@ import { pathToFileURL } from 'node:url';
 const ROOT = process.cwd();
 const TMP = path.join(ROOT, '.express-test-tmp');
 
-// lib/ is ESM inside a CommonJS package: stage the modules as .mjs.
+// lib/ is ESM inside a CommonJS package: stage the modules as .mjs, following
+// their relative imports (lib/redFlags.js now re-exports lib/services/spine/).
 const MODULES = ['express', 'languages', 'consent', 'redFlags', 'rosSystems'];
 fs.rmSync(TMP, { recursive: true, force: true });
-fs.mkdirSync(TMP, { recursive: true });
-for (const name of MODULES) {
-  let src = fs.readFileSync(path.join(ROOT, 'lib', `${name}.js`), 'utf8');
-  src = src.replace(/from '\.\/([A-Za-z0-9_]+)'/g, "from './$1.mjs'");
-  if (name === 'i18n') {
-    // The hooks need React; only the language tables are wanted here.
-    src = src.replace(/^'use client';\s*/m, '').replace(/import \{ useEffect, useState \} from 'react';\s*/, '').replace(/import \{ useIntake \} from '\.\/store\.mjs';\s*/, '');
-    src = src.replace(/export function useLang\(\) \{[\s\S]*?\n\}\n/, 'export function useLang() { return "en"; }\n');
-  }
-  fs.writeFileSync(path.join(TMP, `${name}.mjs`), src);
+const staged = new Set();
+function stage(rel) {
+  rel = rel.split(path.sep).join('/').replace(/\.js$/, '');
+  if (staged.has(rel)) return;
+  staged.add(rel);
+  let src = fs.readFileSync(path.join(ROOT, 'lib', `${rel}.js`), 'utf8');
+  const deps = [];
+  src = src.replace(/from '(\.{1,2}\/[A-Za-z0-9_\/.]+)'/g, (_, spec) => {
+    deps.push(path.posix.join(path.posix.dirname(rel), spec));
+    return `from '${spec.replace(/\.js$/, '')}.mjs'`;
+  });
+  const out = path.join(TMP, `${rel}.mjs`);
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  fs.writeFileSync(out, src);
+  for (const d of deps) stage(d);
 }
+for (const name of MODULES) stage(name);
 const X = await import(pathToFileURL(path.join(TMP, 'express.mjs')).href);
 const { LANGUAGES } = await import(pathToFileURL(path.join(TMP, 'languages.mjs')).href);
 const { expressConsentComplete, consentComplete } = await import(pathToFileURL(path.join(TMP, 'consent.mjs')).href);
