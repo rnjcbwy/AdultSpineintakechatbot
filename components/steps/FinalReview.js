@@ -184,6 +184,9 @@ const LOCAL = {
     zh: '我们期待在您的下次就诊时见到您。',
   },
   'What you told us': { es: 'Lo que nos contó', zh: '您告诉我们的内容' },
+  'I have read these and agree to all of them': { es: 'Las he leído y estoy de acuerdo con todas', zh: '我已阅读并全部同意' },
+  'Your intake is complete.': { es: 'Su formulario está completo.', zh: '您的登记表已完成。' },
+  'Thank you for taking the time to fill it out. The office has it, and there is nothing more for you to do right now.': { es: 'Gracias por tomarse el tiempo de completarlo. La oficina ya lo tiene y no necesita hacer nada más por ahora.', zh: '感谢您抽出时间填写。诊所已收到，您现在无需再做任何事情。' },
   'We are putting together a summary of what you shared. This usually takes about a minute; this page will update on its own.': {
     es: 'Estamos preparando un resumen de lo que compartió. Suele tardar alrededor de un minuto; esta página se actualizará sola.',
     zh: '我们正在整理您所分享内容的摘要。通常需要大约一分钟，本页面会自动更新。',
@@ -413,7 +416,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
         <ReviewCard
           t={t}
           title="Type of Visit"
-          onEdit={() => go(has('triage') ? 'triage' : 'fx-basics')}
+          onEdit={() => go(has('triage') ? 'triage' : has('fx-basics') ? 'fx-basics' : 'simple-basics')}
           items={[{ label: 'Visit', value: t(VISIT_LABEL[visitType] || data.demographics.visitReason) }]}
         />
 
@@ -421,7 +424,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
         <ReviewCard
           t={t}
           title="Patient Information"
-          onEdit={() => go(has('demographics') ? 'demographics' : 'fx-basics')}
+          onEdit={() => go(has('demographics') ? 'demographics' : has('fx-basics') ? 'fx-basics' : 'simple-basics')}
           items={[
             ...(child ? [{ label: 'Completed by', value: byParent ? [g.name, g.relationship && t(g.relationship)].filter(Boolean).join(' · ') : t('The patient') }] : []),
             { label: 'Name', value: `${data.demographics?.firstName || ''} ${data.demographics?.lastName || ''}`.trim() },
@@ -430,6 +433,52 @@ export default function FinalReview({ onBack, onGoToStep }) {
             { label: 'Phone', value: data.demographics.phone },
           ]}
         />
+
+        {has('simple-story') && (
+          <ReviewCard
+            t={t}
+            title="What is bothering you"
+            onEdit={() => go('simple-story')}
+            items={[
+              { label: 'In your words', value: data.chiefComplaint.mainReason },
+              ...(data.visit?.followup?.overallChange ? [{ label: 'Compared with last visit', value: t(data.visit.followup.overallChange) }] : []),
+              ...(data.simple?.regions?.length || (data.chiefComplaint.symptomRegions || []).length ? [{ label: 'Where', value: regionsLabel }] : []),
+              ...(data.simple?.duration ? [{ label: 'How long', value: t(data.simple.duration) }] : []),
+              ...(data.simple?.pain != null && data.simple?.pain !== '' ? [{ label: 'Pain today', value: `${data.simple.pain} / 10` }] : []),
+              ...(data.simple?.trend ? [{ label: 'Direction', value: t(data.simple.trend) }] : []),
+            ]}
+          />
+        )}
+
+        {has('simple-questions') && (
+          <ReviewCard
+            t={t}
+            title="A few questions"
+            onEdit={() => go('simple-questions')}
+            items={[
+              { label: 'Numbness or tingling', value: t(data.hpiData?.overall?.numbness === 'yes' ? 'Yes' : 'No') },
+              { label: 'Weakness', value: t(data.hpiData?.overall?.weakness === 'yes' ? 'Yes' : 'No') },
+              { label: 'Trouble walking', value: t(data.hpiData?.overall?.gaitChanges === 'yes' ? 'Yes' : 'No') },
+              { label: 'Bladder or bowel trouble', value: t(data.hpiData?.overall?.bowelBladder === 'yes' ? 'Yes' : 'No') },
+              { label: 'Spine surgery before', value: data.simple?.priorSurgery === 'Yes' ? data.simple?.priorSurgeryText || t('Yes') : t('No') },
+              ...(data.visit?.workInjury && data.visit.workInjury !== 'No' ? [{ label: 'Claim', value: t(data.visit.workInjury) }] : []),
+              ...((data.simple?.tried || []).length ? [{ label: 'Already tried', value: data.simple.tried.map((x) => t(x)).join(', ') }] : []),
+            ]}
+          />
+        )}
+
+        {has('simple-health') && (
+          <ReviewCard
+            t={t}
+            title="Your health"
+            onEdit={() => go('simple-health')}
+            items={[
+              { label: 'Medicines', value: data.medications?.noMedications ? t('None') : (data.medications?.current || []).map((m) => m.name).join(', ') },
+              { label: 'Allergies', value: data.allergies?.nkda ? t('None') : (data.allergies?.entries || []).map((a) => a.allergen).join(', ') },
+              { label: 'Conditions', value: data.pastMedicalHistory?.noConditions ? t('None') : (data.pastMedicalHistory?.conditions || []).map((c) => c.name).join(', ') },
+            ]}
+          />
+        )}
 
         {has('fx-health') && (
           <ReviewCard
@@ -719,6 +768,11 @@ function ConsentCard({ t, lang, consent, setNested, guardian = null }) {
     <div className="card mt-6 border-teal-100">
       <h3 className="text-base font-semibold text-navy-600 mb-1">{t('Acknowledgment and signature')}</h3>
       <p className="text-sm text-gray-500 mb-4">{t('Please read and check each statement, then print your name and sign below.')}</p>
+      {!CONSENT_ITEMS.every((item) => consent[item.key]) && (
+        <button type="button" className="btn-secondary text-sm mb-4" onClick={() => CONSENT_ITEMS.forEach((item) => set(item.key, true))}>
+          {t('I have read these and agree to all of them')}
+        </button>
+      )}
       <div className="space-y-3">
         {CONSENT_ITEMS.map((item) => (
           <label key={item.key} className="flex items-start gap-3 cursor-pointer">
@@ -846,6 +900,7 @@ function SubmittedView({ data, onGoToStep }) {
   const sub = data.submission;
   // Which kind of visit this was, for the closing line.
   const visitType = data.visit?.type || '';
+  const simple = data.mode === 'simple';
 
   // The note is written in the background after the answers are stored. If
   // it was not ready when the patient submitted, keep asking until it is.
@@ -904,9 +959,9 @@ function SubmittedView({ data, onGoToStep }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="font-serif text-[1.9rem] md:text-[2.3rem] font-semibold text-navy-600 mb-3 leading-tight">{t('Thank you so much for completing this.')}</h2>
+        <h2 className="font-serif text-[1.9rem] md:text-[2.3rem] font-semibold text-navy-600 mb-3 leading-tight">{t(simple ? 'Your intake is complete.' : 'Thank you so much for completing this.')}</h2>
         <p className="text-base md:text-lg text-gray-500 max-w-md mx-auto">
-          {t('We know it took real time and care. Everything you shared is saved, and you are all set for now.')}
+          {t(simple ? 'Thank you for taking the time to fill it out. The office has it, and there is nothing more for you to do right now.' : 'We know it took real time and care. Everything you shared is saved, and you are all set for now.')}
         </p>
         <p className="text-base md:text-lg text-navy-600 font-medium max-w-md mx-auto mt-3">
           {visitType && visitType !== 'new' ? t('We look forward to seeing you at your upcoming visit.') : t('Our office will contact you within two business days to schedule your consultation.')}
@@ -931,7 +986,8 @@ function SubmittedView({ data, onGoToStep }) {
         </div>
       )}
 
-      {/* Generated summary preview */}
+      {/* Generated summary preview (not on the short form: the office reads it, the patient is done) */}
+      {!simple && (
       <div className="card text-left mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-navy-600">{t('What you told us')}</h3>
@@ -1005,6 +1061,7 @@ function SubmittedView({ data, onGoToStep }) {
         />
         )}
       </div>
+      )}
 
       <div className="flex justify-center gap-4 flex-wrap">
         {!IS_PRODUCTION_TIER && (

@@ -223,7 +223,9 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* The clinic tablet: fingers, not a mouse. Larger targets and type. */
-.kiosk button, .kiosk input, .kiosk select, .kiosk textarea { min-height: 48px; font-size: 1.05rem; }
+.kiosk button, .kiosk input, .kiosk select, .kiosk textarea,
+.simple button, .simple input, .simple select, .simple textarea { min-height: 48px; font-size: 1.05rem; }
 .kiosk input[type='checkbox'], .kiosk input[type='radio'] { min-height: 0; width: 1.35rem; height: 1.35rem; }
-.kiosk .section-title { font-size: 1.6rem; }
-.kiosk .section-subtitle, .kiosk .form-label { font-size: 1.05rem; }
+.kiosk .section-title, .simple .section-title { font-size: 1.6rem; }
+.kiosk .section-subtitle, .kiosk .form-label, .simple .section-subtitle, .simple .form-label { font-size: 1.05rem; }
+.simple .card { padding: 1.25rem; }

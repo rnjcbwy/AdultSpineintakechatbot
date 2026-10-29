@@ -11,9 +11,14 @@ const STEP_MINUTES = {
   'chief-complaint': 1, 'pain-map': 1, 'symptom-details': 2, 'spine-history': 2, treatments: 1, records: 2, 'clinical-photos': 1,
   pmh: 1, psh: 1, medications: 1, allergies: 1, social: 1, family: 1, ros: 1, proms: 3, review: 1,
   'fx-basics': 1, 'fx-health': 1,
+  'simple-basics': 1, 'simple-story': 2, 'simple-questions': 1, 'simple-health': 1,
 };
 
 const CHROME = {
+  'About you': { es: 'Sobre usted', zh: '关于您' },
+  'What is bothering you': { es: 'Qué le molesta', zh: '您哪里不舒服' },
+  'A few questions': { es: 'Unas preguntas', zh: '几个问题' },
+  'Your health': { es: 'Su salud', zh: '您的健康' },
   'About your child': { es: 'Sobre su hijo o hija', zh: '关于您的孩子' },
   'Health check': { es: 'Revisión de salud', zh: '健康情况' },
   'Growth & Development': { es: 'Crecimiento y desarrollo', zh: '生长与发育' },
@@ -91,6 +96,7 @@ import KioskGuard from './KioskGuard';
 import Welcome from './steps/Welcome';
 import Triage from './steps/Triage';
 import { PEDS_STEP_COMPONENTS } from './steps/peds';
+import { SIMPLE_STEP_COMPONENTS } from './steps/simple';
 import WorkInjury from './steps/WorkInjury';
 import LegalInjury from './steps/LegalInjury';
 import IntervalHistory from './steps/IntervalHistory';
@@ -135,6 +141,7 @@ const STEP_COMPONENTS = {
   proms: PROMs,
   review: FinalReview,
   ...PEDS_STEP_COMPONENTS,
+  ...SIMPLE_STEP_COMPONENTS,
 };
 
 export default function IntakeWizard() {
@@ -196,7 +203,7 @@ export default function IntakeWizard() {
   };
 
   return (
-    <div className={`min-h-screen bg-cream-100${kiosk ? ' kiosk' : ''}`}>
+    <div className={`min-h-screen bg-cream-100${kiosk ? ' kiosk' : ''}${data.mode === 'simple' ? ' simple' : ''}`}>
       {/* Header */}
       {showChrome && (
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">

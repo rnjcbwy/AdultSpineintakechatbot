@@ -41,6 +41,19 @@ const T = {
     spineLink: 'spine intake, which asks the right questions for the spine',
     orthoPrefix: 'A bone or joint problem? Use the ',
     orthoLink: 'orthopaedic intake, which asks the right questions for bones and joints',
+    simpleTitle: 'Your Spine Story',
+    simpleSubtitle: 'A short form about what is bothering you. Big buttons, a few questions, about 5 minutes.',
+    simpleDescription: 'It asks:',
+    simpleSteps: [
+      'Your name, date of birth and phone number',
+      'What is bothering you, in your own words',
+      'A few yes or no questions',
+      'Your medicines and allergies',
+      'Your signature, and you are done',
+    ],
+    fullPrefix: 'Prefer to give more detail? ',
+    fullLink: 'Use the detailed form',
+    simpleLink: 'Use the short form instead',
     begin: 'Begin Intake',
     continue: 'Continue Where You Left Off',
     startNew: 'Start New Form',
@@ -85,6 +98,19 @@ const T = {
     spineLink: 'formulario de columna, que hace las preguntas adecuadas para la columna',
     orthoPrefix: '¿Un problema de huesos o articulaciones? Use el ',
     orthoLink: 'formulario de ortopedia, que hace las preguntas adecuadas para huesos y articulaciones',
+    simpleTitle: 'La historia de su columna',
+    simpleSubtitle: 'Un formulario corto sobre lo que le molesta. Botones grandes, unas pocas preguntas, unos 5 minutos.',
+    simpleDescription: 'Pregunta:',
+    simpleSteps: [
+      'Su nombre, fecha de nacimiento y teléfono',
+      'Qué le molesta, con sus propias palabras',
+      'Unas preguntas de sí o no',
+      'Sus medicamentos y alergias',
+      'Su firma, y listo',
+    ],
+    fullPrefix: '¿Prefiere dar más detalles? ',
+    fullLink: 'Use el formulario detallado',
+    simpleLink: 'Use el formulario corto',
     begin: 'Comenzar Admisión',
     continue: 'Continuar Donde lo Dejó',
     startNew: 'Comenzar Nuevo Formulario',
@@ -129,6 +155,19 @@ const T = {
     spineLink: '脊柱问诊表，它会针对脊柱提出合适的问题',
     orthoPrefix: '骨骼或关节问题？请使用',
     orthoLink: '骨科问诊表，它会针对骨骼和关节提出合适的问题',
+    simpleTitle: '您的脊柱故事',
+    simpleSubtitle: '一份关于您不适的简短表格。大按钮，几个问题，大约 5 分钟。',
+    simpleDescription: '内容包括：',
+    simpleSteps: [
+      '您的姓名、出生日期和电话',
+      '用您自己的话说明哪里不舒服',
+      '几个是或否的问题',
+      '您的药物和过敏情况',
+      '签名，然后就完成了',
+    ],
+    fullPrefix: '想提供更多细节？',
+    fullLink: '使用详细表格',
+    simpleLink: '改用简短表格',
     begin: '开始登记',
     continue: '从上次中断处继续',
     startNew: '开始新表格',
@@ -199,7 +238,9 @@ function KneeLogo() {
 }
 
 export default function Welcome({ onNext }) {
-  const { data, resetIntake, setLanguage, kiosk } = useIntake();
+  const { data, resetIntake, setLanguage, setNested, kiosk } = useIntake();
+  // The short form or the detailed one (lib/simple.js); the choice survives a reset.
+  const setMode = (mode) => { setNested('mode', mode); if (mode === 'simple') { setNested('service', { patient: 'adult', specialty: 'spine', key: 'adult_spine', how: 'site' }); setNested('triage.who', 'Myself'); } };
   const hasExisting = data.lastUpdated && data.demographics?.firstName;
   // The clinic tablet: a code the office read out opens a form sent from the chart.
   const [codeOpen, setCodeOpen] = useState(false);
@@ -229,8 +270,10 @@ export default function Welcome({ onNext }) {
   const t = T[lang] || translateDeep(T.en, lang);
   // The short fracture form (lib/fracture.js) has its own welcome.
   const fracture = data.mode === 'fracture';
+  const simple = data.mode === 'simple';
   // A one-service site (lib/siteLock.js) has its own title, mark and links.
   const lockSpec = lockedSpecialty();
+  const canSwitch = lockSpec === 'spine' && !fracture;
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
@@ -241,10 +284,10 @@ export default function Welcome({ onNext }) {
         </div>
 
         <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">
-          {fracture ? t.fxTitle : lockSpec === 'spine' ? t.spineTitle : lockSpec === 'ortho' ? t.orthoTitle : t.title}
+          {fracture ? t.fxTitle : simple ? t.simpleTitle : lockSpec === 'spine' ? t.spineTitle : lockSpec === 'ortho' ? t.orthoTitle : t.title}
         </h1>
         <p className="text-base md:text-lg text-gray-500 leading-relaxed max-w-md mx-auto mb-7">
-          {fracture ? t.fxSubtitle : lockSpec === 'spine' ? t.spineSubtitle : lockSpec === 'ortho' ? t.orthoSubtitle : t.subtitle}
+          {fracture ? t.fxSubtitle : simple ? t.simpleSubtitle : lockSpec === 'spine' ? t.spineSubtitle : lockSpec === 'ortho' ? t.orthoSubtitle : t.subtitle}
         </p>
 
         {/* Language selector */}
@@ -278,11 +321,11 @@ export default function Welcome({ onNext }) {
 
         {/* No redirects: the next step works out who the form is for and what it is about. */}
         <p className="text-sm font-medium uppercase tracking-[0.12em] text-gray-400 mb-3 mt-6">
-          {fracture ? t.fxDescription : t.description}
+          {fracture ? t.fxDescription : simple ? t.simpleDescription : t.description}
         </p>
 
         <ul className="bg-white rounded-2xl border border-navy-100 p-2 mb-8 text-left">
-          {(fracture ? t.fxSteps : t.steps).map((label, i) => (
+          {(fracture ? t.fxSteps : simple ? t.simpleSteps : t.steps).map((label, i) => (
             <li key={i} className="flex items-center gap-4 px-4 py-3 text-gray-700 rounded-xl">
               <span className="flex items-center justify-center w-7 h-7 flex-shrink-0 bg-navy-50 text-navy-600 rounded-full text-xs font-semibold tabular-nums">
                 {i + 1}
@@ -292,6 +335,17 @@ export default function Welcome({ onNext }) {
           ))}
         </ul>
 
+        {canSwitch && (
+          <p className="text-sm text-gray-600 mb-4">
+            <button
+              type="button"
+              className="font-semibold text-teal-500 underline hover:text-teal-600"
+              onClick={() => { setMode(simple ? 'full' : 'simple'); }}
+            >
+              {simple ? t.fullLink : t.simpleLink}
+            </button>
+          </p>
+        )}
         {lockSpec && !fracture && (
           <div className="text-sm text-gray-600 mb-6 space-y-2">
             <p>
