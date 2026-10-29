@@ -67,8 +67,9 @@ const TEXT = {
     ],
     s8: '8. Have you ever had surgery on your spine?',
     s8detail: 'If yes, what surgery and about when?',
-    s9: '9. Is this problem from an injury at work, or an accident with an insurance claim or a lawyer?',
-    claims: ['No', 'Yes, a work injury', 'Yes, an accident with a claim or a lawyer'],
+    s9: '9. Did this start with an injury at work, a car crash or another accident?',
+    claims: ['No', 'Yes, I was hurt at work', 'Yes, a car crash or other accident'],
+    s9detail: 'If yes, when did it happen?',
     s10: '10. Have you already tried any of these? (You can skip this.)',
     tried: ['Physical therapy', 'Chiropractor', 'Injections', 'Pain medicine', 'Nothing yet'],
     s11: '11. Medicines you take every day',
@@ -76,8 +77,8 @@ const TEXT = {
     s13: '13. Health conditions (for example diabetes, heart disease, high blood pressure)',
     none: 'None',
     s14: '14. Please sign',
-    attest: 'My answers are true to the best of my knowledge. The office may contact me by phone or email about my care.',
-    signature: 'Signature', printed: 'Printed name', signDate: 'Date',
+    attest: 'My answers are true to the best of my knowledge. The office may call or email me about my care.',
+    signature: 'Signature', signDate: 'Date',
     thanks: 'Thank you for taking the time to fill this out. Please hand it to the front desk.',
     office: 'Office use: scan or photograph both pages into Practice Hub.',
   },
@@ -111,17 +112,18 @@ const TEXT = {
     ],
     s8: '8. ¿Alguna vez le han operado la columna?',
     s8detail: 'Si la respuesta es sí, ¿qué cirugía y aproximadamente cuándo?',
-    s9: '9. ¿Este problema se debe a una lesión en el trabajo o a un accidente con un reclamo de seguro o un abogado?',
-    claims: ['No', 'Sí, una lesión en el trabajo', 'Sí, un accidente con reclamo o abogado'],
+    s9: '9. ¿Esto empezó con una lesión en el trabajo, un choque de auto u otro accidente?',
+    claims: ['No', 'Sí, me lastimé en el trabajo', 'Sí, un choque de auto u otro accidente'],
+    s9detail: 'Si la respuesta es sí, ¿cuándo pasó?',
     s10: '10. ¿Ya ha probado alguno de estos? (Puede omitir esta pregunta.)',
     tried: ['Fisioterapia', 'Quiropráctico', 'Inyecciones', 'Medicamentos para el dolor', 'Nada todavía'],
     s11: '11. Medicamentos que toma todos los días',
     s12: '12. Alergias a medicamentos',
-    s13: '13. Afecciones de salud (por ejemplo diabetes, enfermedad del corazón, presión alta)',
+    s13: '13. Afecciones de salud (por ejemplo diabetes, corazón, presión alta)',
     none: 'Ninguno',
     s14: '14. Firme aquí',
-    attest: 'Mis respuestas son verdaderas según mi leal saber y entender. La oficina puede comunicarse conmigo por teléfono o correo electrónico sobre mi atención.',
-    signature: 'Firma', printed: 'Nombre en letra de imprenta', signDate: 'Fecha',
+    attest: 'Mis respuestas son verdaderas. La oficina puede llamarme o escribirme sobre mi atención.',
+    signature: 'Firma', signDate: 'Fecha',
     thanks: 'Gracias por tomarse el tiempo de completar este formulario. Entréguelo en recepción.',
     office: 'Uso de la oficina: escanee o fotografíe ambas páginas en Practice Hub.',
   },
@@ -133,11 +135,11 @@ const SAMPLE_ANSWERS = {
   seen: 'no',
   story: ['My low back hurts and the pain goes down my', 'right leg to the foot. It is worse when I walk', 'more than one block. Started after I moved', 'some boxes in July.'],
   areas: ['Low back', 'Right leg or foot'], duration: '1 to 6 months', pain: 7, trend: 'Getting worse',
-  yesno: ['yes', 'no', 'no', 'no'], surgery: 'no', surgeryText: '', claim: 'No',
+  yesno: ['yes', 'no', 'no', 'no'], surgery: 'no', surgeryText: '', claim: 'No', injuryDate: '',
   tried: ['Physical therapy', 'Pain medicine'],
   meds: ['Lisinopril 10 mg', 'Metformin 500 mg twice a day'], allergies: [], allergiesNone: true,
   conditions: ['High blood pressure', 'Diabetes'],
-  signature: 'Margaret Okafor', printed: 'MARGARET OKAFOR', date: '10 / 29 / 2026',
+  signature: 'Margaret Okafor', date: '10 / 29 / 2026',
 };
 
 async function build(lang) {
@@ -156,10 +158,13 @@ async function build(lang) {
     page = pdf.addPage([PAGE.w, PAGE.h]);
     y = PAGE.h - M;
     if (pageNo === 1) {
-      page.drawText(T.title, { x: M, y: y - 18, size: 20, font: bold, color: NAVY });
+      const d = `${T.date}: ____________`;
+      // The title shrinks until it and the date line fit side by side.
+      let size = 20;
+      while (size > 14 && bold.widthOfTextAtSize(T.title, size) + reg.widthOfTextAtSize(d, 10.5) + 24 > CW) size -= 0.5;
+      page.drawText(T.title, { x: M, y: y - 18, size, font: bold, color: NAVY });
       y -= 30;
       page.drawText(T.sub, { x: M, y: y - 10, size: 10.5, font: reg, color: GREY });
-      const d = `${T.date}: ____________`;
       page.drawText(d, { x: PAGE.w - M - reg.widthOfTextAtSize(d, 10.5), y: y + 20, size: 10.5, font: reg, color: INK });
       y -= 22;
     } else {
@@ -172,10 +177,10 @@ async function build(lang) {
   };
 
   const heading = (text) => {
-    y -= 14;
+    y -= 10;
     page.drawText(text, { x: M, y: y - 4, size: 13, font: bold, color: NAVY });
     page.drawLine({ start: { x: M, y: y - 9 }, end: { x: M + CW, y: y - 9 }, thickness: 0.8, color: TEAL });
-    y -= 18;
+    y -= 16;
   };
   const text = (str, size = 11, color = INK, font = reg, x = M) => {
     page.drawText(str, { x, y: y - size, size, font, color });
@@ -219,13 +224,29 @@ async function build(lang) {
     page.drawLine({ start: { x, y: y - 28 }, end: { x: x + width, y: y - 28 }, thickness: 0.8, color: LINE });
     if (SAMPLE && value) page.drawText(value, { x: x + 4, y: y - 25, size: 12.5, font: pen, color: PEN });
   };
-  const lines = (n, values = []) => {
+  /**
+   * Ruled lines to write on. With `none` given, the first line is shorter and
+   * carries a "None" box at its right end (ticked on the sample when `none`
+   * is true).
+   */
+  const lines = (n, values = [], none) => {
     for (let i = 0; i < n; i += 1) {
       y -= 20;
-      page.drawLine({ start: { x: M, y: y - 2 }, end: { x: M + CW, y: y - 2 }, thickness: 0.8, color: LINE });
+      const withNone = i === 0 && none !== undefined;
+      page.drawLine({ start: { x: M, y: y - 2 }, end: { x: M + CW - (withNone ? 92 : 0), y: y - 2 }, thickness: 0.8, color: LINE });
+      if (withNone) {
+        box(M + CW - 80, y + 12, none);
+        page.drawText(T.none, { x: M + CW - 61, y: y + 2, size: 11, font: reg, color: INK });
+      }
       if (SAMPLE && values[i]) page.drawText(values[i], { x: M + 4, y: y + 2, size: 12.5, font: pen, color: PEN });
     }
-    y -= 6;
+    y -= 4;
+  };
+  /** A bare Yes / No row at the left, for a question the heading already asks. */
+  const yesNoRow = (answer) => {
+    box(M, y, answer === 'yes'); page.drawText(T.yes, { x: M + 19, y: y - 10, size: 11.5, font: reg, color: INK });
+    box(M + 68, y, answer === 'no'); page.drawText(T.no, { x: M + 87, y: y - 10, size: 11.5, font: reg, color: INK });
+    y -= 24;
   };
   const yesNo = (q, answer) => {
     const ls = wrap(q, 11.5, reg, CW - 150);
@@ -234,7 +255,7 @@ async function build(lang) {
     const bx = M + CW - 130;
     box(bx, top, answer === 'yes'); page.drawText(T.yes, { x: bx + 19, y: top - 10, size: 11.5, font: reg, color: INK });
     box(bx + 68, top, answer === 'no'); page.drawText(T.no, { x: bx + 87, y: top - 10, size: 11.5, font: reg, color: INK });
-    y -= Math.max(ls.length * 14, 16) + 10;
+    y -= Math.max(ls.length * 14, 16) + 6;
   };
   const S = SAMPLE ? SAMPLE_ANSWERS : null;
 
@@ -249,6 +270,7 @@ async function build(lang) {
   y -= 36;
   field(T.phone, M, CW / 2 - 10, S?.phone); field(T.email, M + CW / 2 + 10, CW / 2 - 10, S?.email); y -= 36;
   text(T.seen, 11.5);
+  y -= 4;
   options([T.seenNo, T.seenYes], S ? [S.seen === 'no' ? T.seenNo : T.seenYes] : []);
 
   heading(T.s2);
@@ -281,35 +303,34 @@ async function build(lang) {
   T.questions.forEach((q, i) => yesNo(q, S?.yesno[i]));
 
   heading(T.s8);
-  yesNo(T.s8, S?.surgery);
+  yesNoRow(S?.surgery);
   y += 6;
   field(T.s8detail, M, CW, S?.surgeryText); y -= 36;
 
   heading(T.s9);
-  options(T.claims, S ? [T.claims[TEXT.en.claims.indexOf(S.claim)]] : [], 3);
+  options(T.claims, S ? [T.claims[TEXT.en.claims.indexOf(S.claim)]] : [], 2);
+  y += 6;
+  field(T.s9detail, M, CW, S?.injuryDate); y -= 36;
 
   heading(T.s10);
   options(T.tried, S ? S.tried.map((a) => T.tried[TEXT.en.tried.indexOf(a)]) : [], 3);
 
   heading(T.s11);
-  box(M + CW - 80, y + 14, S ? !S.meds.length : false); page.drawText(T.none, { x: M + CW - 61, y: y + 4, size: 11, font: reg, color: INK });
-  lines(3, S?.meds);
+  lines(3, S?.meds, S ? !S.meds.length : false);
 
   heading(T.s12);
-  box(M + CW - 80, y + 14, S ? S.allergiesNone : false); page.drawText(T.none, { x: M + CW - 61, y: y + 4, size: 11, font: reg, color: INK });
-  lines(2, S?.allergies);
+  lines(1, S?.allergies, S ? S.allergiesNone : false);
 
   heading(T.s13);
-  box(M + CW - 80, y + 14, S ? !S.conditions.length : false); page.drawText(T.none, { x: M + CW - 61, y: y + 4, size: 11, font: reg, color: INK });
-  lines(2, S?.conditions);
+  lines(2, S?.conditions, S ? !S.conditions.length : false);
 
   heading(T.s14);
   para(T.attest, 10.5, INK);
-  y -= 8;
-  field(T.signature, M, CW / 2 - 10, S?.signature); field(T.signDate, M + CW / 2 + 10, CW / 2 - 10, S?.date); y -= 36;
-  field(T.printed, M, CW / 2 - 10, S?.printed); y -= 36;
   y -= 4;
+  field(T.signature, M, CW / 2 - 10, S?.signature); field(T.signDate, M + CW / 2 + 10, CW / 2 - 10, S?.date); y -= 36;
   page.drawText(T.thanks, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
+  // The footer sits at y = 28; nothing may run into it.
+  if (y - 14 < 44) throw new Error(`${lang}: page ${pageNo} overflows by ${Math.round(44 - (y - 14))} pt; shorten something`);
 
   return pdf.save();
 }

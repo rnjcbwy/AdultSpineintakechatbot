@@ -17,7 +17,9 @@ const LOCAL = {
   'Any new trouble controlling your bladder or bowels?': { es: '¿Algún problema nuevo para controlar la vejiga o los intestinos?', zh: '最近出现控制大小便的困难吗？' },
   'Have you ever had surgery on your spine?': { es: '¿Alguna vez le han operado la columna?', zh: '您做过脊柱手术吗？' },
   'What surgery, and about when?': { es: '¿Qué cirugía y aproximadamente cuándo?', zh: '什么手术？大约什么时候？' },
-  'Is this problem from an injury at work, or an accident with an insurance claim or a lawyer?': { es: '¿Este problema se debe a una lesión en el trabajo o a un accidente con un reclamo de seguro o un abogado?', zh: '这个问题是因工伤，或是涉及保险索赔或律师的事故引起的吗？' },
+  'Did this start with an injury at work, a car crash or another accident?': { es: '¿Esto empezó con una lesión en el trabajo, un choque de auto u otro accidente?', zh: '这个问题是因工伤、车祸或其他事故引起的吗？' },
+  'Yes, I was hurt at work': { es: 'Sí, me lastimé en el trabajo', zh: '是，我在工作中受伤' },
+  'Yes, a car crash or other accident': { es: 'Sí, un choque de auto u otro accidente', zh: '是，车祸或其他事故' },
   'Have you already tried any of these? You can skip this.': { es: '¿Ya ha probado alguno de estos? Puede omitir esta pregunta.', zh: '您已经尝试过以下哪些？可以跳过此问题。' },
   'Physical therapy': { es: 'Fisioterapia', zh: '物理治疗' },
   'Chiropractor': { es: 'Quiropráctico', zh: '脊椎按摩' },
@@ -27,9 +29,15 @@ const LOCAL = {
   'Nothing yet': { es: 'Nada todavía', zh: '还没有' },
   'No': { es: 'No', zh: '否' },
   'Yes': { es: 'Sí', zh: '是' },
-  "Yes, a workers' compensation claim": { es: 'Sí, un reclamo de compensación laboral', zh: '是，工伤赔偿' },
-  'Yes, an accident or injury with an attorney or insurance claim': { es: 'Sí, un accidente o lesión con un abogado o reclamo de seguro', zh: '是，涉及律师或保险索赔的事故或受伤' },
 };
+
+// The claim question in plain words. The stored answers stay the shared
+// CLAIM_OPTIONS strings, which visitTypeFor and the full form key on.
+const SIMPLE_CLAIM = [
+  { id: CLAIM_OPTIONS[0], label: 'No' },
+  { id: CLAIM_OPTIONS[1], label: 'Yes, I was hurt at work' },
+  { id: CLAIM_OPTIONS[2], label: 'Yes, a car crash or other accident' },
+];
 
 const TRIED_FLAGS = { 'Physical therapy': 'physicalTherapy.tried', Chiropractor: 'chiropracticCare.tried' };
 
@@ -104,8 +112,8 @@ export default function SimpleQuestions({ onNext, onBack }) {
           {s.priorSurgery === 'Yes' && <TextArea label={t('What surgery, and about when?')} value={s.priorSurgeryText || ''} onChange={setSurgeryText} rows={2} />}
         </Card>
         {!followup && (
-          <Card title={t('Is this problem from an injury at work, or an accident with an insurance claim or a lawyer?')}>
-            <BigChoice t={t} options={CLAIM_OPTIONS} value={v.workInjury || ''} onChange={setClaim} />
+          <Card title={t('Did this start with an injury at work, a car crash or another accident?')}>
+            <BigChoice t={t} options={SIMPLE_CLAIM} value={v.workInjury || ''} onChange={setClaim} />
           </Card>
         )}
         <Card title={t('Have you already tried any of these? You can skip this.')}>

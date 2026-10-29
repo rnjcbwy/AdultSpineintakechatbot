@@ -184,7 +184,8 @@ Older patients found the full adult spine form too long, so:
   across "start a new form" when the site lock is adult_spine). Five screens:
   about you, what is bothering you (own words + dictation, seven big area
   buttons, how long, pain 0-10, better/worse), a few yes/no questions (the
-  safety screen, prior spine surgery, any claim, optional "already tried"),
+  safety screen, prior spine surgery, work injury or accident in plain words,
+  optional "already tried"),
   three health questions (medicines with the photo fill, allergies,
   conditions), sign and send with a one-tap "agree to all". A returning
   patient gets four screens. The thank-you says "Your intake is complete."
@@ -195,7 +196,10 @@ Older patients found the full adult spine form too long, so:
 - **The paper form** (`scripts/build-paper-intake.mjs` ->
   `public/paper/spine-intake-paper-en.pdf`, `-es.pdf`): the same questions
   on two letter pages, large type, big boxes, middle-school reading level.
-  `--sample` writes a filled copy to `.pdf-tmp/` for testing the reader.
+  Neither the short form nor the paper form asks for insurance (the office
+  has it; the word does not appear on either). The build fails if a page
+  would run into the footer. `--sample` writes a filled copy to `.pdf-tmp/`
+  for testing the reader.
 - **Scan to note** lives in Practice Hub (its own commit e104ef7, "Paper
   intake forms"): the "Paper intake form" panel on the Intake forms page and
   on each chart photographs or scans the pages, `src/server/paper-intake.ts`

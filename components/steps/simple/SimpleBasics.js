@@ -3,7 +3,6 @@
 import { useIntake } from '../../../lib/store';
 import { useLang, makeT, COMMON } from '../../../lib/i18n';
 import StepNavigation from '../../ui/StepNavigation';
-import UploadToFill from '../../UploadToFill';
 import { Card, BigChoice } from './Big';
 
 const LOCAL = {
@@ -23,9 +22,6 @@ const LOCAL = {
   'Have you seen this doctor before?': { es: '¿Ya ha visto a este médico antes?', zh: '您以前看过这位医生吗？' },
   'No, this is my first visit': { es: 'No, es mi primera visita', zh: '没有，这是第一次' },
   'Yes, I have been here before': { es: 'Sí, ya he venido antes', zh: '是的，我来过' },
-  'Insurance (skip this if the office already has it)': { es: 'Seguro (omita esto si la oficina ya lo tiene)', zh: '保险（如果诊所已有您的保险信息，可跳过）' },
-  'Insurance company': { es: 'Compañía de seguros', zh: '保险公司' },
-  'Member ID': { es: 'Número de miembro', zh: '会员编号' },
 };
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
@@ -103,22 +99,6 @@ export default function SimpleBasics({ onNext, onBack }) {
         <Card title={t('Have you seen this doctor before?')}>
           <BigChoice t={t} options={['No, this is my first visit', 'Yes, I have been here before']} value={seen} onChange={setSeen} />
         </Card>
-        <details className="card">
-          <summary className="cursor-pointer text-lg font-medium text-navy-600">{t('Insurance (skip this if the office already has it)')}</summary>
-          <div className="mt-4 space-y-4">
-            <UploadToFill section="insurance" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label">{t('Insurance company')}</label>
-                <input type="text" value={d.insuranceProvider || ''} onChange={(e) => setField('demographics', 'insuranceProvider', e.target.value)} />
-              </div>
-              <div>
-                <label className="form-label">{t('Member ID')}</label>
-                <input type="text" value={d.memberId || ''} onChange={(e) => setField('demographics', 'memberId', e.target.value)} />
-              </div>
-            </div>
-          </div>
-        </details>
       </div>
       <StepNavigation onNext={onNext} onBack={onBack} canGoNext={canGoNext} />
     </div>
