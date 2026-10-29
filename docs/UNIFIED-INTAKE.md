@@ -175,6 +175,35 @@ At the surgeon's request the sites are one per service again:
 - Unset lock (local development) still runs every service, as the combined
   form did. Set `NEXT_PUBLIC_SERVICE_LOCK` in `.env.local` to test a site.
 
+## The short form and the paper form (2026-10-29)
+
+Older patients found the full adult spine form too long, so:
+
+- **The short form** (`lib/simple.js`, `components/steps/simple/*`) is the
+  DEFAULT on intake.aaronweymd.com (mode `simple`, set on load and kept
+  across "start a new form" when the site lock is adult_spine). Five screens:
+  about you, what is bothering you (own words + dictation, seven big area
+  buttons, how long, pain 0-10, better/worse), a few yes/no questions (the
+  safety screen, prior spine surgery, any claim, optional "already tried"),
+  three health questions (medicines with the photo fill, allergies,
+  conditions), sign and send with a one-tap "agree to all". A returning
+  patient gets four screens. The thank-you says "Your intake is complete."
+  and hides the note review. "Use the detailed form" on the welcome sets
+  mode `full` (also `?form=full` / `?form=simple` on the address). The
+  answers land in the full form's fields, so note, PDF, Practice Hub and
+  the handouts are unchanged.
+- **The paper form** (`scripts/build-paper-intake.mjs` ->
+  `public/paper/spine-intake-paper-en.pdf`, `-es.pdf`): the same questions
+  on two letter pages, large type, big boxes, middle-school reading level.
+  `--sample` writes a filled copy to `.pdf-tmp/` for testing the reader.
+- **Scan to note** lives in Practice Hub (its own commit e104ef7, "Paper
+  intake forms"): the "Paper intake form" panel on the Intake forms page and
+  on each chart photographs or scans the pages, `src/server/paper-intake.ts`
+  transcribes them with Claude on Bedrock into a fixed JSON shape, flags red
+  flags, drafts the clinic note and files the intake (to the chart when
+  opened from one). The filled sample above was read back exactly and gave
+  a correct H&P.
+
 ## Remaining
 
 1. The review-of-systems defaults in `lib/store.js` still come from the
