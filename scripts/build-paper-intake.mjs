@@ -41,7 +41,7 @@ const TEXT = {
     title: 'Spine Visit: Patient Form',
     sub: 'Please print clearly. If you need help, ask the front desk. There are no wrong answers.',
     date: 'Today’s date',
-    page: 'Page {n} of 2',
+    page: 'Page {n} of 3',
     s1: '1. About you',
     first: 'First name', last: 'Last name', dob: 'Date of birth (month / day / year)',
     sex: 'Are you a', woman: 'Woman', man: 'Man',
@@ -79,14 +79,28 @@ const TEXT = {
     s14: '14. Please sign',
     attest: 'My answers are true to the best of my knowledge. The office may call or email me about my care.',
     signature: 'Signature', signDate: 'Date',
+    next: 'Please turn to page 3.',
     thanks: 'Thank you for taking the time to fill this out. Please hand it to the front desk.',
-    office: 'Office use: scan or photograph both pages into Practice Hub.',
+    office: 'Office use: pages 1 and 2 go into Practice Hub. Page 3 is filed with registration.',
+    // Page 3: the acknowledgments the online form collects (lib/consent.js),
+    // in plain words. The signed sheet is the record.
+    s15: '15. Please read each statement, check the box, and sign',
+    consents: [
+      'What I wrote on this form is true and complete, as far as I know. I am the patient, or I am filling this out for the patient as a parent, guardian or someone the patient has authorized.',
+      'I will pay for any care my insurance does not cover, and any copays or deductibles. The office may send my insurance company the information it needs to process my claims, and my insurance company may pay the office directly.',
+      'The office may share my health information with the other doctors, hospitals, imaging centers and therapists who take care of me, and may ask them for my records, so that my care can be coordinated.',
+      'I was given the chance to read the Notice of Privacy Practices of Holy Name Medical Partners. It explains how my health information may be used and shared, and my rights. A copy is available at the front desk.',
+      'The office may call, text or email me at the phone number and email I gave, to schedule and coordinate my care. This form is not for emergencies. In an emergency I will call 911.',
+    ],
+    printed: 'Printed name',
+    forPatient: 'If you are signing for the patient:',
+    forName: 'Your name', forRel: 'Your relationship to the patient',
   },
   es: {
     title: 'Visita de columna: formulario del paciente',
     sub: 'Escriba con letra de imprenta clara. Si necesita ayuda, pregunte en recepción. No hay respuestas incorrectas.',
     date: 'Fecha de hoy',
-    page: 'Página {n} de 2',
+    page: 'Página {n} de 3',
     s1: '1. Sobre usted',
     first: 'Nombre', last: 'Apellido', dob: 'Fecha de nacimiento (mes / día / año)',
     sex: 'Es usted', woman: 'Mujer', man: 'Hombre',
@@ -124,8 +138,10 @@ const TEXT = {
     s14: '14. Firme aquí',
     attest: 'Mis respuestas son verdaderas. La oficina puede llamarme o escribirme sobre mi atención.',
     signature: 'Firma', signDate: 'Fecha',
+    next: 'Pase a la página 3.',
     thanks: 'Gracias por tomarse el tiempo de completar este formulario. Entréguelo en recepción.',
-    office: 'Uso de la oficina: escanee o fotografíe ambas páginas en Practice Hub.',
+    office: 'Uso de la oficina: las páginas 1 y 2 van a Practice Hub. La página 3 se archiva con el registro.',
+    // Page 3 (the acknowledgments) is printed in English on every form.
   },
 };
 
@@ -139,7 +155,7 @@ const SAMPLE_ANSWERS = {
   tried: ['Physical therapy', 'Pain medicine'],
   meds: ['Lisinopril 10 mg', 'Metformin 500 mg twice a day'], allergies: [], allergiesNone: true,
   conditions: ['High blood pressure', 'Diabetes'],
-  signature: 'Margaret Okafor', date: '10 / 29 / 2026',
+  signature: 'Margaret Okafor', date: '10 / 29 / 2026', printed: 'MARGARET OKAFOR', consents: true,
 };
 
 async function build(lang) {
@@ -242,6 +258,10 @@ async function build(lang) {
     }
     y -= 4;
   };
+  /** The footer sits at y = 28; the page's last line may not run into it. */
+  const fits = () => {
+    if (y - 14 < 44) throw new Error(`${lang}: page ${pageNo} overflows by ${Math.round(44 - (y - 14))} pt; shorten something`);
+  };
   /** A bare Yes / No row at the left, for a question the heading already asks. */
   const yesNoRow = (answer) => {
     box(M, y, answer === 'yes'); page.drawText(T.yes, { x: M + 19, y: y - 10, size: 11.5, font: reg, color: INK });
@@ -297,6 +317,8 @@ async function build(lang) {
   heading(T.s6);
   options(T.trends, S ? [T.trends[TEXT.en.trends.indexOf(S.trend)]] : [], 3);
 
+  fits();
+
   // ---------------------------------------------------------------- page 2
   newPage();
   heading(T.s7);
@@ -328,9 +350,32 @@ async function build(lang) {
   para(T.attest, 10.5, INK);
   y -= 4;
   field(T.signature, M, CW / 2 - 10, S?.signature); field(T.signDate, M + CW / 2 + 10, CW / 2 - 10, S?.date); y -= 36;
-  page.drawText(T.thanks, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
-  // The footer sits at y = 28; nothing may run into it.
-  if (y - 14 < 44) throw new Error(`${lang}: page ${pageNo} overflows by ${Math.round(44 - (y - 14))} pt; shorten something`);
+  page.drawText(T.next, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
+  fits();
+
+  // ---------------------------------------------------------------- page 3
+  // The acknowledgments, in English on every form. Pages 1 and 2 are the
+  // clinical form Practice Hub reads; this page is filed with registration.
+  const E = TEXT.en;
+  newPage();
+  heading(E.s15);
+  y -= 2;
+  // Larger type than the questions: there is room, and this is the page
+  // that gets read slowly.
+  for (const statement of E.consents) {
+    box(M, y - 1, S ? S.consents : false, 15);
+    const ls = wrap(statement, 13, reg, CW - 28);
+    ls.forEach((l, i) => page.drawText(l, { x: M + 28, y: y - 13 - i * 17, size: 13, font: reg, color: INK }));
+    y -= ls.length * 17 + 14;
+  }
+  y -= 8;
+  field(E.signature, M, CW / 2 - 10, S?.signature); field(E.signDate, M + CW / 2 + 10, CW / 2 - 10, S?.date); y -= 36;
+  field(E.printed, M, CW / 2 - 10, S?.printed); y -= 44;
+  text(E.forPatient, 10.5, GREY);
+  y -= 2;
+  field(E.forName, M, CW / 2 - 10); field(E.forRel, M + CW / 2 + 10, CW / 2 - 10); y -= 40;
+  page.drawText(E.thanks, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
+  fits();
 
   return pdf.save();
 }

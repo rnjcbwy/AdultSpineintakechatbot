@@ -195,11 +195,15 @@ Older patients found the full adult spine form too long, so:
   the handouts are unchanged.
 - **The paper form** (`scripts/build-paper-intake.mjs` ->
   `public/paper/spine-intake-paper-en.pdf`, `-es.pdf`): the same questions
-  on two letter pages, large type, big boxes, middle-school reading level.
-  Neither the short form nor the paper form asks for insurance (the office
-  has it; the word does not appear on either). The build fails if a page
-  would run into the footer. `--sample` writes a filled copy to `.pdf-tmp/`
-  for testing the reader.
+  on two letter pages, large type, big boxes, middle-school reading level,
+  plus a third page with the five acknowledgments of `lib/consent.js` in
+  plain words (English on every form, by the user's choice) and its own
+  signature block. Pages 1 and 2 are the clinical form the hub reads; page
+  3 is filed with the registration paperwork. Neither the short form nor
+  the paper form asks for insurance details (the office has the card; the
+  assignment-of-benefits statement still mentions insurance). The build
+  fails if a page would run into the footer. `--sample` writes a filled
+  copy to `.pdf-tmp/` for testing the reader.
 - **Scan to note** lives in Practice Hub (its own commit e104ef7, "Paper
   intake forms"): the "Paper intake form" panel on the Intake forms page and
   on each chart photographs or scans the pages, `src/server/paper-intake.ts`
