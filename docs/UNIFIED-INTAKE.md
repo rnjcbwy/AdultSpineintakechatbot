@@ -200,7 +200,9 @@ Older patients found the full adult spine form too long, so:
   name and contact only (no date of birth, sex or "seen before": those are
   on the registration), what brings you in, where it hurts with an "Other"
   line, a front-and-back body diagram to mark pain, its travel and numbness
-  (vector outlines in the script, no image), how long, 0-10, better or
+  (the practice's own figure, `scripts/assets/body-diagram.jpg`, with its
+  title cropped off; positions on it are fractions in `FIG`), how long,
+  0-10, better or
   worse, the four safety questions, treatments tried with details (PT when,
   where, how long, how often; injections when, how many, type, level),
   medicines, allergies, fifteen common conditions plus cancer (type, when,

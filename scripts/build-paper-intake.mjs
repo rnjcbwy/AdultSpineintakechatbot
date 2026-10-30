@@ -80,9 +80,9 @@ const TEXT = {
     ],
 
     s9: '9. Have you already tried any of these? Check what you tried and tell us about it.',
-    pt: 'Physical therapy', ptWhen: 'When', ptWhere: 'Where', ptHowLong: 'How long (weeks or months)', ptHowOften: 'How often (times a week)',
+    pt: 'Physical therapy', ptWhen: 'When', ptWhere: 'Where', ptHowLong: 'How long', ptHowOften: 'How often (times a week)',
     chiro: 'Chiropractor', chiroDetail: 'When, and for how long',
-    inj: 'Injections', injWhen: 'When', injHowMany: 'How many', injType: 'What type (for example epidural, facet)', injLevel: 'Which level, if you know (for example L4-5)',
+    inj: 'Injections', injWhen: 'When', injHowMany: 'How many', injType: 'What type, and which level if you know (for example epidural L4-5)',
     painMeds: 'Pain medicine', painMedsDetail: 'Which ones',
     nothing: 'Nothing yet',
 
@@ -196,9 +196,9 @@ const TEXT = {
     ],
 
     s9: '9. ¿Ya ha probado alguno de estos? Marque lo que probó y cuéntenos.',
-    pt: 'Fisioterapia', ptWhen: 'Cuándo', ptWhere: 'Dónde', ptHowLong: 'Por cuánto tiempo (semanas o meses)', ptHowOften: 'Con qué frecuencia (veces por semana)',
+    pt: 'Fisioterapia', ptWhen: 'Cuándo', ptWhere: 'Dónde', ptHowLong: 'Por cuánto tiempo', ptHowOften: 'Veces por semana',
     chiro: 'Quiropráctico', chiroDetail: 'Cuándo y por cuánto tiempo',
-    inj: 'Inyecciones', injWhen: 'Cuándo', injHowMany: 'Cuántas', injType: 'De qué tipo (por ejemplo epidural, facetaria)', injLevel: 'En qué nivel, si lo sabe (por ejemplo L4-5)',
+    inj: 'Inyecciones', injWhen: 'Cuándo', injHowMany: 'Cuántas', injType: 'De qué tipo y en qué nivel, si lo sabe (por ejemplo epidural L4-5)',
     painMeds: 'Medicamentos para el dolor', painMedsDetail: 'Cuáles',
     nothing: 'Nada todavía',
 
@@ -268,7 +268,7 @@ const SAMPLE_ANSWERS = {
   yesno: ['yes', 'no', 'no', 'no'],
   tried: ['pt', 'painMeds'],
   ptWhen: 'Aug - Sept 2026', ptWhere: 'Englewood PT', ptHowLong: '6 weeks', ptHowOften: '2 x week',
-  chiroDetail: '', injWhen: '', injHowMany: '', injType: '', injLevel: '',
+  chiroDetail: '', injWhen: '', injHowMany: '', injType: '',
   painMedsDetail: 'Tylenol, Advil',
   meds: ['Lisinopril 10 mg', 'Metformin 500 mg twice a day'], allergies: [], allergiesNone: true,
   conditions: ['High blood pressure', 'Diabetes', 'Osteopenia'], cancer: false,
@@ -280,15 +280,16 @@ const SAMPLE_ANSWERS = {
   signature: 'Margaret Okafor', date: '10 / 30 / 2026', printed: 'MARGARET OKAFOR', consents: true,
 };
 
-// The body outline for the pain diagram, in a 100 x 220 box (origin top
-// left), as a closed polygon from the left of the neck around and back.
-const BODY = [
-  [43, 31], [43, 36], [26, 42], [14, 70], [6, 105], [4, 120], [12, 122], [17, 108], [28, 62],
-  [29, 100], [27, 120], [26, 160], [27, 205], [24, 215], [40, 215], [42, 205], [44, 160], [48, 128], [50, 126],
-  [52, 128], [56, 160], [58, 205], [60, 215], [76, 215], [73, 205], [74, 160], [73, 120], [71, 100],
-  [72, 62], [83, 108], [88, 122], [96, 120], [94, 105], [86, 70], [74, 42], [57, 36], [57, 31],
-];
-const HEAD = { cx: 50, cy: 18, r: 13 };
+// The pain diagram: the practice's own front-and-back figure (the title
+// cropped off), with the front figure on the left. Positions on it below
+// are fractions of its width and height.
+const BODY_IMAGE = path.join(ROOT, 'scripts', 'assets', 'body-diagram.jpg');
+const FIG = {
+  frontCx: 0.25, backCx: 0.757, shoulderY: 0.18,
+  // The sample's marks on the back figure: the low back, and the patient's
+  // right leg (the viewer's right from behind).
+  lowBack: [0.757, 0.40], rightLegTop: [0.775, 0.49], rightLegBottom: [0.79, 0.9],
+};
 
 async function build(lang) {
   const T = TEXT[lang];
@@ -387,6 +388,18 @@ async function build(lang) {
     if (b) field(b[0], M + CW / 2 + 10, CW / 2 - 10, b[1]);
     y -= 36;
   };
+  /** Several fields across one row, equal widths unless `widths` (fractions) is given. */
+  const fieldsRow = (items, widths) => {
+    const gap = 14;
+    const total = CW - gap * (items.length - 1);
+    let x = M;
+    items.forEach(([label, value], i) => {
+      const w = total * (widths ? widths[i] : 1 / items.length);
+      field(label, x, w, value);
+      x += w + gap;
+    });
+    y -= 36;
+  };
   /**
    * Ruled lines to write on. With `none` given, the first line is shorter and
    * carries a "None" box at its right end (ticked on the sample when `none`
@@ -420,23 +433,25 @@ async function build(lang) {
     if (y - 14 < 44) throw new Error(`${lang}: page ${pageNo} overflows by ${Math.round(44 - (y - 14))} pt; shorten something`);
   };
 
-  /** One body outline with its top-left corner at (x0, top), scaled by s. */
-  const body = (x0, top, s, isBack) => {
-    const P = (p) => ({ x: x0 + p[0] * s, y: top - p[1] * s });
-    for (let i = 0; i < BODY.length; i += 1) {
-      page.drawLine({ start: P(BODY[i]), end: P(BODY[(i + 1) % BODY.length]), thickness: 1, color: INK });
-    }
-    page.drawCircle({ x: x0 + HEAD.cx * s, y: top - HEAD.cy * s, size: HEAD.r * s, borderColor: INK, borderWidth: 1 });
-    if (isBack) {
-      // The spine, so the patient can place neck, mid-back and low-back pain.
-      page.drawLine({ start: P([50, 36]), end: P([50, 124]), thickness: 0.8, color: GREY, dashArray: [3, 3] });
-    }
-    const caption = isBack ? T.back : T.front;
-    page.drawText(caption, { x: x0 + 50 * s - bold.widthOfTextAtSize(caption, 10.5) / 2, y: top - 220 * s - 13, size: 10.5, font: bold, color: NAVY });
-    // The patient's right is on the viewer's left from the front, and on the right from the back.
-    const [lhs, rhs] = isBack ? [T.left, T.right] : [T.right, T.left];
-    page.drawText(lhs, { x: x0 - 2 - reg.widthOfTextAtSize(lhs, 9), y: top - 60 * s, size: 9, font: reg, color: GREY });
-    page.drawText(rhs, { x: x0 + 100 * s + 2, y: top - 60 * s, size: 9, font: reg, color: GREY });
+  const bodyImage = await pdf.embedJpg(fs.readFileSync(BODY_IMAGE));
+  /**
+   * The body diagram, `h` points tall and centred, with Front / Back
+   * captions and the patient's right and left marked beside each figure
+   * (right is on the viewer's left from the front, on the right from
+   * behind). Returns a function from image fractions to page points.
+   */
+  const diagram = (top, h) => {
+    const w = h * (bodyImage.width / bodyImage.height);
+    const x0 = M + (CW - w) / 2;
+    page.drawImage(bodyImage, { x: x0, y: top - h, width: w, height: h });
+    const P = ([fx, fy]) => ({ x: x0 + fx * w, y: top - fy * h });
+    const cap = (label, cx) => page.drawText(label, { x: cx - bold.widthOfTextAtSize(label, 10.5) / 2, y: top - h - 13, size: 10.5, font: bold, color: NAVY });
+    cap(T.front, P([FIG.frontCx, 0]).x);
+    cap(T.back, P([FIG.backCx, 0]).x);
+    const side = (label, x, alignRight, dy = 0) => page.drawText(label, { x: alignRight ? x - reg.widthOfTextAtSize(label, 9) : x, y: P([0, FIG.shoulderY]).y - dy, size: 9, font: reg, color: GREY });
+    // The two inner labels sit between the figures, one a line below the other so they never collide.
+    side(T.right, x0 - 4, true); side(T.left, P([0.5, 0]).x - 2, true);
+    side(T.left, P([0.5, 0]).x + 2, false, 12); side(T.right, x0 + w + 4, false);
     return P;
   };
 
@@ -455,6 +470,29 @@ async function build(lang) {
   para(T.s2hint);
   lines(4, S?.story);
 
+  heading(T.s4);
+  para(T.s4hint);
+  y -= 6;
+  {
+    // As tall as the room left on the page allows (the Spanish hint wraps).
+    const h = Math.min(340, y - 76);
+    const top = y;
+    const P = diagram(top, h);
+    if (SAMPLE) {
+      // Low back circled, an arrow down the right leg.
+      const lb = P(FIG.lowBack);
+      page.drawEllipse({ x: lb.x, y: lb.y, xScale: 14, yScale: 7, borderColor: PEN, borderWidth: 2 });
+      const a = P(FIG.rightLegTop); const b = P(FIG.rightLegBottom);
+      page.drawLine({ start: a, end: b, thickness: 2, color: PEN });
+      page.drawLine({ start: b, end: { x: b.x - 7, y: b.y + 3 }, thickness: 2, color: PEN });
+      page.drawLine({ start: b, end: { x: b.x + 1, y: b.y + 8 }, thickness: 2, color: PEN });
+    }
+    y = top - h - 18;
+  }
+  fits();
+
+  // ---------------------------------------------------------------- page 2
+  newPage();
   heading(T.s3);
   options(T.areas, picks('areas', S?.areas), 2);
   // "Other: ____" takes the free slot at the end of the last row.
@@ -465,41 +503,19 @@ async function build(lang) {
   if (SAMPLE && S.otherArea) page.drawText(S.otherArea, { x: ox + 3, y: y - 9, size: 12.5, font: pen, color: PEN });
   y -= 22;
 
-  heading(T.s4);
-  para(T.s4hint);
-  y -= 6;
-  {
-    const s = 0.93;
-    const top = y;
-    body(M + CW / 4 - 50 * s, top, s, false);
-    const PB = body(M + (3 * CW) / 4 - 50 * s, top, s, true);
-    if (SAMPLE) {
-      // Low back shaded, an arrow down the right leg (viewer's right from the back).
-      page.drawEllipse({ x: PB([50, 108]).x, y: PB([50, 108]).y, xScale: 16 * s, yScale: 8 * s, borderColor: PEN, borderWidth: 2 });
-      const a = PB([52, 118]); const b = PB([66, 200]);
-      page.drawLine({ start: a, end: b, thickness: 2, color: PEN });
-      page.drawLine({ start: b, end: { x: b.x - 7, y: b.y + 3 }, thickness: 2, color: PEN });
-      page.drawLine({ start: b, end: { x: b.x + 1, y: b.y + 8 }, thickness: 2, color: PEN });
-    }
-    y = top - 220 * s - 18;
-  }
-  fits();
-
-  // ---------------------------------------------------------------- page 2
-  newPage();
   heading(T.s5);
   options(T.durations, pick('durations', S?.duration), 2);
 
   heading(T.s6);
   para(T.s6hint);
-  y -= 6;
+  y -= 2;
   for (let n = 0; n <= 10; n += 1) {
     const x = M + 12 + n * (CW - 24) / 10;
     page.drawCircle({ x, y: y - 8, size: 11, borderColor: INK, borderWidth: 0.8 });
     page.drawText(String(n), { x: x - (n === 10 ? 7 : 3.5), y: y - 12.5, size: 12, font: bold, color: INK });
     if (SAMPLE && S.pain === n) page.drawCircle({ x, y: y - 8, size: 14, borderColor: PEN, borderWidth: 2 });
   }
-  y -= 34;
+  y -= 30;
 
   heading(T.s7);
   options(T.trends, pick('trends', S?.trend), 3);
@@ -510,12 +526,10 @@ async function build(lang) {
   heading(T.s9);
   const tried = (k) => (S ? S.tried.includes(k) : false);
   check(M, T.pt, tried('pt')); y -= 22;
-  fieldRow([T.ptWhen, S?.ptWhen], [T.ptWhere, S?.ptWhere]);
-  fieldRow([T.ptHowLong, S?.ptHowLong], [T.ptHowOften, S?.ptHowOften]);
+  fieldsRow([[T.ptWhen, S?.ptWhen], [T.ptWhere, S?.ptWhere], [T.ptHowLong, S?.ptHowLong], [T.ptHowOften, S?.ptHowOften]]);
   check(M, T.chiro, tried('chiro')); field(T.chiroDetail, M + 190, CW - 190, S?.chiroDetail); y -= 36;
   check(M, T.inj, tried('inj')); y -= 22;
-  fieldRow([T.injWhen, S?.injWhen], [T.injHowMany, S?.injHowMany]);
-  fieldRow([T.injType, S?.injType], [T.injLevel, S?.injLevel]);
+  fieldsRow([[T.injWhen, S?.injWhen], [T.injHowMany, S?.injHowMany], [T.injType, S?.injType]], [0.2, 0.2, 0.6]);
   check(M, T.painMeds, tried('painMeds')); field(T.painMedsDetail, M + 190, CW - 190, S?.painMedsDetail); y -= 36;
   check(M, T.nothing, tried('nothing')); y -= 22;
   fits();
