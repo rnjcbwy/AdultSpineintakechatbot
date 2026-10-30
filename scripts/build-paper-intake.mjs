@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // ============================================================================
-// The paper intake form: two letter-size pages a patient fills in by hand in
-// the clinic. The same questions as the short on-screen form (lib/simple.js),
-// written for a middle-school reading level, in large type with big boxes.
+// The paper intake form: letter-size pages a patient fills in by hand in the
+// clinic, written for a middle-school reading level, in large type with big
+// boxes. Pages 1 to 4 are the clinical form; page 5 is the acknowledgments
+// to sign (English on every form) and is filed with registration.
 //
-// The office scans or photographs the completed pages into Practice Hub
-// ("Paper intake form" on the Intake forms page or on the chart), where
-// Claude reads them and drafts the clinic note. The numbered questions and
-// plain labels below are what that reader keys on.
+// The office scans or photographs pages 1 to 4 into Practice Hub ("Paper
+// intake form" on the Intake forms page or on the chart), where Claude reads
+// them, including the marks on the body diagram, and drafts the clinic note.
+// The numbered questions and plain labels below are what that reader keys on.
 //
 //   node scripts/build-paper-intake.mjs            -> public/paper/spine-intake-paper-en.pdf (+ es)
 //   node scripts/build-paper-intake.mjs --sample   -> also a filled-in sample, for testing the reader
@@ -35,56 +36,113 @@ const PEN = rgb(0.1, 0.1, 0.45);
 const PAGE = { w: 612, h: 792 };
 const M = 44;
 const CW = PAGE.w - M * 2;
+const PAGES = 5;
 
 const TEXT = {
   en: {
     title: 'Spine Visit: Patient Form',
     sub: 'Please print clearly. If you need help, ask the front desk. There are no wrong answers.',
     date: 'Today’s date',
-    page: 'Page {n} of 3',
+    page: `Page {n} of ${PAGES}`,
+    office: 'Office use: pages 1 to 4 go into Practice Hub. Page 5 is filed with registration.',
+    yes: 'Yes', no: 'No', none: 'None',
+
     s1: '1. About you',
-    first: 'First name', last: 'Last name', dob: 'Date of birth (month / day / year)',
-    sex: 'Are you a', woman: 'Woman', man: 'Man',
+    first: 'First name', last: 'Last name',
     phone: 'Phone number', email: 'Email (if you have one)',
-    seen: 'Have you seen this doctor before?', seenNo: 'No, this is my first visit', seenYes: 'Yes, I have been here before',
-    s2: '2. What is bothering you?',
+
+    s2: '2. What brings you in today?',
     s2hint: 'Tell us in your own words. For example: my low back hurts and the pain goes down my right leg.',
+
     s3: '3. Where does it hurt? Check all that apply.',
     areas: ['Neck', 'Upper or middle back', 'Low back', 'Right arm or hand', 'Left arm or hand', 'Right leg or foot', 'Left leg or foot'],
-    s4: '4. How long has this been going on?',
+    other: 'Other:',
+
+    s4: '4. Mark where your pain is',
+    s4hint: 'Shade or circle the places that hurt. Draw an arrow to show where the pain travels. Write X where you feel numbness or tingling.',
+    front: 'Front', back: 'Back', right: 'Right', left: 'Left',
+
+    s5: '5. How long has this been going on?',
     durations: ['Less than a month', '1 to 6 months', '6 months to 2 years', 'More than 2 years'],
-    s5: '5. How bad is the pain today? Circle one number.',
-    s5hint: '0 = no pain          10 = the worst pain you can imagine',
-    s6: '6. Is it getting better, worse, or staying the same?',
+
+    s6: '6. How bad is the pain today? Circle one number.',
+    s6hint: '0 = no pain          10 = the worst pain you can imagine',
+
+    s7: '7. Is it getting better, worse, or staying the same?',
     trends: ['Getting better', 'About the same', 'Getting worse'],
-    s7: '7. Please answer Yes or No.',
-    yes: 'Yes', no: 'No',
+
+    s8: '8. Please answer Yes or No.',
     questions: [
       'Do you have numbness or tingling in your arms, hands, legs or feet?',
       'Do you have weakness in an arm or a leg?',
       'Do you have trouble walking, or feel unsteady on your feet?',
       'Any new trouble controlling your bladder or bowels?',
     ],
-    s8: '8. Have you ever had surgery on your spine?',
-    s8detail: 'If yes, what surgery and about when?',
-    s9: '9. Did this start with an injury at work, a car crash or another accident?',
-    claims: ['No', 'Yes, I was hurt at work', 'Yes, a car crash or other accident'],
-    s9detail: 'If yes, when did it happen?',
-    s10: '10. Have you already tried any of these? (You can skip this.)',
-    tried: ['Physical therapy', 'Chiropractor', 'Injections', 'Pain medicine', 'Nothing yet'],
-    s11: '11. Medicines you take every day',
-    s12: '12. Allergies to medicines',
-    s13: '13. Health conditions (for example diabetes, heart disease, high blood pressure)',
-    none: 'None',
-    s14: '14. Please sign',
+
+    s9: '9. Have you already tried any of these? Check what you tried and tell us about it.',
+    pt: 'Physical therapy', ptWhen: 'When', ptWhere: 'Where', ptHowLong: 'How long (weeks or months)', ptHowOften: 'How often (times a week)',
+    chiro: 'Chiropractor', chiroDetail: 'When, and for how long',
+    inj: 'Injections', injWhen: 'When', injHowMany: 'How many', injType: 'What type (for example epidural, facet)', injLevel: 'Which level, if you know (for example L4-5)',
+    painMeds: 'Pain medicine', painMedsDetail: 'Which ones',
+    nothing: 'Nothing yet',
+
+    s10: '10. Medicines you take every day',
+    s11: '11. Allergies to medicines',
+
+    s12: '12. Health conditions. Check any you have.',
+    conditions: [
+      'High blood pressure', 'Diabetes', 'Heart disease (blocked arteries or heart attack)',
+      'Heart failure', 'Stroke', 'Blood clots (DVT or lung clot)',
+      'Lung disease (COPD, asthma)', 'Sleep apnea', 'Kidney disease',
+      'Osteoporosis', 'Osteopenia', 'Low thyroid (hypothyroid)',
+      'Overactive thyroid (hyperthyroid)', 'Rheumatoid arthritis or other autoimmune disease', 'Depression or anxiety',
+    ],
+    cancer: 'Cancer', cancerType: 'What type', cancerWhen: 'When',
+    cancerTreated: 'How was it treated', cancerStatus: 'Ongoing treatment, or in remission since when?',
+    infections: 'Serious infections (for example MRSA, a bone or joint infection): what and when',
+    otherConditions: 'Other conditions',
+
+    s13: '13. Surgeries you have had',
+    spineSurgery: 'Have you ever had surgery on your spine?',
+    spineSurgeryDetail: 'If yes, what surgery and about when?',
+    surgeryList: 'All other surgeries, with the year (for example appendix 1998, right knee 2015)',
+
+    s14: '14. Review of systems. Check anything you have now.',
+    rosNone: 'I have none of these',
+    ros: [
+      { system: 'General', items: ['fever or chills', 'weight loss', 'night sweats'] },
+      { system: 'Heart', items: ['chest pain', 'skipped heartbeats', 'leg swelling'] },
+      { system: 'Lungs', items: ['shortness of breath', 'cough that will not go away'] },
+      { system: 'Stomach', items: ['nausea or vomiting', 'constipation', 'blood in the stool'] },
+      { system: 'Bladder', items: ['trouble passing urine', 'burning', 'blood in the urine'] },
+      { system: 'Nerves', items: ['headaches', 'dizziness or fainting', 'seizures'] },
+      { system: 'Joints', items: ['pain in other joints', 'recent falls'] },
+      { system: 'Skin', items: ['rashes', 'sores that will not heal'] },
+      { system: 'Blood', items: ['easy bruising or bleeding', 'I take a blood thinner'] },
+      { system: 'Mood and sleep', items: ['feeling down or anxious', 'trouble sleeping'] },
+    ],
+
+    s15: '15. About your life',
+    job: 'Your job or career (or your former job, if retired)',
+    living: 'Who do you live with?',
+    livingOpts: ['Alone', 'Spouse or partner', 'Family', 'Assisted living or nursing home'],
+    stairs: 'Do you have to climb stairs at home?',
+    stairsOpts: ['No', 'Yes, a few steps', 'Yes, a full flight or more'],
+    activity: 'How active are you?',
+    activityOpts: ['Very active', 'Somewhat active', 'Mostly sitting', 'Mostly in bed'],
+    activities: 'What do you do for exercise, hobbies or sport?',
+    walking: 'Do you use anything to help you walk?',
+    walkOpts: ['Nothing', 'Cane', 'Walker', 'Wheelchair'],
+    smoke: 'Do you smoke or vape?',
+
+    s16: '16. Please sign',
     attest: 'My answers are true to the best of my knowledge. The office may call or email me about my care.',
     signature: 'Signature', signDate: 'Date',
-    next: 'Please turn to page 3.',
-    thanks: 'Thank you for taking the time to fill this out. Please hand it to the front desk.',
-    office: 'Office use: pages 1 and 2 go into Practice Hub. Page 3 is filed with registration.',
-    // Page 3: the acknowledgments the online form collects (lib/consent.js),
-    // in plain words. The signed sheet is the record.
-    s15: '15. Please read each statement, check the box, and sign',
+    next: `Please turn to page ${PAGES}.`,
+
+    // Page 5: the acknowledgments the online form collects (lib/consent.js),
+    // in plain words. English on every form. The signed sheet is the record.
+    s17: '17. Please read each statement, check the box, and sign',
     consents: [
       'What I wrote on this form is true and complete, as far as I know. I am the patient, or I am filling this out for the patient as a parent, guardian or someone the patient has authorized.',
       'I will pay for any care my insurance does not cover, and any copays or deductibles. The office may send my insurance company the information it needs to process my claims, and my insurance company may pay the office directly.',
@@ -95,71 +153,146 @@ const TEXT = {
     printed: 'Printed name',
     forPatient: 'If you are signing for the patient:',
     forName: 'Your name', forRel: 'Your relationship to the patient',
+    thanks: 'Thank you for taking the time to fill this out. Please hand it to the front desk.',
   },
   es: {
     title: 'Visita de columna: formulario del paciente',
     sub: 'Escriba con letra de imprenta clara. Si necesita ayuda, pregunte en recepción. No hay respuestas incorrectas.',
     date: 'Fecha de hoy',
-    page: 'Página {n} de 3',
+    page: `Página {n} de ${PAGES}`,
+    office: 'Uso de la oficina: las páginas 1 a 4 van a Practice Hub. La página 5 se archiva con el registro.',
+    yes: 'Sí', no: 'No', none: 'Ninguno',
+
     s1: '1. Sobre usted',
-    first: 'Nombre', last: 'Apellido', dob: 'Fecha de nacimiento (mes / día / año)',
-    sex: 'Es usted', woman: 'Mujer', man: 'Hombre',
+    first: 'Nombre', last: 'Apellido',
     phone: 'Número de teléfono', email: 'Correo electrónico (si tiene)',
-    seen: '¿Ya ha visto a este médico antes?', seenNo: 'No, es mi primera visita', seenYes: 'Sí, ya he venido antes',
-    s2: '2. ¿Qué le molesta?',
+
+    s2: '2. ¿Qué lo trae hoy a la consulta?',
     s2hint: 'Cuéntenos con sus propias palabras. Por ejemplo: me duele la espalda baja y el dolor baja por la pierna derecha.',
+
     s3: '3. ¿Dónde le duele? Marque todo lo que corresponda.',
     areas: ['Cuello', 'Espalda alta o media', 'Espalda baja', 'Brazo o mano derecha', 'Brazo o mano izquierda', 'Pierna o pie derecho', 'Pierna o pie izquierdo'],
-    s4: '4. ¿Desde hace cuánto tiempo tiene este problema?',
+    other: 'Otro:',
+
+    s4: '4. Marque dónde le duele',
+    s4hint: 'Sombree o encierre en un círculo los lugares que le duelen. Dibuje una flecha para mostrar hacia dónde viaja el dolor. Escriba una X donde sienta entumecimiento u hormigueo.',
+    front: 'Frente', back: 'Espalda', right: 'Derecha', left: 'Izquierda',
+
+    s5: '5. ¿Desde hace cuánto tiempo tiene este problema?',
     durations: ['Menos de un mes', 'De 1 a 6 meses', 'De 6 meses a 2 años', 'Más de 2 años'],
-    s5: '5. ¿Qué tan fuerte es el dolor hoy? Encierre un número en un círculo.',
-    s5hint: '0 = sin dolor          10 = el peor dolor que pueda imaginar',
-    s6: '6. ¿Está mejorando, empeorando o sigue igual?',
+
+    s6: '6. ¿Qué tan fuerte es el dolor hoy? Encierre un número en un círculo.',
+    s6hint: '0 = sin dolor          10 = el peor dolor que pueda imaginar',
+
+    s7: '7. ¿Está mejorando, empeorando o sigue igual?',
     trends: ['Mejorando', 'Más o menos igual', 'Empeorando'],
-    s7: '7. Responda Sí o No.',
-    yes: 'Sí', no: 'No',
+
+    s8: '8. Responda Sí o No.',
     questions: [
       '¿Tiene entumecimiento u hormigueo en los brazos, las manos, las piernas o los pies?',
       '¿Tiene debilidad en un brazo o una pierna?',
       '¿Tiene dificultad para caminar o se siente inestable al caminar?',
       '¿Algún problema nuevo para controlar la vejiga o los intestinos?',
     ],
-    s8: '8. ¿Alguna vez le han operado la columna?',
-    s8detail: 'Si la respuesta es sí, ¿qué cirugía y aproximadamente cuándo?',
-    s9: '9. ¿Esto empezó con una lesión en el trabajo, un choque de auto u otro accidente?',
-    claims: ['No', 'Sí, me lastimé en el trabajo', 'Sí, un choque de auto u otro accidente'],
-    s9detail: 'Si la respuesta es sí, ¿cuándo pasó?',
-    s10: '10. ¿Ya ha probado alguno de estos? (Puede omitir esta pregunta.)',
-    tried: ['Fisioterapia', 'Quiropráctico', 'Inyecciones', 'Medicamentos para el dolor', 'Nada todavía'],
-    s11: '11. Medicamentos que toma todos los días',
-    s12: '12. Alergias a medicamentos',
-    s13: '13. Afecciones de salud (por ejemplo diabetes, corazón, presión alta)',
-    none: 'Ninguno',
-    s14: '14. Firme aquí',
+
+    s9: '9. ¿Ya ha probado alguno de estos? Marque lo que probó y cuéntenos.',
+    pt: 'Fisioterapia', ptWhen: 'Cuándo', ptWhere: 'Dónde', ptHowLong: 'Por cuánto tiempo (semanas o meses)', ptHowOften: 'Con qué frecuencia (veces por semana)',
+    chiro: 'Quiropráctico', chiroDetail: 'Cuándo y por cuánto tiempo',
+    inj: 'Inyecciones', injWhen: 'Cuándo', injHowMany: 'Cuántas', injType: 'De qué tipo (por ejemplo epidural, facetaria)', injLevel: 'En qué nivel, si lo sabe (por ejemplo L4-5)',
+    painMeds: 'Medicamentos para el dolor', painMedsDetail: 'Cuáles',
+    nothing: 'Nada todavía',
+
+    s10: '10. Medicamentos que toma todos los días',
+    s11: '11. Alergias a medicamentos',
+
+    s12: '12. Afecciones de salud. Marque las que tenga.',
+    conditions: [
+      'Presión alta', 'Diabetes', 'Enfermedad del corazón (arterias tapadas o infarto)',
+      'Insuficiencia cardíaca', 'Derrame cerebral', 'Coágulos de sangre (en la pierna o el pulmón)',
+      'Enfermedad pulmonar (EPOC, asma)', 'Apnea del sueño', 'Enfermedad de los riñones',
+      'Osteoporosis', 'Osteopenia', 'Tiroides baja (hipotiroidismo)',
+      'Tiroides alta (hipertiroidismo)', 'Artritis reumatoide u otra enfermedad autoinmune', 'Depresión o ansiedad',
+    ],
+    cancer: 'Cáncer', cancerType: 'De qué tipo', cancerWhen: 'Cuándo',
+    cancerTreated: 'Cómo se trató', cancerStatus: '¿Tratamiento en curso, o en remisión desde cuándo?',
+    infections: 'Infecciones graves (por ejemplo MRSA, infección de hueso o articulación): cuál y cuándo',
+    otherConditions: 'Otras afecciones',
+
+    s13: '13. Cirugías que ha tenido',
+    spineSurgery: '¿Alguna vez le han operado la columna?',
+    spineSurgeryDetail: 'Si la respuesta es sí, ¿qué cirugía y aproximadamente cuándo?',
+    surgeryList: 'Todas las demás cirugías, con el año (por ejemplo apéndice 1998, rodilla derecha 2015)',
+
+    s14: '14. Revisión por sistemas. Marque lo que tenga ahora.',
+    rosNone: 'No tengo ninguno de estos',
+    ros: [
+      { system: 'General', items: ['fiebre o escalofríos', 'pérdida de peso', 'sudores nocturnos'] },
+      { system: 'Corazón', items: ['dolor de pecho', 'latidos irregulares', 'hinchazón de piernas'] },
+      { system: 'Pulmones', items: ['falta de aire', 'tos que no se quita'] },
+      { system: 'Estómago', items: ['náuseas o vómitos', 'estreñimiento', 'sangre en las heces'] },
+      { system: 'Vejiga', items: ['dificultad para orinar', 'ardor', 'sangre en la orina'] },
+      { system: 'Nervios', items: ['dolores de cabeza', 'mareos o desmayos', 'convulsiones'] },
+      { system: 'Articulaciones', items: ['dolor en otras articulaciones', 'caídas recientes'] },
+      { system: 'Piel', items: ['sarpullido', 'llagas que no sanan'] },
+      { system: 'Sangre', items: ['moretones o sangrado fácil', 'tomo un anticoagulante'] },
+      { system: 'Ánimo y sueño', items: ['me siento decaído o ansioso', 'problemas para dormir'] },
+    ],
+
+    s15: '15. Sobre su vida',
+    job: 'Su trabajo o carrera (o su trabajo anterior, si está jubilado)',
+    living: '¿Con quién vive?',
+    livingOpts: ['Solo', 'Esposo(a) o pareja', 'Familia', 'Residencia asistida o asilo'],
+    stairs: '¿Tiene que subir escaleras en su casa?',
+    stairsOpts: ['No', 'Sí, unos escalones', 'Sí, un piso completo o más'],
+    activity: '¿Qué tan activo es usted?',
+    activityOpts: ['Muy activo', 'Algo activo', 'Casi siempre sentado', 'Casi siempre en cama'],
+    activities: '¿Qué hace de ejercicio, pasatiempos o deporte?',
+    walking: '¿Usa algo para ayudarse a caminar?',
+    walkOpts: ['Nada', 'Bastón', 'Andador', 'Silla de ruedas'],
+    smoke: '¿Fuma o vapea?',
+
+    s16: '16. Firme aquí',
     attest: 'Mis respuestas son verdaderas. La oficina puede llamarme o escribirme sobre mi atención.',
     signature: 'Firma', signDate: 'Fecha',
-    next: 'Pase a la página 3.',
-    thanks: 'Gracias por tomarse el tiempo de completar este formulario. Entréguelo en recepción.',
-    office: 'Uso de la oficina: las páginas 1 y 2 van a Practice Hub. La página 3 se archiva con el registro.',
-    // Page 3 (the acknowledgments) is printed in English on every form.
+    next: `Pase a la página ${PAGES}.`,
+    // Page 5 (the acknowledgments) is printed in English on every form.
   },
 };
 
 /** A handwritten-looking answer set, drawn onto the sample copy only. */
 const SAMPLE_ANSWERS = {
-  first: 'Margaret', last: 'Okafor', dob: '03 / 15 / 1950', sex: 'woman', phone: '(201) 555-0142', email: '',
-  seen: 'no',
+  first: 'Margaret', last: 'Okafor', phone: '(201) 555-0142', email: '',
   story: ['My low back hurts and the pain goes down my', 'right leg to the foot. It is worse when I walk', 'more than one block. Started after I moved', 'some boxes in July.'],
-  areas: ['Low back', 'Right leg or foot'], duration: '1 to 6 months', pain: 7, trend: 'Getting worse',
-  yesno: ['yes', 'no', 'no', 'no'], surgery: 'no', surgeryText: '', claim: 'No', injuryDate: '',
-  tried: ['Physical therapy', 'Pain medicine'],
+  areas: ['Low back', 'Right leg or foot'], otherArea: '',
+  duration: '1 to 6 months', pain: 7, trend: 'Getting worse',
+  yesno: ['yes', 'no', 'no', 'no'],
+  tried: ['pt', 'painMeds'],
+  ptWhen: 'Aug - Sept 2026', ptWhere: 'Englewood PT', ptHowLong: '6 weeks', ptHowOften: '2 x week',
+  chiroDetail: '', injWhen: '', injHowMany: '', injType: '', injLevel: '',
+  painMedsDetail: 'Tylenol, Advil',
   meds: ['Lisinopril 10 mg', 'Metformin 500 mg twice a day'], allergies: [], allergiesNone: true,
-  conditions: ['High blood pressure', 'Diabetes'],
-  signature: 'Margaret Okafor', date: '10 / 29 / 2026', printed: 'MARGARET OKAFOR', consents: true,
+  conditions: ['High blood pressure', 'Diabetes', 'Osteopenia'], cancer: false,
+  cancerType: '', cancerWhen: '', cancerTreated: '', cancerStatus: '', infections: '', otherConditions: [],
+  spineSurgery: 'no', spineSurgeryText: '', surgeries: ['Gallbladder 2009', 'Left cataract 2022'],
+  rosNone: false, ros: { Joints: ['recent falls'], 'Mood and sleep': ['trouble sleeping'] },
+  job: 'Retired school secretary', living: 'Spouse or partner', stairs: 'Yes, a full flight or more',
+  activity: 'Somewhat active', activities: 'Walking, church choir, gardening', walking: 'Cane', smoke: 'no',
+  signature: 'Margaret Okafor', date: '10 / 30 / 2026', printed: 'MARGARET OKAFOR', consents: true,
 };
+
+// The body outline for the pain diagram, in a 100 x 220 box (origin top
+// left), as a closed polygon from the left of the neck around and back.
+const BODY = [
+  [43, 31], [43, 36], [26, 42], [14, 70], [6, 105], [4, 120], [12, 122], [17, 108], [28, 62],
+  [29, 100], [27, 120], [26, 160], [27, 205], [24, 215], [40, 215], [42, 205], [44, 160], [48, 128], [50, 126],
+  [52, 128], [56, 160], [58, 205], [60, 215], [76, 215], [73, 205], [74, 160], [73, 120], [71, 100],
+  [72, 62], [83, 108], [88, 122], [96, 120], [94, 105], [86, 70], [74, 42], [57, 36], [57, 31],
+];
+const HEAD = { cx: 50, cy: 18, r: 13 };
 
 async function build(lang) {
   const T = TEXT[lang];
+  const E = TEXT.en;
   const pdf = await PDFDocument.create();
   pdf.setTitle(T.title);
   const reg = await pdf.embedFont(StandardFonts.Helvetica);
@@ -222,23 +355,37 @@ async function build(lang) {
       page.drawLine({ start: { x: x + size / 2.2, y: yy - size + 5.5 }, end: { x: x + size - 2, y: yy + 1 }, thickness: 2, color: PEN });
     }
   };
-  /** Checkbox options laid across the width, wrapping to new rows. */
-  const options = (opts, chosen = [], cols = 2) => {
+  /** A checkbox with its label at the current line; the caller moves y. */
+  const check = (x, label, on, size = 11.5) => {
+    box(x, y, on);
+    page.drawText(label, { x: x + 19, y: y - 10, size, font: reg, color: INK });
+  };
+  /** Checkbox options laid across the width in columns; a long label wraps inside its column. */
+  const options = (opts, chosen = [], cols = 2, size = 11.5) => {
     const colW = CW / cols;
     for (let i = 0; i < opts.length; i += cols) {
       const row = opts.slice(i, i + cols);
+      let rowLines = 1;
       row.forEach((o, j) => {
         const x = M + j * colW;
         box(x, y, chosen.includes(o));
-        page.drawText(o, { x: x + 19, y: y - 10, size: 11.5, font: reg, color: INK });
+        const ls = wrap(o, size, reg, colW - 26);
+        rowLines = Math.max(rowLines, ls.length);
+        ls.forEach((l, k) => page.drawText(l, { x: x + 19, y: y - 10 - k * 13, size, font: reg, color: INK }));
       });
-      y -= 22;
+      y -= 9 + rowLines * 13;
     }
   };
+  /** A labelled line to write on: the label in small grey above a rule 28 pt down. The caller moves y (36 for a row). */
   const field = (label, x, width, value = '') => {
     page.drawText(label, { x, y: y - 9, size: 9.5, font: reg, color: GREY });
     page.drawLine({ start: { x, y: y - 28 }, end: { x: x + width, y: y - 28 }, thickness: 0.8, color: LINE });
     if (SAMPLE && value) page.drawText(value, { x: x + 4, y: y - 25, size: 12.5, font: pen, color: PEN });
+  };
+  const fieldRow = (a, b) => {
+    field(a[0], M, CW / 2 - 10, a[1]);
+    if (b) field(b[0], M + CW / 2 + 10, CW / 2 - 10, b[1]);
+    y -= 36;
   };
   /**
    * Ruled lines to write on. With `none` given, the first line is shorter and
@@ -258,16 +405,7 @@ async function build(lang) {
     }
     y -= 4;
   };
-  /** The footer sits at y = 28; the page's last line may not run into it. */
-  const fits = () => {
-    if (y - 14 < 44) throw new Error(`${lang}: page ${pageNo} overflows by ${Math.round(44 - (y - 14))} pt; shorten something`);
-  };
-  /** A bare Yes / No row at the left, for a question the heading already asks. */
-  const yesNoRow = (answer) => {
-    box(M, y, answer === 'yes'); page.drawText(T.yes, { x: M + 19, y: y - 10, size: 11.5, font: reg, color: INK });
-    box(M + 68, y, answer === 'no'); page.drawText(T.no, { x: M + 87, y: y - 10, size: 11.5, font: reg, color: INK });
-    y -= 24;
-  };
+  /** A question at the left with Yes / No boxes at the right. */
   const yesNo = (q, answer) => {
     const ls = wrap(q, 11.5, reg, CW - 150);
     const top = y;
@@ -277,34 +415,83 @@ async function build(lang) {
     box(bx + 68, top, answer === 'no'); page.drawText(T.no, { x: bx + 87, y: top - 10, size: 11.5, font: reg, color: INK });
     y -= Math.max(ls.length * 14, 16) + 6;
   };
+  /** The footer sits at y = 28; the page's last line may not run into it. */
+  const fits = () => {
+    if (y - 14 < 44) throw new Error(`${lang}: page ${pageNo} overflows by ${Math.round(44 - (y - 14))} pt; shorten something`);
+  };
+
+  /** One body outline with its top-left corner at (x0, top), scaled by s. */
+  const body = (x0, top, s, isBack) => {
+    const P = (p) => ({ x: x0 + p[0] * s, y: top - p[1] * s });
+    for (let i = 0; i < BODY.length; i += 1) {
+      page.drawLine({ start: P(BODY[i]), end: P(BODY[(i + 1) % BODY.length]), thickness: 1, color: INK });
+    }
+    page.drawCircle({ x: x0 + HEAD.cx * s, y: top - HEAD.cy * s, size: HEAD.r * s, borderColor: INK, borderWidth: 1 });
+    if (isBack) {
+      // The spine, so the patient can place neck, mid-back and low-back pain.
+      page.drawLine({ start: P([50, 36]), end: P([50, 124]), thickness: 0.8, color: GREY, dashArray: [3, 3] });
+    }
+    const caption = isBack ? T.back : T.front;
+    page.drawText(caption, { x: x0 + 50 * s - bold.widthOfTextAtSize(caption, 10.5) / 2, y: top - 220 * s - 13, size: 10.5, font: bold, color: NAVY });
+    // The patient's right is on the viewer's left from the front, and on the right from the back.
+    const [lhs, rhs] = isBack ? [T.left, T.right] : [T.right, T.left];
+    page.drawText(lhs, { x: x0 - 2 - reg.widthOfTextAtSize(lhs, 9), y: top - 60 * s, size: 9, font: reg, color: GREY });
+    page.drawText(rhs, { x: x0 + 100 * s + 2, y: top - 60 * s, size: 9, font: reg, color: GREY });
+    return P;
+  };
+
   const S = SAMPLE ? SAMPLE_ANSWERS : null;
+  const enIdx = (list, v) => (v == null ? -1 : list.indexOf(v));
+  const pick = (listKey, v) => (v == null ? [] : [T[listKey][enIdx(E[listKey], v)]]);
+  const picks = (listKey, vs) => (vs || []).map((v) => T[listKey][enIdx(E[listKey], v)]);
 
   // ---------------------------------------------------------------- page 1
   newPage();
   heading(T.s1);
-  field(T.first, M, CW / 2 - 10, S?.first); field(T.last, M + CW / 2 + 10, CW / 2 - 10, S?.last); y -= 36;
-  field(T.dob, M, CW / 2 - 10, S?.dob);
-  page.drawText(T.sex, { x: M + CW / 2 + 10, y: y - 9, size: 9.5, font: reg, color: GREY });
-  box(M + CW / 2 + 10, y - 14, S?.sex === 'woman'); page.drawText(T.woman, { x: M + CW / 2 + 29, y: y - 24, size: 11.5, font: reg, color: INK });
-  box(M + CW / 2 + 110, y - 14, S?.sex === 'man'); page.drawText(T.man, { x: M + CW / 2 + 129, y: y - 24, size: 11.5, font: reg, color: INK });
-  y -= 36;
-  field(T.phone, M, CW / 2 - 10, S?.phone); field(T.email, M + CW / 2 + 10, CW / 2 - 10, S?.email); y -= 36;
-  text(T.seen, 11.5);
-  y -= 4;
-  options([T.seenNo, T.seenYes], S ? [S.seen === 'no' ? T.seenNo : T.seenYes] : []);
+  fieldRow([T.first, S?.first], [T.last, S?.last]);
+  fieldRow([T.phone, S?.phone], [T.email, S?.email]);
 
   heading(T.s2);
   para(T.s2hint);
   lines(4, S?.story);
 
   heading(T.s3);
-  options(T.areas, S ? S.areas.map((a) => T.areas[TEXT.en.areas.indexOf(a)]) : [], 2);
+  options(T.areas, picks('areas', S?.areas), 2);
+  // "Other: ____" takes the free slot at the end of the last row.
+  y += 22;
+  check(M + CW / 2, T.other, S ? !!S.otherArea : false);
+  const ox = M + CW / 2 + 19 + reg.widthOfTextAtSize(T.other, 11.5) + 6;
+  page.drawLine({ start: { x: ox, y: y - 12 }, end: { x: M + CW, y: y - 12 }, thickness: 0.8, color: LINE });
+  if (SAMPLE && S.otherArea) page.drawText(S.otherArea, { x: ox + 3, y: y - 9, size: 12.5, font: pen, color: PEN });
+  y -= 22;
 
   heading(T.s4);
-  options(T.durations, S ? [T.durations[TEXT.en.durations.indexOf(S.duration)]] : [], 2);
+  para(T.s4hint);
+  y -= 6;
+  {
+    const s = 0.93;
+    const top = y;
+    body(M + CW / 4 - 50 * s, top, s, false);
+    const PB = body(M + (3 * CW) / 4 - 50 * s, top, s, true);
+    if (SAMPLE) {
+      // Low back shaded, an arrow down the right leg (viewer's right from the back).
+      page.drawEllipse({ x: PB([50, 108]).x, y: PB([50, 108]).y, xScale: 16 * s, yScale: 8 * s, borderColor: PEN, borderWidth: 2 });
+      const a = PB([52, 118]); const b = PB([66, 200]);
+      page.drawLine({ start: a, end: b, thickness: 2, color: PEN });
+      page.drawLine({ start: b, end: { x: b.x - 7, y: b.y + 3 }, thickness: 2, color: PEN });
+      page.drawLine({ start: b, end: { x: b.x + 1, y: b.y + 8 }, thickness: 2, color: PEN });
+    }
+    y = top - 220 * s - 18;
+  }
+  fits();
 
+  // ---------------------------------------------------------------- page 2
+  newPage();
   heading(T.s5);
-  para(T.s5hint);
+  options(T.durations, pick('durations', S?.duration), 2);
+
+  heading(T.s6);
+  para(T.s6hint);
   y -= 6;
   for (let n = 0; n <= 10; n += 1) {
     const x = M + 12 + n * (CW - 24) / 10;
@@ -314,54 +501,97 @@ async function build(lang) {
   }
   y -= 34;
 
-  heading(T.s6);
-  options(T.trends, S ? [T.trends[TEXT.en.trends.indexOf(S.trend)]] : [], 3);
-
-  fits();
-
-  // ---------------------------------------------------------------- page 2
-  newPage();
   heading(T.s7);
-  T.questions.forEach((q, i) => yesNo(q, S?.yesno[i]));
+  options(T.trends, pick('trends', S?.trend), 3);
 
   heading(T.s8);
-  yesNoRow(S?.surgery);
-  y += 6;
-  field(T.s8detail, M, CW, S?.surgeryText); y -= 36;
+  T.questions.forEach((q, i) => yesNo(q, S?.yesno[i]));
 
   heading(T.s9);
-  options(T.claims, S ? [T.claims[TEXT.en.claims.indexOf(S.claim)]] : [], 2);
-  y += 6;
-  field(T.s9detail, M, CW, S?.injuryDate); y -= 36;
-
-  heading(T.s10);
-  options(T.tried, S ? S.tried.map((a) => T.tried[TEXT.en.tried.indexOf(a)]) : [], 3);
-
-  heading(T.s11);
-  lines(3, S?.meds, S ? !S.meds.length : false);
-
-  heading(T.s12);
-  lines(1, S?.allergies, S ? S.allergiesNone : false);
-
-  heading(T.s13);
-  lines(2, S?.conditions, S ? !S.conditions.length : false);
-
-  heading(T.s14);
-  para(T.attest, 10.5, INK);
-  y -= 4;
-  field(T.signature, M, CW / 2 - 10, S?.signature); field(T.signDate, M + CW / 2 + 10, CW / 2 - 10, S?.date); y -= 36;
-  page.drawText(T.next, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
+  const tried = (k) => (S ? S.tried.includes(k) : false);
+  check(M, T.pt, tried('pt')); y -= 22;
+  fieldRow([T.ptWhen, S?.ptWhen], [T.ptWhere, S?.ptWhere]);
+  fieldRow([T.ptHowLong, S?.ptHowLong], [T.ptHowOften, S?.ptHowOften]);
+  check(M, T.chiro, tried('chiro')); field(T.chiroDetail, M + 190, CW - 190, S?.chiroDetail); y -= 36;
+  check(M, T.inj, tried('inj')); y -= 22;
+  fieldRow([T.injWhen, S?.injWhen], [T.injHowMany, S?.injHowMany]);
+  fieldRow([T.injType, S?.injType], [T.injLevel, S?.injLevel]);
+  check(M, T.painMeds, tried('painMeds')); field(T.painMedsDetail, M + 190, CW - 190, S?.painMedsDetail); y -= 36;
+  check(M, T.nothing, tried('nothing')); y -= 22;
   fits();
 
   // ---------------------------------------------------------------- page 3
-  // The acknowledgments, in English on every form. Pages 1 and 2 are the
-  // clinical form Practice Hub reads; this page is filed with registration.
-  const E = TEXT.en;
   newPage();
-  heading(E.s15);
+  heading(T.s10);
+  lines(3, S?.meds, S ? !S.meds.length : false);
+
+  heading(T.s11);
+  lines(1, S?.allergies, S ? S.allergiesNone : false);
+
+  heading(T.s12);
+  options(T.conditions, picks('conditions', S?.conditions), 3);
+  y -= 4;
+  check(M, T.cancer, S ? S.cancer : false); y -= 22;
+  fieldRow([T.cancerType, S?.cancerType], [T.cancerWhen, S?.cancerWhen]);
+  fieldRow([T.cancerTreated, S?.cancerTreated], [T.cancerStatus, S?.cancerStatus]);
+  field(T.infections, M, CW, S?.infections); y -= 36;
+  field(T.otherConditions, M, CW, S?.otherConditions?.[0]); y -= 36;
+
+  heading(T.s13);
+  yesNo(T.spineSurgery, S?.spineSurgery);
+  y += 4;
+  field(T.spineSurgeryDetail, M, CW, S?.spineSurgeryText); y -= 36;
   y -= 2;
-  // Larger type than the questions: there is room, and this is the page
-  // that gets read slowly.
+  page.drawText(T.surgeryList, { x: M, y: y - 9, size: 9.5, font: reg, color: GREY });
+  y -= 8;
+  lines(3, S?.surgeries);
+  fits();
+
+  // ---------------------------------------------------------------- page 4
+  newPage();
+  heading(T.s14);
+  check(M, T.rosNone, S ? S.rosNone : false); y -= 24;
+  const LABEL_W = 96;
+  T.ros.forEach((sys, si) => {
+    page.drawText(sys.system, { x: M, y: y - 10, size: 10.5, font: bold, color: INK });
+    let x = M + LABEL_W;
+    let lineY = y;
+    sys.items.forEach((item, ii) => {
+      const w = reg.widthOfTextAtSize(item, 10.5) + 15 + 14;
+      if (x + w > M + CW + 2) { x = M + LABEL_W; lineY -= 16; }
+      const on = S ? (S.ros[E.ros[si].system] || []).includes(E.ros[si].items[ii]) : false;
+      box(x, lineY, on, 11);
+      page.drawText(item, { x: x + 15, y: lineY - 9, size: 10.5, font: reg, color: INK });
+      x += w;
+    });
+    y = lineY - 19;
+  });
+
+  heading(T.s15);
+  field(T.job, M, CW, S?.job); y -= 36;
+  text(T.living, 11.5); y -= 4;
+  options(T.livingOpts, pick('livingOpts', S?.living), 4);
+  text(T.stairs, 11.5); y -= 4;
+  options(T.stairsOpts, pick('stairsOpts', S?.stairs), 3);
+  text(T.activity, 11.5); y -= 4;
+  options(T.activityOpts, pick('activityOpts', S?.activity), 4);
+  field(T.activities, M, CW, S?.activities); y -= 36;
+  text(T.walking, 11.5); y -= 4;
+  options(T.walkOpts, pick('walkOpts', S?.walking), 4);
+  yesNo(T.smoke, S?.smoke);
+
+  heading(T.s16);
+  para(T.attest, 10.5, INK);
+  y -= 4;
+  fieldRow([T.signature, S?.signature], [T.signDate, S?.date]);
+  page.drawText(T.next, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
+  fits();
+
+  // ---------------------------------------------------------------- page 5
+  // The acknowledgments, in English on every form. Filed with registration.
+  newPage();
+  heading(E.s17);
+  y -= 2;
   for (const statement of E.consents) {
     box(M, y - 1, S ? S.consents : false, 15);
     const ls = wrap(statement, 13, reg, CW - 28);
@@ -377,6 +607,7 @@ async function build(lang) {
   page.drawText(E.thanks, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
   fits();
 
+  if (pageNo !== PAGES) throw new Error(`${lang}: ${pageNo} pages drawn but the footer says ${PAGES}`);
   return pdf.save();
 }
 

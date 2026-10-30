@@ -194,16 +194,29 @@ Older patients found the full adult spine form too long, so:
   answers land in the full form's fields, so note, PDF, Practice Hub and
   the handouts are unchanged.
 - **The paper form** (`scripts/build-paper-intake.mjs` ->
-  `public/paper/spine-intake-paper-en.pdf`, `-es.pdf`): the same questions
-  on two letter pages, large type, big boxes, middle-school reading level,
-  plus a third page with the five acknowledgments of `lib/consent.js` in
-  plain words (English on every form, by the user's choice) and its own
-  signature block. Pages 1 and 2 are the clinical form the hub reads; page
-  3 is filed with the registration paperwork. Neither the short form nor
-  the paper form asks for insurance details (the office has the card; the
-  assignment-of-benefits statement still mentions insurance). The build
-  fails if a page would run into the footer. `--sample` writes a filled
-  copy to `.pdf-tmp/` for testing the reader.
+  `public/paper/spine-intake-paper-en.pdf`, `-es.pdf`): five letter pages,
+  large type, big boxes, middle-school reading level. Pages 1 to 4 are the
+  clinical form the hub reads (2026-10-30 shape, at the user's direction):
+  name and contact only (no date of birth, sex or "seen before": those are
+  on the registration), what brings you in, where it hurts with an "Other"
+  line, a front-and-back body diagram to mark pain, its travel and numbness
+  (vector outlines in the script, no image), how long, 0-10, better or
+  worse, the four safety questions, treatments tried with details (PT when,
+  where, how long, how often; injections when, how many, type, level),
+  medicines, allergies, fifteen common conditions plus cancer (type, when,
+  treated, ongoing or remission since) and serious infections, spine and
+  other surgeries, a ten-system review of systems with "none of these",
+  social history (job, who they live with, stairs, activity level,
+  activities, walking aid, smoking), and the signature. No work-injury or
+  claim question. Page 5 is the five acknowledgments of `lib/consent.js`
+  in plain words (English on every form) with its own signature block,
+  filed with registration. No insurance details anywhere (the office has
+  the card; the assignment-of-benefits statement still mentions insurance).
+  The build fails if a page would run into the footer or the page count
+  changes. `--sample` writes a filled copy to `.pdf-tmp/` for testing the
+  reader; the hub reader's prompt already describes body-diagram marks
+  into `symptoms.painLocations`. PyMuPDF is installed locally, so pages
+  can be rendered to PNG and checked by eye.
 - **Scan to note** lives in Practice Hub (its own commit e104ef7, "Paper
   intake forms"): the "Paper intake form" panel on the Intake forms page and
   on each chart photographs or scans the pages, `src/server/paper-intake.ts`
