@@ -204,15 +204,17 @@ Older patients found the full adult spine form too long, so:
   title cropped off; positions on it are fractions in `FIG`), how long,
   0-10, better or
   worse, the four safety questions, treatments tried with details (PT when,
-  where, how long, how often; injections when, how many, type, level),
+  where, how long, how often; a row of alternative-therapy boxes:
+  chiropractor, dry needling, massage, acupuncture, cupping, home
+  exercises; injections when, how many, type and level; pain medicine),
   medicines, allergies, fifteen common conditions plus cancer (type, when,
   treated, ongoing or remission since) and serious infections, spine and
   other surgeries, a ten-system review of systems with "none of these",
-  social history (job, who they live with, stairs, activity level,
-  activities, walking aid, smoking), and the signature. No work-injury or
-  claim question. Page 5 is the five acknowledgments of `lib/consent.js`
-  in plain words (English on every form) with its own signature block,
-  filed with registration. No insurance details anywhere (the office has
+  and social history (job, who they live with, stairs, activity level,
+  activities, walking aid, smoking). No work-injury or claim question and
+  no signature on the clinical pages. Page 5 is the five acknowledgments
+  of `lib/consent.js` in plain words (English on every form) with the one
+  signature block, filed with registration. No insurance details anywhere (the office has
   the card; the assignment-of-benefits statement still mentions insurance).
   The build fails if a page would run into the footer or the page count
   changes. `--sample` writes a filled copy to `.pdf-tmp/` for testing the

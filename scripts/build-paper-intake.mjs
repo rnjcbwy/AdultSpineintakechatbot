@@ -81,7 +81,7 @@ const TEXT = {
 
     s9: '9. Have you already tried any of these? Check what you tried and tell us about it.',
     pt: 'Physical therapy', ptWhen: 'When', ptWhere: 'Where', ptHowLong: 'How long', ptHowOften: 'How often (times a week)',
-    chiro: 'Chiropractor', chiroDetail: 'When, and for how long',
+    alternatives: ['Chiropractor', 'Dry needling', 'Massage therapy', 'Acupuncture', 'Cupping', 'Home exercises'],
     inj: 'Injections', injWhen: 'When', injHowMany: 'How many', injType: 'What type, and which level if you know (for example epidural L4-5)',
     painMeds: 'Pain medicine', painMedsDetail: 'Which ones',
     nothing: 'Nothing yet',
@@ -135,14 +135,12 @@ const TEXT = {
     walkOpts: ['Nothing', 'Cane', 'Walker', 'Wheelchair'],
     smoke: 'Do you smoke or vape?',
 
-    s16: '16. Please sign',
-    attest: 'My answers are true to the best of my knowledge. The office may call or email me about my care.',
     signature: 'Signature', signDate: 'Date',
-    next: `Please turn to page ${PAGES}.`,
+    next: `Please turn to page ${PAGES} and sign there.`,
 
     // Page 5: the acknowledgments the online form collects (lib/consent.js),
-    // in plain words. English on every form. The signed sheet is the record.
-    s17: '17. Please read each statement, check the box, and sign',
+    // in plain words, and the one signature. English on every form.
+    s16: '16. Please read each statement, check the box, and sign',
     consents: [
       'What I wrote on this form is true and complete, as far as I know. I am the patient, or I am filling this out for the patient as a parent, guardian or someone the patient has authorized.',
       'I will pay for any care my insurance does not cover, and any copays or deductibles. The office may send my insurance company the information it needs to process my claims, and my insurance company may pay the office directly.',
@@ -197,7 +195,7 @@ const TEXT = {
 
     s9: '9. ¿Ya ha probado alguno de estos? Marque lo que probó y cuéntenos.',
     pt: 'Fisioterapia', ptWhen: 'Cuándo', ptWhere: 'Dónde', ptHowLong: 'Por cuánto tiempo', ptHowOften: 'Veces por semana',
-    chiro: 'Quiropráctico', chiroDetail: 'Cuándo y por cuánto tiempo',
+    alternatives: ['Quiropráctico', 'Punción seca', 'Masaje terapéutico', 'Acupuntura', 'Ventosas', 'Ejercicios en casa'],
     inj: 'Inyecciones', injWhen: 'Cuándo', injHowMany: 'Cuántas', injType: 'De qué tipo y en qué nivel, si lo sabe (por ejemplo epidural L4-5)',
     painMeds: 'Medicamentos para el dolor', painMedsDetail: 'Cuáles',
     nothing: 'Nada todavía',
@@ -251,10 +249,8 @@ const TEXT = {
     walkOpts: ['Nada', 'Bastón', 'Andador', 'Silla de ruedas'],
     smoke: '¿Fuma o vapea?',
 
-    s16: '16. Firme aquí',
-    attest: 'Mis respuestas son verdaderas. La oficina puede llamarme o escribirme sobre mi atención.',
     signature: 'Firma', signDate: 'Fecha',
-    next: `Pase a la página ${PAGES}.`,
+    next: `Pase a la página ${PAGES} y firme allí.`,
     // Page 5 (the acknowledgments) is printed in English on every form.
   },
 };
@@ -266,9 +262,9 @@ const SAMPLE_ANSWERS = {
   areas: ['Low back', 'Right leg or foot'], otherArea: '',
   duration: '1 to 6 months', pain: 7, trend: 'Getting worse',
   yesno: ['yes', 'no', 'no', 'no'],
-  tried: ['pt', 'painMeds'],
+  tried: ['pt', 'painMeds'], alternatives: ['Massage therapy'],
   ptWhen: 'Aug - Sept 2026', ptWhere: 'Englewood PT', ptHowLong: '6 weeks', ptHowOften: '2 x week',
-  chiroDetail: '', injWhen: '', injHowMany: '', injType: '',
+  injWhen: '', injHowMany: '', injType: '',
   painMedsDetail: 'Tylenol, Advil',
   meds: ['Lisinopril 10 mg', 'Metformin 500 mg twice a day'], allergies: [], allergiesNone: true,
   conditions: ['High blood pressure', 'Diabetes', 'Osteopenia'], cancer: false,
@@ -527,11 +523,11 @@ async function build(lang) {
   const tried = (k) => (S ? S.tried.includes(k) : false);
   check(M, T.pt, tried('pt')); y -= 22;
   fieldsRow([[T.ptWhen, S?.ptWhen], [T.ptWhere, S?.ptWhere], [T.ptHowLong, S?.ptHowLong], [T.ptHowOften, S?.ptHowOften]]);
-  check(M, T.chiro, tried('chiro')); field(T.chiroDetail, M + 190, CW - 190, S?.chiroDetail); y -= 36;
+  options(T.alternatives, picks('alternatives', S?.alternatives), 3);
   check(M, T.inj, tried('inj')); y -= 22;
   fieldsRow([[T.injWhen, S?.injWhen], [T.injHowMany, S?.injHowMany], [T.injType, S?.injType]], [0.2, 0.2, 0.6]);
   check(M, T.painMeds, tried('painMeds')); field(T.painMedsDetail, M + 190, CW - 190, S?.painMedsDetail); y -= 36;
-  check(M, T.nothing, tried('nothing')); y -= 22;
+  check(M, T.nothing, tried('nothing')); y -= 14;
   fits();
 
   // ---------------------------------------------------------------- page 3
@@ -593,18 +589,15 @@ async function build(lang) {
   text(T.walking, 11.5); y -= 4;
   options(T.walkOpts, pick('walkOpts', S?.walking), 4);
   yesNo(T.smoke, S?.smoke);
-
-  heading(T.s16);
-  para(T.attest, 10.5, INK);
-  y -= 4;
-  fieldRow([T.signature, S?.signature], [T.signDate, S?.date]);
+  y -= 6;
   page.drawText(T.next, { x: M, y: y - 11, size: 11, font: bold, color: TEAL });
   fits();
 
   // ---------------------------------------------------------------- page 5
-  // The acknowledgments, in English on every form. Filed with registration.
+  // The acknowledgments and the one signature, in English on every form.
+  // Filed with registration.
   newPage();
-  heading(E.s17);
+  heading(E.s16);
   y -= 2;
   for (const statement of E.consents) {
     box(M, y - 1, S ? S.consents : false, 15);
