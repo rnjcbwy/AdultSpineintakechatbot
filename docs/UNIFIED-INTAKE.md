@@ -208,8 +208,14 @@ Older patients found the full adult spine form too long, so:
   The short form's welcome does not advertise the detailed form;
   `?form=full` still opens it, and its welcome offers the short form back.
   On a one-service site the detailed form's triage no longer asks who the
-  form is for (a "Filling this out for someone else?" link reveals it) and
-  the demographics step folds insurance and referral away as optional. The
+  form is for (a "Filling this out for someone else?" link reveals it),
+  never calls the model and has no "here is what we understood" box: it
+  asks the injury-or-accident question outright in plain words (and, for a
+  returning patient, which kind of visit), so one Continue moves on. Its
+  "Where is the problem?" offers right/left arm or hand and right/left
+  leg or foot on the spine site, seeded into the chief complaint's
+  regions. The demographics step folds insurance and referral away as
+  optional. The
   answers land in the full form's fields, so note, PDF, Practice Hub and
   the handouts are unchanged.
 - **The paper form** (`scripts/build-paper-intake.mjs` ->

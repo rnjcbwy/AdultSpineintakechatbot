@@ -21,7 +21,7 @@ const LOCAL = {
   'Male': { es: 'Masculino', zh: '男' },
   'Non-binary': { es: 'No binario', zh: '非二元' },
   'Prefer not to say': { es: 'Prefiero no decirlo', zh: '不愿透露' },
-  'Pronouns (optional)': { es: 'Pronombres (opcional)', zh: '代词（可选）' },
+  'Pronouns': { es: 'Pronombres', zh: '代词' },
   'For example: she/her, he/him, they/them': { es: 'Por ejemplo: ella, él, elle', zh: '例如：她、他、TA' },
   'Phone number': { es: 'Número de teléfono', zh: '电话号码' },
   'Email (if you have one)': { es: 'Correo electrónico (si tiene)', zh: '电子邮件（如有）' },
@@ -91,7 +91,7 @@ export default function SimpleBasics({ onNext, onBack }) {
         <Card title={t('Gender')}>
           <BigChoice t={t} options={[{ id: 'Female', label: 'Female' }, { id: 'Male', label: 'Male' }, { id: 'Non-binary', label: 'Non-binary' }, { id: 'Prefer not to say', label: 'Prefer not to say' }]} value={d.sex} onChange={(x) => setField('demographics', 'sex', x)} />
           <details className="mt-3">
-            <summary className="cursor-pointer text-base font-medium text-teal-600">{t('Pronouns (optional)')}</summary>
+            <summary className="cursor-pointer text-base font-medium text-teal-600">{t('Pronouns')}</summary>
             <input type="text" className="mt-3" value={d.pronouns || ''} onChange={(e) => setField('demographics', 'pronouns', e.target.value)} placeholder={t('For example: she/her, he/him, they/them')} />
           </details>
         </Card>

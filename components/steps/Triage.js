@@ -25,6 +25,10 @@ const KIND = ['A new problem', 'A follow-up for a problem seen here before', 'A 
 const KIND_OF = { new: KIND[0], followup: KIND[1], postop: KIND[2] };
 const VISIT_KIND_OF = { [KIND[0]]: 'new', [KIND[1]]: 'followup', [KIND[2]]: 'postop' };
 const CLAIM_OF = { none: CLAIM_OPTIONS[0], workers_comp: CLAIM_OPTIONS[1], personal_injury: CLAIM_OPTIONS[2] };
+// The claim question in plain words (the stored answers stay CLAIM_OPTIONS).
+const PLAIN_CLAIM = ['No', 'Yes, I was hurt at work', 'Yes, a car crash or other accident'];
+const PLAIN_OF = { [CLAIM_OPTIONS[0]]: PLAIN_CLAIM[0], [CLAIM_OPTIONS[1]]: PLAIN_CLAIM[1], [CLAIM_OPTIONS[2]]: PLAIN_CLAIM[2] };
+const CLAIM_FROM_PLAIN = { [PLAIN_CLAIM[0]]: CLAIM_OPTIONS[0], [PLAIN_CLAIM[1]]: CLAIM_OPTIONS[1], [PLAIN_CLAIM[2]]: CLAIM_OPTIONS[2] };
 
 /**
  * The first real screen. Who the visit is for, where the problem is, whether
@@ -164,18 +168,20 @@ export default function Triage({ onNext, onBack }) {
   const pedsOrtho = svc.key === 'peds_ortho';
   const track = data.pedsOrtho?.track || '';
   const allSet = !!svc.specialty && !!kind && !!claim && !!v.type && (!pedsOrtho || !!track);
-  // Before the model has been asked, Continue asks it; afterwards it needs the three rows settled.
-  const canGoNext = basicsDone && !busy && !childOnAdultSite && (!asked || allSet);
+  // A one-service site asks the two remaining questions outright and never
+  // waits on the model. Elsewhere, before the model has been asked, Continue
+  // asks it; afterwards it needs the three rows settled.
+  const canGoNext = basicsDone && !busy && !childOnAdultSite && (LOCKED_SERVICE ? allSet : (!asked || allSet));
 
   const next = async () => {
-    if (!asked && description.length >= 3 && !allSet) { await classify(); return; }
-    if (!asked) { setAsked(true); return; }
+    if (!LOCKED_SERVICE && !asked && description.length >= 3 && !allSet) { await classify(); return; }
+    if (!LOCKED_SERVICE && !asked) { setAsked(true); return; }
     if (!allSet) return;
     seedComplaint();
     onNext();
   };
 
-  const showCard = asked || understood;
+  const showCard = !LOCKED_SERVICE && (asked || understood);
 
   return (
     <div className="animate-fade-in">
@@ -230,6 +236,35 @@ export default function Triage({ onNext, onBack }) {
           rows={3}
         />
       </div>
+
+      {LOCKED_SERVICE && (
+        <div className="card mt-4 space-y-4">
+          {returning && (
+            <Chips
+              label="This visit is"
+              options={KIND}
+              value={KIND_OF[kind] || ''}
+              onChange={(x) => applyVisit({ kind: VISIT_KIND_OF[x] })}
+              hint={kind === 'new' ? 'The form asks about the new problem in full; the history already on file is only brought up to date.' : kind === 'followup' || kind === 'postop' ? 'Your history is on file, so the form will only ask what has changed.' : undefined}
+            />
+          )}
+          <Chips
+            label="Did this start with an injury at work, a car crash or another accident?"
+            options={PLAIN_CLAIM}
+            value={PLAIN_OF[claim] || ''}
+            onChange={(x) => applyVisit({ claim: CLAIM_FROM_PLAIN[x] })}
+          />
+          {pedsOrtho && (
+            <Chips
+              label="Is this visit about a broken bone or a recent injury?"
+              options={FRACTURE.map((o) => t(o))}
+              value={track === 'fracture' ? t(FRACTURE[0]) : track === 'full' ? t(FRACTURE[1]) : ''}
+              onChange={(x) => { setNested('pedsOrtho.track', x === t(FRACTURE[0]) ? 'fracture' : 'full'); trimCompleted(); }}
+              hint={track === 'fracture' ? 'The form asks about the injury and the cast or splint, and skips the longer questions.' : undefined}
+            />
+          )}
+        </div>
+      )}
 
       {showCard && (
         <div className="card mt-4 border-teal-200 bg-teal-50 animate-fade-in" role="status">
