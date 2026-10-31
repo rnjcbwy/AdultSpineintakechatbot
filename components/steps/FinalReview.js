@@ -63,7 +63,7 @@ const LOCAL = {
   // Field labels
   'Name': { es: 'Nombre', zh: '姓名' },
   'DOB': { es: 'Fecha de nacimiento', zh: '出生日期' },
-  'Sex': { es: 'Sexo', zh: '性别' },
+  'Gender': { es: 'Género', zh: '性别' },
   'Phone': { es: 'Teléfono', zh: '电话' },
   'Visit reason': { es: 'Motivo de la visita', zh: '就诊原因' },
   'Main concern': { es: 'Preocupación principal', zh: '主要问题' },
@@ -430,7 +430,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
             ...(child ? [{ label: 'Completed by', value: byParent ? [g.name, g.relationship && t(g.relationship)].filter(Boolean).join(' · ') : t('The patient') }] : []),
             { label: 'Name', value: `${data.demographics?.firstName || ''} ${data.demographics?.lastName || ''}`.trim() },
             { label: 'DOB', value: data.demographics.dob },
-            { label: 'Sex', value: data.demographics.sex },
+            { label: 'Gender', value: data.demographics.sex },
             { label: 'Phone', value: data.demographics.phone },
           ]}
         />

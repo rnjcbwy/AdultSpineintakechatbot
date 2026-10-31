@@ -13,17 +13,15 @@ const LOCAL = {
   'First name': { es: 'Nombre', zh: '名字' },
   'Last name': { es: 'Apellido', zh: '姓氏' },
   'Date of birth': { es: 'Fecha de nacimiento', zh: '出生日期' },
-  'Are you a man or a woman?': { es: '¿Es usted hombre o mujer?', zh: '您的性别是？' },
   'Woman': { es: 'Mujer', zh: '女' },
   'Man': { es: 'Hombre', zh: '男' },
   'How can we reach you?': { es: '¿Cómo podemos comunicarnos con usted?', zh: '我们如何联系您？' },
-  'Sex': { es: 'Sexo', zh: '性别' },
-  'As it appears on your ID or insurance card. The doctor needs this for your care.': { es: 'Como aparece en su identificación o tarjeta de seguro. El médico lo necesita para su atención.', zh: '以您的证件或保险卡上的为准。医生的诊疗需要这项信息。' },
+  'Gender': { es: 'Género', zh: '性别' },
   'Female': { es: 'Femenino', zh: '女' },
   'Male': { es: 'Masculino', zh: '男' },
-  'Non-binary or other': { es: 'No binario u otro', zh: '非二元或其他' },
+  'Non-binary': { es: 'No binario', zh: '非二元' },
   'Prefer not to say': { es: 'Prefiero no decirlo', zh: '不愿透露' },
-  'Pronouns or gender identity (optional)': { es: 'Pronombres o identidad de género (opcional)', zh: '代词或性别认同（可选）' },
+  'Pronouns (optional)': { es: 'Pronombres (opcional)', zh: '代词（可选）' },
   'For example: she/her, he/him, they/them': { es: 'Por ejemplo: ella, él, elle', zh: '例如：她、他、TA' },
   'Phone number': { es: 'Número de teléfono', zh: '电话号码' },
   'Email (if you have one)': { es: 'Correo electrónico (si tiene)', zh: '电子邮件（如有）' },
@@ -90,11 +88,10 @@ export default function SimpleBasics({ onNext, onBack }) {
         <Card title={t('Date of birth')}>
           <input type="date" value={d.dob || ''} max={new Date().toISOString().slice(0, 10)} onChange={(e) => { setField('demographics', 'dob', e.target.value); setField('demographics', 'age', ageFrom(e.target.value)); }} />
         </Card>
-        <Card title={t('Sex')}>
-          <p className="text-base text-gray-600 mb-3">{t('As it appears on your ID or insurance card. The doctor needs this for your care.')}</p>
-          <BigChoice t={t} options={[{ id: 'Female', label: 'Female' }, { id: 'Male', label: 'Male' }, { id: 'Other', label: 'Non-binary or other' }, { id: 'Prefer not to say', label: 'Prefer not to say' }]} value={d.sex} onChange={(x) => setField('demographics', 'sex', x)} />
+        <Card title={t('Gender')}>
+          <BigChoice t={t} options={[{ id: 'Female', label: 'Female' }, { id: 'Male', label: 'Male' }, { id: 'Non-binary', label: 'Non-binary' }, { id: 'Prefer not to say', label: 'Prefer not to say' }]} value={d.sex} onChange={(x) => setField('demographics', 'sex', x)} />
           <details className="mt-3">
-            <summary className="cursor-pointer text-base font-medium text-teal-600">{t('Pronouns or gender identity (optional)')}</summary>
+            <summary className="cursor-pointer text-base font-medium text-teal-600">{t('Pronouns (optional)')}</summary>
             <input type="text" className="mt-3" value={d.pronouns || ''} onChange={(e) => setField('demographics', 'pronouns', e.target.value)} placeholder={t('For example: she/her, he/him, they/them')} />
           </details>
         </Card>

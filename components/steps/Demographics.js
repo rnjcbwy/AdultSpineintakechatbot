@@ -63,7 +63,8 @@ const LOCAL = {
   'Date of Birth *': { es: 'Fecha de nacimiento *', zh: '出生日期 *' },
   'Age': { es: 'Edad', zh: '年龄' },
   'Calculated from DOB': { es: 'Calculado a partir de la fecha de nacimiento', zh: '根据出生日期计算' },
-  'Sex *': { es: 'Sexo *', zh: '性别 *' },
+  'Gender *': { es: 'Género *', zh: '性别 *' },
+  'Non-binary': { es: 'No binario', zh: '非二元' },
   'Male': { es: 'Masculino', zh: '男性' },
   'Female': { es: 'Femenino', zh: '女性' },
   'Other': { es: 'Otro', zh: '其他' },
@@ -308,11 +309,12 @@ export default function Demographics({ onNext, onBack }) {
         />
       </div>
       <div>
-        <label className="form-label">{t('Sex *')}</label>
+        <label className="form-label">{t('Gender *')}</label>
         <select value={d.sex} onChange={(e) => updateField('sex', e.target.value)}>
           <option value="">{t('Select...')}</option>
-          <option value="Male">{t('Male')}</option>
           <option value="Female">{t('Female')}</option>
+          <option value="Male">{t('Male')}</option>
+          <option value="Non-binary">{t('Non-binary')}</option>
           <option value="Other">{t('Other')}</option>
           <option value="Prefer not to say">{t('Prefer not to say')}</option>
         </select>
