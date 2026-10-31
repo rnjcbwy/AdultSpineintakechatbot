@@ -17,6 +17,14 @@ const LOCAL = {
   'Woman': { es: 'Mujer', zh: '女' },
   'Man': { es: 'Hombre', zh: '男' },
   'How can we reach you?': { es: '¿Cómo podemos comunicarnos con usted?', zh: '我们如何联系您？' },
+  'Sex': { es: 'Sexo', zh: '性别' },
+  'As it appears on your ID or insurance card. The doctor needs this for your care.': { es: 'Como aparece en su identificación o tarjeta de seguro. El médico lo necesita para su atención.', zh: '以您的证件或保险卡上的为准。医生的诊疗需要这项信息。' },
+  'Female': { es: 'Femenino', zh: '女' },
+  'Male': { es: 'Masculino', zh: '男' },
+  'Non-binary or other': { es: 'No binario u otro', zh: '非二元或其他' },
+  'Prefer not to say': { es: 'Prefiero no decirlo', zh: '不愿透露' },
+  'Pronouns or gender identity (optional)': { es: 'Pronombres o identidad de género (opcional)', zh: '代词或性别认同（可选）' },
+  'For example: she/her, he/him, they/them': { es: 'Por ejemplo: ella, él, elle', zh: '例如：她、他、TA' },
   'Phone number': { es: 'Número de teléfono', zh: '电话号码' },
   'Email (if you have one)': { es: 'Correo electrónico (si tiene)', zh: '电子邮件（如有）' },
   'A phone number or an email is needed.': { es: 'Se necesita un teléfono o un correo electrónico.', zh: '请至少提供电话或电子邮件。' },
@@ -45,9 +53,9 @@ export default function SimpleBasics({ onNext, onBack }) {
   const v = data.visit || {};
   const seen = v.type === 'followup' || v.type === 'postop' ? 'Yes, I have been here before' : v.type ? 'No, this is my first visit' : '';
 
-  // Normally chosen on the welcome screen (the two big cards); asked here only
-  // when the form was opened some other way and the visit is still unset.
-  const askSeen = !v.type;
+  // This one answer chooses the branch: a return visit gets the shorter
+  // "what has changed" path (lib/services/spine/flow.js).
+  const askSeen = true;
   const setSeen = (answer) => {
     const followup = answer === 'Yes, I have been here before';
     for (const [path, value] of Object.entries(visitAnswers(followup))) {
@@ -82,8 +90,13 @@ export default function SimpleBasics({ onNext, onBack }) {
         <Card title={t('Date of birth')}>
           <input type="date" value={d.dob || ''} max={new Date().toISOString().slice(0, 10)} onChange={(e) => { setField('demographics', 'dob', e.target.value); setField('demographics', 'age', ageFrom(e.target.value)); }} />
         </Card>
-        <Card title={t('Are you a man or a woman?')}>
-          <BigChoice t={t} options={[{ id: 'Female', label: 'Woman' }, { id: 'Male', label: 'Man' }]} value={d.sex} onChange={(x) => setField('demographics', 'sex', x)} />
+        <Card title={t('Sex')}>
+          <p className="text-base text-gray-600 mb-3">{t('As it appears on your ID or insurance card. The doctor needs this for your care.')}</p>
+          <BigChoice t={t} options={[{ id: 'Female', label: 'Female' }, { id: 'Male', label: 'Male' }, { id: 'Other', label: 'Non-binary or other' }, { id: 'Prefer not to say', label: 'Prefer not to say' }]} value={d.sex} onChange={(x) => setField('demographics', 'sex', x)} />
+          <details className="mt-3">
+            <summary className="cursor-pointer text-base font-medium text-teal-600">{t('Pronouns or gender identity (optional)')}</summary>
+            <input type="text" className="mt-3" value={d.pronouns || ''} onChange={(e) => setField('demographics', 'pronouns', e.target.value)} placeholder={t('For example: she/her, he/him, they/them')} />
+          </details>
         </Card>
         <Card title={t('How can we reach you?')}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -680,11 +680,11 @@ export default function FinalReview({ onBack, onGoToStep }) {
           />
         )}
 
-        {has('ros') && (
+        {(has('ros') || has('simple-ros')) && (
           <ReviewCard
             t={t}
             title="Review of Systems"
-            onEdit={() => go('ros')}
+            onEdit={() => go(has('ros') ? 'ros' : 'simple-ros')}
             items={[
               { label: 'Completed', value: t('Yes') },
             ]}

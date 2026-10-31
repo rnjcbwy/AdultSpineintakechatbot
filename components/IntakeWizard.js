@@ -11,7 +11,7 @@ const STEP_MINUTES = {
   'chief-complaint': 1, 'pain-map': 1, 'symptom-details': 2, 'spine-history': 2, treatments: 1, records: 2, 'clinical-photos': 1,
   pmh: 1, psh: 1, medications: 1, allergies: 1, social: 1, family: 1, ros: 1, proms: 3, review: 1,
   'fx-basics': 1, 'fx-health': 1,
-  'simple-basics': 1, 'simple-story': 2, 'simple-questions': 1, 'simple-health': 1,
+  'simple-basics': 1, 'simple-story': 2, 'simple-questions': 1, 'simple-health': 1, 'simple-ros': 1,
 };
 
 const CHROME = {

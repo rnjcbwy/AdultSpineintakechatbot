@@ -181,20 +181,29 @@ Older patients found the full adult spine form too long, so:
 
 - **The short form** (`lib/simple.js`, `components/steps/simple/*`) is the
   DEFAULT on intake.aaronweymd.com (mode `simple`, set on load and kept
-  across "start a new form" when the site lock is adult_spine). The welcome
-  asks one thing, as the peds ortho form does: "Which kind of visit is
-  this?" with two cards (first visit or new problem, about 5 minutes; been
-  here before, about 3 minutes); the card sets the visit (`visitAnswers`)
-  and opens the first screen. Then: about you (name, birth date, sex,
-  phone or email; nothing about who is filling it in), what is bothering
+  across "start a new form" when the site lock is adult_spine). The spine
+  site's welcome is one decision point (2026-10-31, the user's wording):
+  a short paragraph saying more detail helps and is appreciated, then two
+  cards, "Detailed form" (15 to 20 minutes) and "Short form" (5 minutes);
+  the card sets the mode and opens the first screen. The short form's
+  first screen asks "Have you seen this doctor before?", which is the
+  branch (a return visit gets the shorter "what has changed" path), and
+  asks sex as Female / Male / Non-binary or other / Prefer not to say
+  with an optional folded pronouns line (`demographics.pronouns`); the
+  note keeps opening with age and sex. Then: about you (name, birth date,
+  sex, phone or email; nothing about who is filling it in), what is bothering
   you (own words + dictation, seven big area buttons, how long, pain 0-10,
   better/worse), a few yes/no questions (the safety screen, prior spine
   surgery, work injury or accident in plain words, optional "already
   tried"), three health questions (medicines: No / Yes / "Yes, but I do
   not have my list with me" (`medications.listPending`, the note says the
   list is coming), the photo fill folded under a link, allergies,
-  conditions as eight big buttons plus an optional line), sign and send
-  with a one-tap "agree to all". A returning patient gets four screens.
+  conditions as eight big buttons plus an optional line), a review of
+  systems (`SimpleRos`: the spine screen list as big buttons plus "None
+  of these", stored exactly as the full form's short list, mode `screen`;
+  items answered on the questions screen are carried over, not asked
+  again), sign and send with a one-tap "agree to all". A returning
+  patient gets five screens (no health screen).
   The thank-you says "Your intake is complete." and hides the note review.
   The short form's welcome does not advertise the detailed form;
   `?form=full` still opens it, and its welcome offers the short form back.

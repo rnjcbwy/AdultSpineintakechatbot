@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
-import { visitAnswers } from '../../lib/simple';
 
 const T = {
   en: {
@@ -52,11 +51,11 @@ const T = {
       'Your medicines and allergies',
       'Your signature, and you are done',
     ],
-    simpleVisitQ: 'Which kind of visit is this?',
-    simpleNew: 'My first visit, or a new problem',
-    simpleNewHint: 'About 5 minutes. What is bothering you, a few questions, your medicines.',
-    simpleReturn: 'I have been here before',
-    simpleReturnHint: 'About 3 minutes. What has changed since your last visit.',
+    chooseIntro: 'There are two ways to fill this out. More detail helps us prepare for your visit, so if you have the time, the detailed form is a real help and we appreciate it. If you would rather keep it short, the short form asks fewer, more basic questions.',
+    chooseDetailed: 'Detailed form',
+    chooseDetailedHint: 'About 15 to 20 minutes. Your full story, your history and a short questionnaire. The most help to the doctor.',
+    chooseShort: 'Short form',
+    chooseShortHint: 'About 5 minutes. What is bothering you, a few questions, your medicines.',
     fullPrefix: 'Prefer to give more detail? ',
     fullLink: 'Use the detailed form',
     simpleLink: 'Use the short form instead',
@@ -114,11 +113,11 @@ const T = {
       'Sus medicamentos y alergias',
       'Su firma, y listo',
     ],
-    simpleVisitQ: '¿Qué tipo de visita es esta?',
-    simpleNew: 'Mi primera visita, o un problema nuevo',
-    simpleNewHint: 'Unos 5 minutos. Qué le molesta, unas preguntas, sus medicamentos.',
-    simpleReturn: 'Ya he venido antes',
-    simpleReturnHint: 'Unos 3 minutos. Qué ha cambiado desde su última visita.',
+    chooseIntro: 'Hay dos maneras de llenar esto. Más detalle nos ayuda a prepararnos para su visita, así que si tiene tiempo, el formulario detallado es una gran ayuda y se lo agradecemos. Si prefiere algo corto, el formulario corto hace menos preguntas y más básicas.',
+    chooseDetailed: 'Formulario detallado',
+    chooseDetailedHint: 'Unos 15 a 20 minutos. Toda su historia, sus antecedentes y un cuestionario corto. La mayor ayuda para el médico.',
+    chooseShort: 'Formulario corto',
+    chooseShortHint: 'Unos 5 minutos. Qué le molesta, unas preguntas, sus medicamentos.',
     fullPrefix: '¿Prefiere dar más detalles? ',
     fullLink: 'Use el formulario detallado',
     simpleLink: 'Use el formulario corto',
@@ -176,11 +175,11 @@ const T = {
       '您的药物和过敏情况',
       '签名，然后就完成了',
     ],
-    simpleVisitQ: '这是哪种就诊？',
-    simpleNew: '第一次就诊，或有新问题',
-    simpleNewHint: '大约 5 分钟。哪里不舒服、几个问题、您的药物。',
-    simpleReturn: '我以前来过',
-    simpleReturnHint: '大约 3 分钟。自上次就诊以来有什么变化。',
+    chooseIntro: '有两种填写方式。更多的细节能帮助我们为您的就诊做好准备，如果您有时间，详细表格对我们帮助很大，我们非常感谢。如果您想简短一些，简短表格的问题更少、更基本。',
+    chooseDetailed: '详细表格',
+    chooseDetailedHint: '大约 15 到 20 分钟。您的完整情况、病史和一份简短问卷。对医生最有帮助。',
+    chooseShort: '简短表格',
+    chooseShortHint: '大约 5 分钟。哪里不舒服、几个问题、您的药物。',
     fullPrefix: '想提供更多细节？',
     fullLink: '使用详细表格',
     simpleLink: '改用简短表格',
@@ -289,15 +288,16 @@ export default function Welcome({ onNext }) {
   const simple = data.mode === 'simple';
   // A one-service site (lib/siteLock.js) has its own title, mark and links.
   const lockSpec = lockedSpecialty();
-  // The detailed form can come back to the short one; the short form's
-  // welcome does not advertise the detailed one (?form=full still opens it).
-  const canSwitch = lockSpec === 'spine' && !fracture && !simple;
+  // The spine site's welcome is the one decision point: the detailed form or
+  // the short one, as two cards. Neither mode shows the old switch link.
+  const chooser = lockSpec === 'spine' && !fracture;
+  const canSwitch = false;
 
-  // The short form's one branch, chosen here: a first visit or a new problem,
-  // or a return visit. Then straight into the first screen.
-  const startSimple = (followup) => {
+  // Start the chosen form: the mode is set, then straight into the first
+  // screen (the short form's first screen asks whether this is a return visit).
+  const startWith = (mode) => {
     const begin = () => {
-      for (const [path, value] of Object.entries(visitAnswers(followup))) setNested(path, value);
+      setMode(mode);
       setTimeout(onNext, 50);
     };
     if (kiosk || hasExisting) {
@@ -325,7 +325,7 @@ export default function Welcome({ onNext }) {
           {fracture ? t.fxTitle : simple ? t.simpleTitle : lockSpec === 'spine' ? t.spineTitle : lockSpec === 'ortho' ? t.orthoTitle : t.title}
         </h1>
         <p className="text-base md:text-lg text-gray-500 leading-relaxed max-w-md mx-auto mb-7">
-          {fracture ? t.fxSubtitle : simple ? t.simpleSubtitle : lockSpec === 'spine' ? t.spineSubtitle : lockSpec === 'ortho' ? t.orthoSubtitle : t.subtitle}
+          {fracture ? t.fxSubtitle : chooser ? t.spineSubtitle : simple ? t.simpleSubtitle : lockSpec === 'spine' ? t.spineSubtitle : lockSpec === 'ortho' ? t.orthoSubtitle : t.subtitle}
         </p>
 
         {/* Language selector */}
@@ -357,21 +357,21 @@ export default function Welcome({ onNext }) {
           </div>
         )}
 
-        {simple ? (
-          /* The short form: two big cards, one tap, and the form begins. */
+        {chooser ? (
+          /* The one decision: the detailed form or the short one. */
           <div className="mb-6 mt-6">
             {!kiosk && hasExisting && (
               <button onClick={onNext} className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block mb-6">
                 {t.continue}
               </button>
             )}
-            <p className="text-base font-medium text-navy-600 mb-3">{t.simpleVisitQ}</p>
+            <p className="text-base text-gray-600 leading-relaxed mb-4 text-left">{t.chooseIntro}</p>
             <div className="space-y-3 text-left">
-              {[[false, t.simpleNew, t.simpleNewHint], [true, t.simpleReturn, t.simpleReturnHint]].map(([followup, title, hint]) => (
+              {[['full', t.chooseDetailed, t.chooseDetailedHint], ['simple', t.chooseShort, t.chooseShortHint]].map(([mode, title, hint]) => (
                 <button
-                  key={title}
+                  key={mode}
                   type="button"
-                  onClick={() => startSimple(followup)}
+                  onClick={() => startWith(mode)}
                   className="w-full text-left bg-white rounded-2xl border-2 border-navy-100 hover:border-teal-400 focus:border-teal-400 px-5 py-4 transition-all"
                 >
                   <span className="block text-lg font-semibold text-navy-600">{title}</span>
@@ -426,7 +426,7 @@ export default function Welcome({ onNext }) {
 
         {kiosk && (
           <div className="space-y-3 mb-3">
-            {!simple && (
+            {!chooser && (
             <button
               onClick={() => {
                 // A new form, but in the language the patient just picked:
@@ -468,12 +468,12 @@ export default function Welcome({ onNext }) {
           </div>
         )}
         <div className="space-y-3">
-          {!kiosk && !simple && hasExisting && (
+          {!kiosk && !chooser && hasExisting && (
             <button onClick={onNext} className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block">
               {t.continue}
             </button>
           )}
-          {!kiosk && !simple && (
+          {!kiosk && !chooser && (
           <button
             onClick={() => {
               if (hasExisting) {
