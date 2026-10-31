@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
+import { visitAnswers } from '../../lib/simple';
 
 const T = {
   en: {
@@ -51,6 +52,11 @@ const T = {
       'Your medicines and allergies',
       'Your signature, and you are done',
     ],
+    simpleVisitQ: 'Which kind of visit is this?',
+    simpleNew: 'My first visit, or a new problem',
+    simpleNewHint: 'About 5 minutes. What is bothering you, a few questions, your medicines.',
+    simpleReturn: 'I have been here before',
+    simpleReturnHint: 'About 3 minutes. What has changed since your last visit.',
     fullPrefix: 'Prefer to give more detail? ',
     fullLink: 'Use the detailed form',
     simpleLink: 'Use the short form instead',
@@ -108,6 +114,11 @@ const T = {
       'Sus medicamentos y alergias',
       'Su firma, y listo',
     ],
+    simpleVisitQ: '¿Qué tipo de visita es esta?',
+    simpleNew: 'Mi primera visita, o un problema nuevo',
+    simpleNewHint: 'Unos 5 minutos. Qué le molesta, unas preguntas, sus medicamentos.',
+    simpleReturn: 'Ya he venido antes',
+    simpleReturnHint: 'Unos 3 minutos. Qué ha cambiado desde su última visita.',
     fullPrefix: '¿Prefiere dar más detalles? ',
     fullLink: 'Use el formulario detallado',
     simpleLink: 'Use el formulario corto',
@@ -165,6 +176,11 @@ const T = {
       '您的药物和过敏情况',
       '签名，然后就完成了',
     ],
+    simpleVisitQ: '这是哪种就诊？',
+    simpleNew: '第一次就诊，或有新问题',
+    simpleNewHint: '大约 5 分钟。哪里不舒服、几个问题、您的药物。',
+    simpleReturn: '我以前来过',
+    simpleReturnHint: '大约 3 分钟。自上次就诊以来有什么变化。',
     fullPrefix: '想提供更多细节？',
     fullLink: '使用详细表格',
     simpleLink: '改用简短表格',
@@ -273,7 +289,29 @@ export default function Welcome({ onNext }) {
   const simple = data.mode === 'simple';
   // A one-service site (lib/siteLock.js) has its own title, mark and links.
   const lockSpec = lockedSpecialty();
-  const canSwitch = lockSpec === 'spine' && !fracture;
+  // The detailed form can come back to the short one; the short form's
+  // welcome does not advertise the detailed one (?form=full still opens it).
+  const canSwitch = lockSpec === 'spine' && !fracture && !simple;
+
+  // The short form's one branch, chosen here: a first visit or a new problem,
+  // or a return visit. Then straight into the first screen.
+  const startSimple = (followup) => {
+    const begin = () => {
+      for (const [path, value] of Object.entries(visitAnswers(followup))) setNested(path, value);
+      setTimeout(onNext, 50);
+    };
+    if (kiosk || hasExisting) {
+      if (!kiosk && !confirm(t.resetConfirm)) return;
+      // A new form, but in the language the patient just picked: the reset
+      // would otherwise put the next page back in English.
+      const lang = data.language;
+      resetIntake();
+      if (lang && lang !== 'en') setLanguage(lang);
+      setTimeout(begin, 100);
+      return;
+    }
+    begin();
+  };
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
@@ -319,21 +357,48 @@ export default function Welcome({ onNext }) {
           </div>
         )}
 
-        {/* No redirects: the next step works out who the form is for and what it is about. */}
-        <p className="text-sm font-medium uppercase tracking-[0.12em] text-gray-400 mb-3 mt-6">
-          {fracture ? t.fxDescription : simple ? t.simpleDescription : t.description}
-        </p>
+        {simple ? (
+          /* The short form: two big cards, one tap, and the form begins. */
+          <div className="mb-6 mt-6">
+            {!kiosk && hasExisting && (
+              <button onClick={onNext} className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block mb-6">
+                {t.continue}
+              </button>
+            )}
+            <p className="text-base font-medium text-navy-600 mb-3">{t.simpleVisitQ}</p>
+            <div className="space-y-3 text-left">
+              {[[false, t.simpleNew, t.simpleNewHint], [true, t.simpleReturn, t.simpleReturnHint]].map(([followup, title, hint]) => (
+                <button
+                  key={title}
+                  type="button"
+                  onClick={() => startSimple(followup)}
+                  className="w-full text-left bg-white rounded-2xl border-2 border-navy-100 hover:border-teal-400 focus:border-teal-400 px-5 py-4 transition-all"
+                >
+                  <span className="block text-lg font-semibold text-navy-600">{title}</span>
+                  <span className="block text-sm text-gray-500 mt-1">{hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* No redirects: the next step works out who the form is for and what it is about. */}
+            <p className="text-sm font-medium uppercase tracking-[0.12em] text-gray-400 mb-3 mt-6">
+              {fracture ? t.fxDescription : t.description}
+            </p>
 
-        <ul className="bg-white rounded-2xl border border-navy-100 p-2 mb-8 text-left">
-          {(fracture ? t.fxSteps : simple ? t.simpleSteps : t.steps).map((label, i) => (
-            <li key={i} className="flex items-center gap-4 px-4 py-3 text-gray-700 rounded-xl">
-              <span className="flex items-center justify-center w-7 h-7 flex-shrink-0 bg-navy-50 text-navy-600 rounded-full text-xs font-semibold tabular-nums">
-                {i + 1}
-              </span>
-              <span>{label}</span>
-            </li>
-          ))}
-        </ul>
+            <ul className="bg-white rounded-2xl border border-navy-100 p-2 mb-8 text-left">
+              {(fracture ? t.fxSteps : t.steps).map((label, i) => (
+                <li key={i} className="flex items-center gap-4 px-4 py-3 text-gray-700 rounded-xl">
+                  <span className="flex items-center justify-center w-7 h-7 flex-shrink-0 bg-navy-50 text-navy-600 rounded-full text-xs font-semibold tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span>{label}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
 
         {canSwitch && (
           <p className="text-sm text-gray-600 mb-4">
@@ -361,6 +426,7 @@ export default function Welcome({ onNext }) {
 
         {kiosk && (
           <div className="space-y-3 mb-3">
+            {!simple && (
             <button
               onClick={() => {
                 // A new form, but in the language the patient just picked:
@@ -374,6 +440,7 @@ export default function Welcome({ onNext }) {
             >
               {t.kioskStart || 'Start a new intake form'}
             </button>
+            )}
             {!codeOpen ? (
               <button onClick={() => setCodeOpen(true)} className="btn-secondary text-base px-8 py-3 w-full max-w-xs mx-auto block">
                 {t.kioskCode || 'Enter clinic code'}
@@ -401,12 +468,12 @@ export default function Welcome({ onNext }) {
           </div>
         )}
         <div className="space-y-3">
-          {!kiosk && hasExisting && (
+          {!kiosk && !simple && hasExisting && (
             <button onClick={onNext} className="btn-primary text-lg px-10 py-4 w-full max-w-xs mx-auto block">
               {t.continue}
             </button>
           )}
-          {!kiosk && (
+          {!kiosk && !simple && (
           <button
             onClick={() => {
               if (hasExisting) {

@@ -78,6 +78,7 @@ const LOCAL = {
   'ZIP': { es: 'Código postal', zh: '邮政编码' },
   'ZIP code': { es: 'Código postal', zh: '邮政编码' },
   'Insurance & Referral': { es: 'Seguro y referencia', zh: '保险与转诊' },
+  '(optional: skip this if the office already has your card)': { es: '(opcional: omita esto si la oficina ya tiene su tarjeta)', zh: '（可选：如果诊所已有您的保险卡，可跳过）' },
   'Insurance Provider': { es: 'Compañía de seguros', zh: '保险公司' },
   'Insurance company name': { es: 'Nombre de la compañía de seguros', zh: '保险公司名称' },
   'Member ID': { es: 'Número de miembro', zh: '会员编号' },
@@ -618,10 +619,13 @@ export default function Demographics({ onNext, onBack }) {
           </div>
         )}
 
-        {/* Insurance & Referral */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-navy-600 mb-1">{t(child ? 'Insurance' : 'Insurance & Referral')}</h3>
-          <p className="text-sm text-gray-500 mb-4 leading-relaxed">{t('If the office already has your insurance and nothing has changed, leave this blank.')}</p>
+        {/* Insurance & Referral, folded away: the office usually has the card already. */}
+        <details className="card" open={!!(d.insuranceProvider || d.memberId || d.referringProvider)}>
+          <summary className="cursor-pointer text-lg font-medium text-navy-600">
+            {t(child ? 'Insurance' : 'Insurance & Referral')}{' '}
+            <span className="text-sm font-normal text-gray-500">{t('(optional: skip this if the office already has your card)')}</span>
+          </summary>
+          <p className="text-sm text-gray-500 mt-3 mb-4 leading-relaxed">{t('If the office already has your insurance and nothing has changed, leave this blank.')}</p>
           <UploadToFill section="insurance" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -728,7 +732,7 @@ export default function Demographics({ onNext, onBack }) {
           <p className="text-xs text-gray-400 mt-3">{t(child
             ? 'If your child does not have an appointment yet, this is what the office needs to verify benefits and request records before scheduling.'
             : 'If you do not have an appointment yet, this is what the office needs to verify your benefits and request your records before scheduling.')}</p>
-        </div>
+        </details>
 
         {/* Emergency Contact (a second parent or guardian for a child) */}
         <Collapsible

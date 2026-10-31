@@ -55,6 +55,11 @@ export default function Triage({ onNext, onBack }) {
   const regionChoices = lockSpec ? TRIAGE_REGIONS.filter((r) => r.specialty === lockSpec || !r.specialty) : TRIAGE_REGIONS;
   const childOnAdultSite = !!LOCKED_SERVICE && patient === 'child';
   const [elsewhere, setElsewhere] = useState('');
+  // On a one-service site the form is for the person filling it in unless they say otherwise.
+  const [whoOpen, setWhoOpen] = useState(!!tri.who && tri.who !== WHO[0]);
+  useEffect(() => {
+    if (LOCKED_SERVICE && !tri.who) setNested('triage.who', WHO[0]);
+  }, [tri.who, setNested]);
   const regions = tri.regions || [];
   const byRegions = specialtyFromRegions(regions);
   const description = String(tri.description || '').trim();
@@ -180,7 +185,14 @@ export default function Triage({ onNext, onBack }) {
       </div>
 
       <div className="card">
-        <Chips label="Who is this form for?" options={WHO} value={tri.who || ''} onChange={(x) => setNested('triage.who', x)} />
+        {/* An adult site assumes the patient is filling it in; the question is one tap away for a helper. */}
+        {LOCKED_SERVICE && !whoOpen ? (
+          <p className="text-sm text-gray-600">
+            <button type="button" className="font-semibold text-teal-600 underline" onClick={() => setWhoOpen(true)}>{t('Filling this out for someone else?')}</button>
+          </p>
+        ) : (
+          <Chips label="Who is this form for?" options={WHO} value={tri.who || ''} onChange={(x) => setNested('triage.who', x)} />
+        )}
         {childOnAdultSite && (
           <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
             <p className="font-medium">{t('Children and teenagers have their own form, with questions made for their age.')}</p>

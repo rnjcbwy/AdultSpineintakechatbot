@@ -2,6 +2,7 @@
 
 import { useIntake } from '../../../lib/store';
 import { useLang, makeT, COMMON } from '../../../lib/i18n';
+import { visitAnswers } from '../../../lib/simple';
 import StepNavigation from '../../ui/StepNavigation';
 import { Card, BigChoice } from './Big';
 
@@ -44,19 +45,20 @@ export default function SimpleBasics({ onNext, onBack }) {
   const v = data.visit || {};
   const seen = v.type === 'followup' || v.type === 'postop' ? 'Yes, I have been here before' : v.type ? 'No, this is my first visit' : '';
 
+  // Normally chosen on the welcome screen (the two big cards); asked here only
+  // when the form was opened some other way and the visit is still unset.
+  const askSeen = !v.type;
   const setSeen = (answer) => {
     const followup = answer === 'Yes, I have been here before';
-    setNested('visit.choice', followup ? 'followup' : 'new');
-    setNested('visit.hadSurgery', followup ? 'No' : '');
-    setNested('visit.workInjury', v.workInjury || 'No');
-    setNested('visit.type', followup ? 'followup' : 'new');
-    setNested('triage.firstTime', followup ? 'No, I have seen this doctor before' : 'Yes, my first time with this doctor');
-    setField('demographics', 'visitReason', followup ? 'Follow-up visit' : 'New patient or new problem');
+    for (const [path, value] of Object.entries(visitAnswers(followup))) {
+      if (path === 'visit.workInjury' && v.workInjury) continue;
+      setNested(path, value);
+    }
     const here = data.currentStep || 0;
     setNested('completedSteps', (data.completedSteps || []).filter((i) => i <= here));
   };
 
-  const canGoNext = !!(d.firstName && d.lastName && d.dob && d.sex && (d.phone || d.email) && (!d.email || isEmail(d.email)) && seen);
+  const canGoNext = !!(d.firstName && d.lastName && d.dob && d.sex && (d.phone || d.email) && (!d.email || isEmail(d.email)) && (!askSeen || seen));
 
   return (
     <div className="animate-fade-in">
@@ -96,9 +98,11 @@ export default function SimpleBasics({ onNext, onBack }) {
           </div>
           {!d.phone && !d.email && <p className="text-sm text-gray-500">{t('A phone number or an email is needed.')}</p>}
         </Card>
-        <Card title={t('Have you seen this doctor before?')}>
-          <BigChoice t={t} options={['No, this is my first visit', 'Yes, I have been here before']} value={seen} onChange={setSeen} />
-        </Card>
+        {askSeen && (
+          <Card title={t('Have you seen this doctor before?')}>
+            <BigChoice t={t} options={['No, this is my first visit', 'Yes, I have been here before']} value={seen} onChange={setSeen} />
+          </Card>
+        )}
       </div>
       <StepNavigation onNext={onNext} onBack={onBack} canGoNext={canGoNext} />
     </div>

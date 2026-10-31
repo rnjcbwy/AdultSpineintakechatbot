@@ -181,16 +181,26 @@ Older patients found the full adult spine form too long, so:
 
 - **The short form** (`lib/simple.js`, `components/steps/simple/*`) is the
   DEFAULT on intake.aaronweymd.com (mode `simple`, set on load and kept
-  across "start a new form" when the site lock is adult_spine). Five screens:
-  about you, what is bothering you (own words + dictation, seven big area
-  buttons, how long, pain 0-10, better/worse), a few yes/no questions (the
-  safety screen, prior spine surgery, work injury or accident in plain words,
-  optional "already tried"),
-  three health questions (medicines with the photo fill, allergies,
-  conditions), sign and send with a one-tap "agree to all". A returning
-  patient gets four screens. The thank-you says "Your intake is complete."
-  and hides the note review. "Use the detailed form" on the welcome sets
-  mode `full` (also `?form=full` / `?form=simple` on the address). The
+  across "start a new form" when the site lock is adult_spine). The welcome
+  asks one thing, as the peds ortho form does: "Which kind of visit is
+  this?" with two cards (first visit or new problem, about 5 minutes; been
+  here before, about 3 minutes); the card sets the visit (`visitAnswers`)
+  and opens the first screen. Then: about you (name, birth date, sex,
+  phone or email; nothing about who is filling it in), what is bothering
+  you (own words + dictation, seven big area buttons, how long, pain 0-10,
+  better/worse), a few yes/no questions (the safety screen, prior spine
+  surgery, work injury or accident in plain words, optional "already
+  tried"), three health questions (medicines: No / Yes / "Yes, but I do
+  not have my list with me" (`medications.listPending`, the note says the
+  list is coming), the photo fill folded under a link, allergies,
+  conditions as eight big buttons plus an optional line), sign and send
+  with a one-tap "agree to all". A returning patient gets four screens.
+  The thank-you says "Your intake is complete." and hides the note review.
+  The short form's welcome does not advertise the detailed form;
+  `?form=full` still opens it, and its welcome offers the short form back.
+  On a one-service site the detailed form's triage no longer asks who the
+  form is for (a "Filling this out for someone else?" link reveals it) and
+  the demographics step folds insurance and referral away as optional. The
   answers land in the full form's fields, so note, PDF, Practice Hub and
   the handouts are unchanged.
 - **The paper form** (`scripts/build-paper-intake.mjs` ->

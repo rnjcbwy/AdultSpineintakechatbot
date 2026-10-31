@@ -185,6 +185,7 @@ const LOCAL = {
   },
   'What you told us': { es: 'Lo que nos contó', zh: '您告诉我们的内容' },
   'I have read these and agree to all of them': { es: 'Las he leído y estoy de acuerdo con todas', zh: '我已阅读并全部同意' },
+  'Will bring the list': { es: 'Traerá la lista', zh: '会带药物清单' },
   'Your intake is complete.': { es: 'Su formulario está completo.', zh: '您的登记表已完成。' },
   'Thank you for taking the time to fill it out. The office has it, and there is nothing more for you to do right now.': { es: 'Gracias por tomarse el tiempo de completarlo. La oficina ya lo tiene y no necesita hacer nada más por ahora.', zh: '感谢您抽出时间填写。诊所已收到，您现在无需再做任何事情。' },
   'We are putting together a summary of what you shared. This usually takes about a minute; this page will update on its own.': {
@@ -473,7 +474,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
             title="Your health"
             onEdit={() => go('simple-health')}
             items={[
-              { label: 'Medicines', value: data.medications?.noMedications ? t('None') : (data.medications?.current || []).map((m) => m.name).join(', ') },
+              { label: 'Medicines', value: data.medications?.noMedications ? t('None') : data.medications?.listPending && !(data.medications?.current || []).length ? t('Will bring the list') : (data.medications?.current || []).map((m) => m.name).join(', ') },
               { label: 'Allergies', value: data.allergies?.nkda ? t('None') : (data.allergies?.entries || []).map((a) => a.allergen).join(', ') },
               { label: 'Conditions', value: data.pastMedicalHistory?.noConditions ? t('None') : (data.pastMedicalHistory?.conditions || []).map((c) => c.name).join(', ') },
             ]}
@@ -486,7 +487,7 @@ export default function FinalReview({ onBack, onGoToStep }) {
             title="Health check"
             onEdit={() => go('fx-health')}
             items={[
-              { label: 'Medicines', value: data.medications?.noMedications ? t('None') : (data.medications?.current || []).map((m) => m.name).join(', ') },
+              { label: 'Medicines', value: data.medications?.noMedications ? t('None') : data.medications?.listPending && !(data.medications?.current || []).length ? t('Will bring the list') : (data.medications?.current || []).map((m) => m.name).join(', ') },
               { label: 'Allergies', value: data.allergies?.nkda ? t('None') : (data.allergies?.entries || []).map((a) => a.allergen).join(', ') },
               { label: 'Conditions', value: data.pastMedicalHistory?.noConditions ? t('None') : (data.pastMedicalHistory?.conditions || []).map((c) => c.name).join(', ') },
               { label: 'Anesthesia problems', value: t(data.pedsOrtho?.health?.anesthesia || '') },
