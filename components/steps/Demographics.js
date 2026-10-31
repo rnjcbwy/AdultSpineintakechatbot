@@ -298,7 +298,8 @@ export default function Demographics({ onNext, onBack }) {
           max={new Date().toISOString().split('T')[0]}
         />
       </div>
-      <div>
+      {/* The age is worked out from the date of birth; nothing to show the patient. */}
+      <div className="hidden">
         <label className="form-label">{t('Age')}</label>
         <input
           type="text"
@@ -738,10 +739,8 @@ export default function Demographics({ onNext, onBack }) {
 
         {/* Emergency Contact (a second parent or guardian for a child) */}
         <Collapsible
-          title={t(child ? 'Another contact (optional)' : 'Emergency contact (optional)')}
+          title={t(child ? 'Another contact (optional)' : 'Emergency Contact')}
           hint={t(child ? 'Another parent or guardian we may call if we cannot reach you.' : 'Someone we may call if we cannot reach you.')}
-          filled={countFilled([d.emergencyContactName, d.emergencyContactPhone, d.emergencyContactRelation])}
-          total={3}
         >
         <div className="card">
           <h3 className="text-lg font-medium text-navy-600 mb-4">{t(child ? 'Second contact' : 'Emergency Contact')}</h3>
