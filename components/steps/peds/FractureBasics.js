@@ -21,8 +21,11 @@ const LOCAL = {
   "Child's first name": { es: 'Nombre del niño o niña', zh: '孩子的名字' },
   "Child's last name": { es: 'Apellido del niño o niña', zh: '孩子的姓氏' },
   'Date of birth': { es: 'Fecha de nacimiento', zh: '出生日期' },
+  'Gender': { es: 'Género', zh: '性别' },
   'Girl': { es: 'Niña', zh: '女孩' },
   'Boy': { es: 'Niño', zh: '男孩' },
+  'Non-binary': { es: 'No binario', zh: '非二元' },
+  'Prefer not to say': { es: 'Prefiero no decirlo', zh: '不愿透露' },
   'How can we reach you?': { es: '¿Cómo podemos comunicarnos con usted?', zh: '我们如何联系您？' },
   'Mobile phone': { es: 'Teléfono celular', zh: '手机' },
   'Email': { es: 'Correo electrónico', zh: '电子邮件' },
@@ -38,7 +41,7 @@ const LOCAL = {
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
 
 const RELATIONSHIPS = ['Mother', 'Father', 'Grandparent', 'Legal guardian', 'Other'];
-const SEX = [['Female', 'Girl'], ['Male', 'Boy']];
+const SEX = [['Female', 'Girl'], ['Male', 'Boy'], ['Non-binary', 'Non-binary'], ['Prefer not to say', 'Prefer not to say']];
 const VISIT = [['new', 'No, this is the first visit for it'], ['followup', 'Yes, this is a follow-up']];
 
 function Choice({ options, value, onChange, t }) {
@@ -147,7 +150,7 @@ export default function FractureBasics({ onNext, onBack }) {
               />
             </div>
             <div>
-              <label className="form-label">&nbsp;</label>
+              <label className="form-label">{t('Gender')}</label>
               <Choice options={SEX} value={d.sex} onChange={(x) => setField('demographics', 'sex', x)} t={t} />
             </div>
           </div>
