@@ -561,11 +561,11 @@ export default function FinalReview({ onBack, onGoToStep }) {
           />
         )}
 
-        {has('chief-complaint') && (
+        {(has('chief-complaint') || !!String(data.chiefComplaint?.mainReason || '').trim()) && (
           <ReviewCard
             t={t}
             title="Your main concern"
-            onEdit={() => go('chief-complaint')}
+            onEdit={() => go(has('chief-complaint') ? 'chief-complaint' : 'triage')}
             items={[
               { label: 'Main concern', value: data.chiefComplaint.mainReason },
               ...(data.chiefComplaint.duration ? [{ label: 'Duration', value: data.chiefComplaint.duration }] : []),
@@ -581,8 +581,6 @@ export default function FinalReview({ onBack, onGoToStep }) {
             onEdit={() => go('symptom-details')}
             items={[
               { label: 'Problems described', value: String(Object.keys(data.hpiData.problems || {}).length || Object.keys(data.hpiData.symptoms || {}).length) },
-              { label: 'AI conversation messages', value: (data.hpiData.conversationHistory || []).length.toString() },
-              ...(has('treatments') ? [{ label: 'Injections recorded', value: (data.hpiData.conservativeTreatments?.injections || []).length.toString() }] : []),
             ]}
           />
         )}

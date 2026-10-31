@@ -207,6 +207,18 @@ Older patients found the full adult spine form too long, so:
   The thank-you says "Your intake is complete." and hides the note review.
   The short form's welcome does not advertise the detailed form;
   `?form=full` still opens it, and its welcome offers the short form back.
+  The detailed spine form, after the 2026-10-31 walkthrough with the user:
+  the first step ("Getting started") carries the first-visit question, the
+  injury and lawsuit questions, and the main concern with the areas and
+  the prior-surgery box (`ChiefComplaintCards` from ChiefComplaint.js, the
+  spine flow drops the 'chief-complaint' step); the body map has no
+  "add your own feeling" builder; the symptom-details step has no AI chat
+  alternative; the records page is one upload area plus the imaging chips
+  (no insurer text, dates or medication-trial chips); family history is
+  one question at the end of the medical history step (the spine flow
+  drops 'family'); the review no longer counts chat messages or
+  injections. The questionnaire, the 30-condition list and the full social
+  history stay.
   On a one-service site the detailed form's triage no longer asks who the
   form is for (a "Filling this out for someone else?" link reveals it),
   never calls the model and has no "here is what we understood" box: it

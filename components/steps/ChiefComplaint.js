@@ -111,7 +111,7 @@ const LOCAL = {
  * step (the old duration chips and "what bothers you most" box are gone;
  * their fields stay in the data for older drafts and the office).
  */
-export default function ChiefComplaint({ onNext, onBack }) {
+export function ChiefComplaintCards({ askOutright = false }) {
   const { data, setField, setNested, setStep } = useIntake();
   const svc = useService();
   const { SYMPTOM_REGIONS, JOINT_ROWS, PELVIS_ROWS = [], REGION_GROUPS, CHIEF_COMPLAINT_TEXT: text, regionsFromTriage } = svc.constants;
@@ -154,7 +154,6 @@ export default function ChiefComplaint({ onNext, onBack }) {
   const otherPelvisRows = PELVIS_ROWS.filter((row) => !triagePelvisRows.includes(row));
 
   const mainReason = String(cc.mainReason || '');
-  const isValid = mainReason.trim() && selected.length > 0;
 
   // The ortho service accepts a neck-or-back tap but points it at the spine
   // questions; a service without that region (the spine) never shows the row.
@@ -210,19 +209,11 @@ export default function ChiefComplaint({ onNext, onBack }) {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-8">
-        <h2 className="section-title">{t('Your main concern')}</h2>
-        <p className="section-subtitle">
-          {t('Check what you told us, then choose every area that is affected. The next step is the body map.')}
-        </p>
-      </div>
-
       <div className="space-y-6">
         {/* Main reason: the triage sentence, shown to check and edit. Only a
             patient who typed nothing there is asked the question outright. */}
         <div className="card">
-          {mainReason.trim() ? (
+          {mainReason.trim() && !askOutright ? (
             <>
               <label className="form-label text-base">{t('What you told us is going on')}</label>
               <p className="text-sm text-gray-400 mb-3">{t('From your first screen. Edit it if you like.')}</p>
@@ -373,11 +364,32 @@ export default function ChiefComplaint({ onNext, onBack }) {
           </label>
         </div>
       </div>
+  );
+}
 
+/** True when the main reason and at least one area are in. */
+export function chiefComplaintValid(cc) {
+  return !!(String(cc?.mainReason || '').trim() && (cc?.symptomRegions || []).length > 0);
+}
+
+/** The step of its own (the ortho service; the spine asks these on its first step). */
+export default function ChiefComplaint({ onNext, onBack }) {
+  const { data } = useIntake();
+  const lang = useLang();
+  const t = makeT({ ...COMMON, ...LOCAL }, lang);
+  return (
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <h2 className="section-title">{t('Your main concern')}</h2>
+        <p className="section-subtitle">
+          {t('Check what you told us, then choose every area that is affected. The next step is the body map.')}
+        </p>
+      </div>
+      <ChiefComplaintCards />
       <StepNavigation
         onNext={onNext}
         onBack={onBack}
-        canGoNext={!!isValid}
+        canGoNext={chiefComplaintValid(data.chiefComplaint)}
         nextLabel={t('Continue to the body map')}
       />
     </div>

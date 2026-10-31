@@ -42,6 +42,9 @@ const LOCAL = {
     { es: '¿Tiene algún dispositivo médico implantado? (Importante para la planificación quirúrgica y las imágenes)', zh: '您是否有任何植入的医疗设备？（对手术规划和影像检查很重要）' },
 
   // Additional notes
+  'Does anyone in your close family have osteoporosis, scoliosis or a bleeding disorder?': { es: '¿Alguien de su familia cercana tiene osteoporosis, escoliosis o un trastorno de sangrado?', zh: '您的直系亲属中有人患骨质疏松、脊柱侧弯或出血性疾病吗？' },
+  'Who, and what do they have?': { es: '¿Quién y qué tiene?', zh: '是谁，患有什么？' },
+  'For example: my mother has osteoporosis': { es: 'Por ejemplo: mi madre tiene osteoporosis', zh: '例如：我母亲有骨质疏松' },
   'Anything else about your medical history?':
     { es: '¿Algo más sobre sus antecedentes médicos?', zh: '关于您的病史还有其他要说明的吗？' },
   "Any other conditions or details you'd like to mention...":
@@ -112,6 +115,19 @@ export default function PastMedicalHistory({ onNext, onBack }) {
   const { data, setSection } = useIntake();
   const { COMMON_CONDITIONS, IMPLANTED_DEVICES } = useService().constants;
   const pmh = data.pastMedicalHistory;
+  // Family history, one question here instead of a step of its own.
+  const fh = data.familyHistory || {};
+  const setFamily = (answer) => setSection('familyHistory', {
+    ...fh,
+    asked: answer,
+    noRelevantHistory: answer === 'No',
+    entries: answer === 'Yes' && String(fh.note || '').trim() ? [{ relation: 'Family member', condition: fh.note.trim() }] : [],
+  });
+  const setFamilyNote = (note) => setSection('familyHistory', {
+    ...fh,
+    note,
+    entries: note.trim() ? [{ relation: 'Family member', condition: note.trim() }] : [],
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [customCondition, setCustomCondition] = useState('');
 
@@ -356,6 +372,26 @@ export default function PastMedicalHistory({ onNext, onBack }) {
               );
             })}
           </div>
+        </div>
+
+        {/* Family history, folded in here: one question, since it is rarely relevant. */}
+        <div className="card">
+          <label className="form-label">{t('Does anyone in your close family have osteoporosis, scoliosis or a bleeding disorder?')}</label>
+          <div className="flex gap-2 mt-2">
+            {['No', 'Yes'].map((o) => {
+              const on = (o === 'No' && fh.noRelevantHistory) || (o === 'Yes' && fh.asked === 'Yes');
+              return (
+                <button key={o} type="button" aria-pressed={on} onClick={() => setFamily(o)}
+                  className={`chip ${on ? 'chip-selected' : 'chip-unselected'}`}>{t(o)}</button>
+              );
+            })}
+          </div>
+          {fh.asked === 'Yes' && (
+            <div className="mt-3">
+              <label className="form-label text-sm">{t('Who, and what do they have?')}</label>
+              <input type="text" value={fh.note || ''} onChange={(e) => setFamilyNote(e.target.value)} placeholder={t('For example: my mother has osteoporosis')} />
+            </div>
+          )}
         </div>
 
         {/* Additional notes */}

@@ -187,8 +187,7 @@ export default function PainMap({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Where Are Your Symptoms?')}</h2>
         <p className="section-subtitle">
-          {t('Tap the body where you feel something. Pick the type of feeling first — you can mark as many places as you like, on the front and the back.')}{' '}
-          {t(svc.constants.PAIN_MAP_TEXT.example)}
+          {t('Pick the feeling, then tap the body where you feel it. Mark as many places as you like, front and back.')}
         </p>
       </div>
 
@@ -265,6 +264,8 @@ export default function PainMap({ onNext, onBack }) {
         {/* Name your own. The six built-ins cover most complaints but
             not itching, cramping or coldness, and forcing those into "aching"
             loses the word the patient chose. */}
+        {/* Not shown since 2026-10-31 (simpler map); the code stays for drafts that used it. */}
+        {false && (
         <div className="mt-4 pt-3 border-t border-gray-100">
           <p className="text-sm font-medium text-gray-600 mb-1">{t('Something else? Add your own')}</p>
           <p className="text-xs text-gray-400 mb-2.5">
@@ -340,6 +341,7 @@ export default function PainMap({ onNext, onBack }) {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* 2 — tool */}

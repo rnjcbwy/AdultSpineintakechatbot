@@ -442,9 +442,7 @@ export default function RecordsUpload({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Records & Documents')}</h2>
         <p className="section-subtitle">
-          {t(ortho
-            ? 'Insurance companies require proof of what you have already tried before they will approve joint surgery, injections or advanced imaging. The more of this you can give us now, the less likely your care is delayed later.'
-            : 'Insurance companies require proof of what you have already tried before they will approve spine treatment. The more of this you can give us now, the less likely your care is delayed later.')}
+          {t('Have any reports, images or notes? Add them here. Anything you cannot find, you can bring to your visit.')}
         </p>
       </div>
 
@@ -470,48 +468,12 @@ export default function RecordsUpload({ onNext, onBack }) {
           </div>
         </div>
         )}
-        {!interval && selectedImaging.length > 0 && (
-        <div className="space-y-4 mt-4">
-          {selectedImaging.map((study) => {
-            const entry = imagingEntry(study);
-            return (
-              <div key={study} className="border border-gray-200 rounded-xl p-4">
-                <p className="text-sm font-semibold text-navy-600 mb-3">{t(study)}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="form-label text-sm">{t('Approximate date')}</label>
-                    <input type="text" value={entry.date || ''}
-                      onChange={(e) => updateImaging(study, 'date', e.target.value)}
-                      placeholder={t('e.g., June 2025')} />
-                  </div>
-                  <div>
-                    <label className="form-label text-sm">{t('Where was it done?')}</label>
-                    <input type="text" value={entry.facility || ''}
-                      onChange={(e) => updateImaging(study, 'facility', e.target.value)}
-                      placeholder={t('Facility or imaging center')} />
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-4 mt-3">
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                    <input type="checkbox" checked={!!entry.hasReport}
-                      onChange={(e) => updateImaging(study, 'hasReport', e.target.checked)} />
-                    {t('I have the written report')}
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                    <input type="checkbox" checked={!!entry.hasImages}
-                      onChange={(e) => updateImaging(study, 'hasImages', e.target.checked)} />
-                    {t('I have the images (CD/portal)')}
-                  </label>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        )}
       </ImagingUpload>
 
-      {/* ---------------- Medication trials (a new problem only) ---------------- */}
-      {newKind && (
+      {/* The medication trials and the care window are no longer asked here
+          (2026-10-31: one simple upload page). Their fields are still seeded
+          from the medication list and the treatment dates, for the note. */}
+      {false && (
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">
           {t('Medications You Have Tried for This Problem')}
@@ -560,8 +522,7 @@ export default function RecordsUpload({ onNext, onBack }) {
       </div>
       )}
 
-      {/* ---------------- Conservative care window (a new problem only) ---------------- */}
-      {newKind && (
+      {false && (
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">
           {t('When did you start and stop non-surgical treatment?')}
@@ -594,7 +555,7 @@ export default function RecordsUpload({ onNext, onBack }) {
       <div className="card mb-4">
         <h3 className="text-base font-medium text-navy-600 mb-1">{t('Upload Your Records')}</h3>
         <p className="text-sm text-gray-400 mb-2">
-          {t('Add any documents you have. Photos of paper records are fine — just make sure the text is readable.')}
+          {t('Therapy notes, injection or procedure notes, nerve studies, operative reports, letters from other doctors. Photos of paper records are fine, as long as the text is readable.')}
         </p>
 
         {error && (
@@ -604,23 +565,15 @@ export default function RecordsUpload({ onNext, onBack }) {
         )}
 
         <div className="space-y-3">
-          {categories.filter((cat) => cat.id !== 'imaging_reports').map((cat) => {
+          {/* One place for everything: files already in a category keep it, new ones go in as "other". */}
+          {categories.filter((cat) => cat.id === 'other' || (cat.id !== 'imaging_reports' && docsIn(cat.id).length > 0)).map((cat) => {
             const catDocs = docsIn(cat.id);
-            const isSuggested = suggested.has(cat.id);
+            const single = cat.id === 'other';
             return (
-              <div key={cat.id}
-                className={`border rounded-xl p-4 ${isSuggested && catDocs.length === 0 ? 'border-amber-300 bg-amber-50/40' : 'border-gray-200'}`}>
+              <div key={cat.id} className="border rounded-xl p-4 border-gray-200">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="flex-1 min-w-[200px]">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-navy-600">{t(cat.label)}</span>
-                      {isSuggested && (
-                        <span className="text-[11px] font-medium text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
-                          {t('Recommended for you')}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">{t(cat.hint)}</p>
+                    <span className="text-sm font-semibold text-navy-600">{t(single ? 'Your records' : cat.label)}</span>
                   </div>
                   <input
                     id={`file-input-${cat.id}`}
@@ -676,8 +629,8 @@ export default function RecordsUpload({ onNext, onBack }) {
         </div>
       </div>
 
-      {/* ---------------- Checklist ---------------- */}
-      {suggested.size > 0 && (
+      {/* The documentation checklist is no longer shown (2026-10-31). */}
+      {false && suggested.size > 0 && (
         <div className="card mb-4 bg-navy-50/40 border-navy-100">
           <h3 className="text-base font-medium text-navy-600 mb-1">{t('Documentation Checklist')}</h3>
           <p className="text-sm text-gray-500 mb-4">

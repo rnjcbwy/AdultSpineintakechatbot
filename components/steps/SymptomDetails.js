@@ -419,12 +419,6 @@ export default function SymptomDetails({ onNext, onBack }) {
       <div className="mb-6">
         <h2 className="section-title">{t('Symptom Details')}</h2>
         <p className="section-subtitle">{t(text.intro)}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-500">
-          <span>{t('Prefer to talk it through?')}</span>
-          <button type="button" onClick={() => setMode('conversation')} className="btn-secondary text-sm py-1.5 px-3">
-            {t('Tell it in your own words')}
-          </button>
-        </div>
       </div>
 
       {problems.length > 1 && (

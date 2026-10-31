@@ -9,6 +9,7 @@ import { CLAIM_OPTIONS, INJURY_KINDS, LAWSUIT_Q, claimFor, VISIT_LABEL, visitTyp
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextArea } from '../ui/Fields';
 import { PEDS_ORTHO_TEXT } from '../../lib/services/peds-ortho/text';
+import { ChiefComplaintCards, chiefComplaintValid } from './ChiefComplaint';
 
 // A child's orthopaedic visit: a recent injury or a broken bone takes the
 // short fracture-clinic path, so the form asks here, before anything else.
@@ -171,10 +172,15 @@ export default function Triage({ onNext, onBack }) {
     if (description && !String(data.chiefComplaint?.mainReason || '').trim()) setField('chiefComplaint', 'mainReason', description);
   };
 
-  const basicsDone = !!patient && !!tri.firstTime && (regions.length > 0 || description.length >= 3);
+  // The spine site asks the main concern and the areas here (ChiefComplaintCards);
+  // a return visit that is a follow-up or post-operative visit asks neither.
+  const merged = svc.key === 'adult_spine';
+  const complaintOk = !merged || (kind && kind !== 'new') || chiefComplaintValid(data.chiefComplaint);
+  const basicsDone = !!patient && !!tri.firstTime && (merged ? complaintOk : (regions.length > 0 || description.length >= 3));
   const pedsOrtho = svc.key === 'peds_ortho';
   const track = data.pedsOrtho?.track || '';
-  const allSet = !!svc.specialty && !!kind && !!claim && !!v.type && (!pedsOrtho || !!track);
+  // A follow-up or post-operative visit on the spine site is not asked about a claim.
+  const allSet = !!svc.specialty && !!kind && (!!claim || (merged && kind !== 'new')) && !!v.type && (!pedsOrtho || !!track);
   // A one-service site asks the two remaining questions outright and never
   // waits on the model. Elsewhere, before the model has been asked, Continue
   // asks it; afterwards it needs the three rows settled.
@@ -193,8 +199,8 @@ export default function Triage({ onNext, onBack }) {
   return (
     <div className="animate-fade-in">
       <div className="mb-8">
-        <h2 className="section-title">{t('A few questions to point you the right way')}</h2>
-        <p className="section-subtitle">{t('Adults and children, the spine and other bones and joints, a first visit and a follow-up are all asked different questions. These answers choose the right ones.')}</p>
+        <h2 className="section-title">{t(merged ? 'Getting started' : 'A few questions to point you the right way')}</h2>
+        <p className="section-subtitle">{t(merged ? 'A few questions, then what brings you in.' : 'Adults and children, the spine and other bones and joints, a first visit and a follow-up are all asked different questions. These answers choose the right ones.')}</p>
       </div>
 
       <div className="card">
@@ -224,26 +230,6 @@ export default function Triage({ onNext, onBack }) {
         />
       </div>
 
-      <div className="card mt-4">
-        <CheckChips
-          label="Where is the problem?"
-          hint="Tap everything that applies."
-          options={regionChoices.map((r) => r.label)}
-          value={regions.map((id) => regionChoices.find((r) => r.id === id)?.label).filter(Boolean)}
-          onChange={(labels) => { setNested('triage.regions', labels.map((l) => TRIAGE_REGIONS.find((r) => r.label === l)?.id).filter(Boolean)); setAsked(false); }}
-        />
-      </div>
-
-      <div className="card mt-4">
-        <TextArea
-          label="In a sentence or two, what is going on?"
-          hint="For example: my right knee has been swollen since I slipped at work last month, or: I had a fusion here in March and this is my check-up. You will have room for the full story later."
-          value={tri.description || ''}
-          onChange={(x) => { setNested('triage.description', x); setAsked(false); }}
-          rows={3}
-        />
-      </div>
-
       {LOCKED_SERVICE && (
         <div className="card mt-4 space-y-4">
           {returning && (
@@ -255,13 +241,15 @@ export default function Triage({ onNext, onBack }) {
               hint={kind === 'new' ? 'The form asks about the new problem in full; the history already on file is only brought up to date.' : kind === 'followup' || kind === 'postop' ? 'Your history is on file, so the form will only ask what has changed.' : undefined}
             />
           )}
-          <Chips
-            label="Did this start with an injury at work, a car crash or another accident?"
-            options={INJURY_KINDS}
-            value={INJURY_LABEL[v.injuryKind] || ''}
-            onChange={(x) => setInjury(INJURY_ID[x], '')}
-          />
-          {v.injuryKind === 'accident' && (
+          {(!merged || kind === 'new') && (
+            <Chips
+              label="Did this start with an injury at work, a car crash or another accident?"
+              options={INJURY_KINDS}
+              value={INJURY_LABEL[v.injuryKind] || ''}
+              onChange={(x) => setInjury(INJURY_ID[x], '')}
+            />
+          )}
+          {(!merged || kind === 'new') && v.injuryKind === 'accident' && (
             <Chips
               label={LAWSUIT_Q}
               options={['No', 'Yes']}
@@ -280,6 +268,38 @@ export default function Triage({ onNext, onBack }) {
             />
           )}
         </div>
+      )}
+
+      {/* The spine site: the main concern and the areas are asked here, on
+          the first step, instead of on a step of their own. */}
+      {merged && kind === 'new' && (
+        <div className="mt-4">
+          <ChiefComplaintCards askOutright />
+        </div>
+      )}
+
+      {!merged && (
+      <div className="card mt-4">
+        <CheckChips
+          label="Where is the problem?"
+          hint="Tap everything that applies."
+          options={regionChoices.map((r) => r.label)}
+          value={regions.map((id) => regionChoices.find((r) => r.id === id)?.label).filter(Boolean)}
+          onChange={(labels) => { setNested('triage.regions', labels.map((l) => TRIAGE_REGIONS.find((r) => r.label === l)?.id).filter(Boolean)); setAsked(false); }}
+        />
+      </div>
+      )}
+
+      {!merged && (
+      <div className="card mt-4">
+        <TextArea
+          label="In a sentence or two, what is going on?"
+          hint="For example: my right knee has been swollen since I slipped at work last month, or: I had a fusion here in March and this is my check-up. You will have room for the full story later."
+          value={tri.description || ''}
+          onChange={(x) => { setNested('triage.description', x); setAsked(false); }}
+          rows={3}
+        />
+      </div>
       )}
 
       {showCard && (

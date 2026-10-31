@@ -12,9 +12,9 @@ const LOCAL = {
     es: 'Si se ha hecho radiografías, una resonancia, una tomografía o una ecografía por este problema, nos gustaría verlas. Agregue aquí el informe escrito, una foto o una captura de pantalla de las imágenes: suba un archivo, tome una foto con su teléfono, elija de su carrete de fotos o pegue una captura con Ctrl+V.',
     zh: '如果您曾因这个问题做过X光、核磁、CT或超声检查，我们希望看到它们。请在此添加书面报告、影像的照片或截图：上传文件、用手机拍照、从相册中选择，或用 Ctrl+V 粘贴截图。',
   },
-  'Below, tap each kind of study you have had and add the approximate date and where it was done.': {
-    es: 'Abajo, toque cada tipo de estudio que se haya hecho y agregue la fecha aproximada y el lugar donde se hizo.',
-    zh: '请在下方点选您做过的每种检查，并填写大约日期和检查地点。',
+  'Below, tap each kind of study you have had.': {
+    es: 'Abajo, toque cada tipo de estudio que se haya hecho.',
+    zh: '请在下方点选您做过的每种检查。',
   },
   'Please add the date and where each study was done below.': {
     es: 'Agregue abajo la fecha y el lugar donde se hizo cada estudio.',
@@ -161,9 +161,7 @@ export default function ImagingUpload({ interval = false, hasListedImaging = fal
       <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600 space-y-2">
         {!interval && (
           <p>
-            {t(hasListedImaging
-              ? 'Please add the date and where each study was done below.'
-              : 'Below, tap each kind of study you have had and add the approximate date and where it was done.')}
+            {t('Below, tap each kind of study you have had.')}
           </p>
         )}
         <p>
