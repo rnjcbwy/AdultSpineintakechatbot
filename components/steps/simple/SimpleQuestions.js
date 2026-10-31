@@ -27,6 +27,10 @@ const LOCAL = {
   'Pain medicine': { es: 'Medicamentos para el dolor', zh: '止痛药' },
   'Surgery on my spine': { es: 'Cirugía de columna', zh: '脊柱手术' },
   'Nothing yet': { es: 'Nada todavía', zh: '还没有' },
+  'Physical therapy: when, and for how long?': { es: 'Fisioterapia: ¿cuándo y por cuánto tiempo?', zh: '物理治疗：什么时候、持续了多久？' },
+  'For example: last spring, 6 weeks': { es: 'Por ejemplo: la primavera pasada, 6 semanas', zh: '例如：去年春天，6 周' },
+  'Injections: what type, and which level if you know?': { es: 'Inyecciones: ¿de qué tipo y en qué nivel, si lo sabe?', zh: '注射：什么类型，如果知道的话在哪个节段？' },
+  'For example: epidural, L4-5, two of them': { es: 'Por ejemplo: epidural, L4-5, dos veces', zh: '例如：硬膜外，L4-5，两次' },
   'No': { es: 'No', zh: '否' },
   'Yes': { es: 'Sí', zh: '是' },
 };
@@ -94,10 +98,19 @@ export default function SimpleQuestions({ onNext, onBack }) {
     const chosen = list.includes('Nothing yet') && !(s.tried || []).includes('Nothing yet') ? ['Nothing yet'] : list.filter((x) => x !== 'Nothing yet' || list.length === 1);
     setNested('simple.tried', chosen);
     for (const [label, flag] of Object.entries(TRIED_FLAGS)) setNested(`hpiData.conservativeTreatments.${flag}`, chosen.includes(label));
-    setNested('hpiData.conservativeTreatments.injections', chosen.includes('Injections') ? [{ type: 'Spine injection', location: '', provider: '', when: '', count: '', reliefDuration: '', helped: '' }] : []);
+    setNested('hpiData.conservativeTreatments.injections', chosen.includes('Injections') ? [{ type: String(s.injectionDetail || '').trim() || 'Spine injection', location: '', provider: '', when: '', count: '', reliefDuration: '', helped: '' }] : []);
     setNested('hpiData.conservativeTreatments.painMedicineTried', chosen.includes('Pain medicine'));
     setNested('hpiData.conservativeTreatments.nothingYet', chosen.includes('Nothing yet'));
-    if (chosen.includes('Surgery on my spine') && s.priorSurgery !== 'Yes') setSurgery('Yes');
+  };
+  // One short line of detail each, optional: when and how long for therapy;
+  // the type and level for injections. Written where the full form writes them.
+  const setPtDetail = (text) => {
+    setNested('simple.ptDetail', text);
+    setNested('hpiData.conservativeTreatments.physicalTherapy.details', text);
+  };
+  const setInjectionDetail = (text) => {
+    setNested('simple.injectionDetail', text);
+    setNested('hpiData.conservativeTreatments.injections', [{ type: text.trim() || 'Spine injection', location: '', provider: '', when: '', count: '', reliefDuration: '', helped: '' }]);
   };
 
   const followup = v.type === 'followup' || v.type === 'postop';
@@ -132,6 +145,18 @@ export default function SimpleQuestions({ onNext, onBack }) {
         )}
         <Card title={t('Have you already tried any of these? You can skip this.')}>
           <BigChoice t={t} multi options={SIMPLE_TRIED} value={s.tried || []} onChange={setTried} />
+          {(s.tried || []).includes('Physical therapy') && (
+            <div className="mt-4">
+              <label className="form-label">{t('Physical therapy: when, and for how long?')}</label>
+              <input type="text" value={s.ptDetail || ''} onChange={(e) => setPtDetail(e.target.value)} placeholder={t('For example: last spring, 6 weeks')} />
+            </div>
+          )}
+          {(s.tried || []).includes('Injections') && (
+            <div className="mt-4">
+              <label className="form-label">{t('Injections: what type, and which level if you know?')}</label>
+              <input type="text" value={s.injectionDetail || ''} onChange={(e) => setInjectionDetail(e.target.value)} placeholder={t('For example: epidural, L4-5, two of them')} />
+            </div>
+          )}
         </Card>
       </div>
       <StepNavigation onNext={onNext} onBack={onBack} canGoNext={answered} />

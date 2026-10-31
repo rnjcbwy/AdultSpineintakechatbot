@@ -684,7 +684,12 @@ export default function FinalReview({ onBack, onGoToStep }) {
             title="Review of Systems"
             onEdit={() => go(has('ros') ? 'ros' : 'simple-ros')}
             items={[
-              { label: 'Completed', value: t('Yes') },
+              {
+                label: 'Reported',
+                value: (service.rosSystems?.ROS_SECTIONS || [])
+                  .flatMap((sec) => sec.questions.filter((q) => data.reviewOfSystems?.[sec.id]?.[q.id] === 'yes').map((q) => t(q.label).replace(/\?$/, '')))
+                  .join(', ') || t('None'),
+              },
             ]}
           />
         )}
