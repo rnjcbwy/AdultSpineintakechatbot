@@ -211,7 +211,13 @@ Older patients found the full adult spine form too long, so:
   form is for (a "Filling this out for someone else?" link reveals it),
   never calls the model and has no "here is what we understood" box: it
   asks the injury-or-accident question outright in plain words (and, for a
-  returning patient, which kind of visit), so one Continue moves on. Its
+  returning patient, which kind of visit), so one Continue moves on. An
+  accident is only how it began: both forms then ask "Is this visit part
+  of a personal injury claim or lawsuit?" and only a Yes takes the
+  personal-injury path with the attorney questions (`lib/flows.js`
+  INJURY_KINDS, LAWSUIT_Q, claimFor; `visit.injuryKind`, `visit.lawsuit`).
+  A work injury still takes the workers' compensation path. The note
+  prompt treats an accident without a claim as the mechanism of onset. Its
   "Where is the problem?" offers right/left arm or hand and right/left
   leg or foot on the spine site, seeded into the chief complaint's
   regions. The demographics step folds insurance and referral away as

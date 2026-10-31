@@ -2,7 +2,7 @@
 
 import { useIntake } from '../../../lib/store';
 import { useLang, makeT, COMMON } from '../../../lib/i18n';
-import { CLAIM_OPTIONS, VISIT_LABEL, visitTypeFor } from '../../../lib/flows';
+import { INJURY_KINDS, LAWSUIT_Q, claimFor, VISIT_LABEL, visitTypeFor } from '../../../lib/flows';
 import { SIMPLE_TRIED } from '../../../lib/simple';
 import StepNavigation from '../../ui/StepNavigation';
 import { TextArea } from '../../ui/Fields';
@@ -33,10 +33,12 @@ const LOCAL = {
 
 // The claim question in plain words. The stored answers stay the shared
 // CLAIM_OPTIONS strings, which visitTypeFor and the full form key on.
-const SIMPLE_CLAIM = [
-  { id: CLAIM_OPTIONS[0], label: 'No' },
-  { id: CLAIM_OPTIONS[1], label: 'Yes, I was hurt at work' },
-  { id: CLAIM_OPTIONS[2], label: 'Yes, a car crash or other accident' },
+// How it started, then, only after an accident, whether a claim or lawsuit is
+// involved. The stored claim (visit.workInjury) is derived by claimFor.
+const INJURY_CHOICES = [
+  { id: 'none', label: INJURY_KINDS[0] },
+  { id: 'work', label: INJURY_KINDS[1] },
+  { id: 'accident', label: INJURY_KINDS[2] },
 ];
 
 const TRIED_FLAGS = { 'Physical therapy': 'physicalTherapy.tried', Chiropractor: 'chiropracticCare.tried' };
@@ -72,6 +74,11 @@ export default function SimpleQuestions({ onNext, onBack }) {
     setSection('pastSurgicalHistory', { ...data.pastSurgicalHistory, surgeries: text.trim() ? [...others, { type: text.trim(), bodyRegion: 'Spine', date: '', hospital: '', surgeon: '', isSpineSurgery: true, simple: true }] : others });
   };
 
+  const setInjury = (kind, lawsuit) => {
+    setNested('visit.injuryKind', kind);
+    setNested('visit.lawsuit', kind === 'accident' ? lawsuit || '' : '');
+    setClaim(claimFor({ injuryKind: kind, lawsuit }));
+  };
   const setClaim = (answer) => {
     setNested('visit.workInjury', answer);
     const type = visitTypeFor({ choice: v.choice || 'new', workInjury: answer, hadSurgery: v.hadSurgery || '', established: v.type === 'new_problem' });
@@ -95,6 +102,7 @@ export default function SimpleQuestions({ onNext, onBack }) {
 
   const followup = v.type === 'followup' || v.type === 'postop';
   const answered = ['numbness', 'weakness', 'gaitChanges', 'bowelBladder'].every((f) => o[f]) && !!s.priorSurgery && (s.priorSurgery !== 'Yes' || String(s.priorSurgeryText || '').trim()) && (followup || !!v.workInjury);
+  // (claimFor leaves the claim blank after an accident until the lawsuit question is answered.)
 
   return (
     <div className="animate-fade-in">
@@ -113,7 +121,13 @@ export default function SimpleQuestions({ onNext, onBack }) {
         </Card>
         {!followup && (
           <Card title={t('Did this start with an injury at work, a car crash or another accident?')}>
-            <BigChoice t={t} options={SIMPLE_CLAIM} value={v.workInjury || ''} onChange={setClaim} />
+            <BigChoice t={t} options={INJURY_CHOICES} value={v.injuryKind || ''} onChange={(kind) => setInjury(kind, '')} />
+            {v.injuryKind === 'accident' && (
+              <div className="mt-4">
+                <p className="text-lg font-medium text-navy-600 mb-3">{t(LAWSUIT_Q)}</p>
+                <YesNo t={t} value={v.lawsuit || ''} onChange={(x) => setInjury('accident', x)} />
+              </div>
+            )}
           </Card>
         )}
         <Card title={t('Have you already tried any of these? You can skip this.')}>

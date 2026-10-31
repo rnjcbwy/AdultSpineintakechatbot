@@ -5,7 +5,7 @@ import { useIntake } from '../../lib/store';
 import { useLang, makeT, COMMON } from '../../lib/i18n';
 import { TRIAGE_REGIONS, specialtyFromRegions, serviceKeyFor } from '../../lib/service';
 import { LOCKED_SERVICE, lockedSpecialty, pedsSiteFor, otherAdultSite } from '../../lib/siteLock';
-import { CLAIM_OPTIONS, VISIT_LABEL, visitTypeFor } from '../../lib/flows';
+import { CLAIM_OPTIONS, INJURY_KINDS, LAWSUIT_Q, claimFor, VISIT_LABEL, visitTypeFor } from '../../lib/flows';
 import StepNavigation from '../ui/StepNavigation';
 import { Chips, CheckChips, TextArea } from '../ui/Fields';
 import { PEDS_ORTHO_TEXT } from '../../lib/services/peds-ortho/text';
@@ -25,10 +25,10 @@ const KIND = ['A new problem', 'A follow-up for a problem seen here before', 'A 
 const KIND_OF = { new: KIND[0], followup: KIND[1], postop: KIND[2] };
 const VISIT_KIND_OF = { [KIND[0]]: 'new', [KIND[1]]: 'followup', [KIND[2]]: 'postop' };
 const CLAIM_OF = { none: CLAIM_OPTIONS[0], workers_comp: CLAIM_OPTIONS[1], personal_injury: CLAIM_OPTIONS[2] };
-// The claim question in plain words (the stored answers stay CLAIM_OPTIONS).
-const PLAIN_CLAIM = ['No', 'Yes, I was hurt at work', 'Yes, a car crash or other accident'];
-const PLAIN_OF = { [CLAIM_OPTIONS[0]]: PLAIN_CLAIM[0], [CLAIM_OPTIONS[1]]: PLAIN_CLAIM[1], [CLAIM_OPTIONS[2]]: PLAIN_CLAIM[2] };
-const CLAIM_FROM_PLAIN = { [PLAIN_CLAIM[0]]: CLAIM_OPTIONS[0], [PLAIN_CLAIM[1]]: CLAIM_OPTIONS[1], [PLAIN_CLAIM[2]]: CLAIM_OPTIONS[2] };
+// How it started, in plain words; the claim (CLAIM_OPTIONS) follows from it
+// and, after an accident, from the lawsuit question (lib/flows.js claimFor).
+const INJURY_ID = { [INJURY_KINDS[0]]: 'none', [INJURY_KINDS[1]]: 'work', [INJURY_KINDS[2]]: 'accident' };
+const INJURY_LABEL = { none: INJURY_KINDS[0], work: INJURY_KINDS[1], accident: INJURY_KINDS[2] };
 
 /**
  * The first real screen. Who the visit is for, where the problem is, whether
@@ -130,6 +130,13 @@ export default function Triage({ onNext, onBack }) {
       setField('demographics', 'visitReason', VISIT_LABEL[type]);
       trimCompleted();
     }
+  };
+
+  /** How it started and, after an accident, whether a claim or lawsuit is involved. */
+  const setInjury = (kind, lawsuit) => {
+    setNested('visit.injuryKind', kind);
+    setNested('visit.lawsuit', kind === 'accident' ? lawsuit || '' : '');
+    applyVisit({ claim: claimFor({ injuryKind: kind, lawsuit }) });
   };
 
   const classify = async () => {
@@ -250,10 +257,19 @@ export default function Triage({ onNext, onBack }) {
           )}
           <Chips
             label="Did this start with an injury at work, a car crash or another accident?"
-            options={PLAIN_CLAIM}
-            value={PLAIN_OF[claim] || ''}
-            onChange={(x) => applyVisit({ claim: CLAIM_FROM_PLAIN[x] })}
+            options={INJURY_KINDS}
+            value={INJURY_LABEL[v.injuryKind] || ''}
+            onChange={(x) => setInjury(INJURY_ID[x], '')}
           />
+          {v.injuryKind === 'accident' && (
+            <Chips
+              label={LAWSUIT_Q}
+              options={['No', 'Yes']}
+              value={v.lawsuit || ''}
+              onChange={(x) => setInjury('accident', x)}
+              hint={v.lawsuit === 'Yes' ? 'The form will ask for the claim and attorney details later.' : undefined}
+            />
+          )}
           {pedsOrtho && (
             <Chips
               label="Is this visit about a broken bone or a recent injury?"
