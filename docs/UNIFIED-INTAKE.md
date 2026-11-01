@@ -185,8 +185,8 @@ Older patients found the full adult spine form too long, so:
   site's welcome is one decision point (2026-10-31, the user's wording):
   a short paragraph asking, if they have the time, for the comprehensive
   questionnaire (it helps us prepare; take your time, describe symptoms,
-  treatments and workup), then two cards, "Comprehensive questionnaire"
-  (15 to 20 minutes) and "Quick questionnaire" (5 minutes);
+  treatments and workup), then a filled "Recommended" card, "Comprehensive Pre-visit Questionnaire"
+  (15 to 20 minutes), and a smaller, quieter "Quick Questionnaire" box (5 minutes);
   the card sets the mode and opens the first screen. The short form's
   first screen asks "Have you seen this doctor before?", which is the
   branch (a return visit gets the shorter "what has changed" path), and

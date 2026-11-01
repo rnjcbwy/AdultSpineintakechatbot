@@ -52,9 +52,10 @@ const T = {
       'Your signature, and you are done',
     ],
     chooseIntro: 'If you have the time, we would ask that you fill out the comprehensive pre-visit questionnaire. It helps us prepare for your visit. Please take your time and include as much as you can: feel free to describe your symptoms, the treatments you have tried, and any tests or imaging you have had. If you are short on time, the quick questionnaire covers the basics.',
-    chooseDetailed: 'Comprehensive questionnaire',
+    chooseRecommended: 'Recommended',
+    chooseDetailed: 'Comprehensive Pre-visit Questionnaire',
     chooseDetailedHint: 'About 15 to 20 minutes. Your symptoms in detail, what you have tried, your tests and imaging, and your health history. The one we would prefer.',
-    chooseShort: 'Quick questionnaire',
+    chooseShort: 'Quick Questionnaire',
     chooseShortHint: 'About 5 minutes. The basics: what is bothering you, a few questions, your medicines.',
     fullPrefix: 'Prefer to give more detail? ',
     fullLink: 'Use the comprehensive questionnaire',
@@ -114,7 +115,8 @@ const T = {
       'Su firma, y listo',
     ],
     chooseIntro: 'Si tiene tiempo, le pedimos que llene el cuestionario completo previo a la visita. Nos ayuda a prepararnos para su consulta. Tómese su tiempo e incluya todo lo que pueda: describa con libertad sus síntomas, los tratamientos que ha probado y cualquier prueba o estudio de imagen que le hayan hecho. Si le falta tiempo, el cuestionario rápido cubre lo básico.',
-    chooseDetailed: 'Cuestionario completo',
+    chooseRecommended: 'Recomendado',
+    chooseDetailed: 'Cuestionario completo previo a la visita',
     chooseDetailedHint: 'Unos 15 a 20 minutos. Sus síntomas en detalle, lo que ha probado, sus pruebas y estudios, y sus antecedentes de salud. El que preferimos.',
     chooseShort: 'Cuestionario rápido',
     chooseShortHint: 'Unos 5 minutos. Lo básico: qué le molesta, unas preguntas, sus medicamentos.',
@@ -176,7 +178,8 @@ const T = {
       '签名，然后就完成了',
     ],
     chooseIntro: '如果您有时间，我们希望您填写完整的就诊前问卷。它能帮助我们为您的就诊做好准备。请慢慢填写，尽量写得详细一些：可以充分描述您的症状、尝试过的治疗，以及做过的检查或影像检查。如果时间不够，快速问卷涵盖基本内容。',
-    chooseDetailed: '完整问卷',
+    chooseRecommended: '推荐',
+    chooseDetailed: '完整的就诊前问卷',
     chooseDetailedHint: '大约 15 到 20 分钟。详细的症状、尝试过的治疗、检查和影像、以及健康史。我们更希望您选择这一份。',
     chooseShort: '快速问卷',
     chooseShortHint: '大约 5 分钟。基本内容：哪里不舒服、几个问题、您的药物。',
@@ -366,18 +369,26 @@ export default function Welcome({ onNext }) {
               </button>
             )}
             <p className="text-base text-gray-600 leading-relaxed mb-4 text-left">{t.chooseIntro}</p>
-            <div className="space-y-3 text-left">
-              {[['full', t.chooseDetailed, t.chooseDetailedHint], ['simple', t.chooseShort, t.chooseShortHint]].map(([mode, title, hint]) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => startWith(mode)}
-                  className="w-full text-left bg-white rounded-2xl border-2 border-navy-100 hover:border-teal-400 focus:border-teal-400 px-5 py-4 transition-all"
-                >
-                  <span className="block text-lg font-semibold text-navy-600">{title}</span>
-                  <span className="block text-sm text-gray-500 mt-1">{hint}</span>
-                </button>
-              ))}
+            {/* The comprehensive questionnaire is the one we ask for: a filled card
+                with a "Recommended" tag. The quick one is a smaller, quieter box. */}
+            <div className="text-left">
+              <button
+                type="button"
+                onClick={() => startWith('full')}
+                className="w-full text-left bg-navy-600 hover:bg-navy-500 active:bg-navy-700 text-white rounded-2xl px-6 py-5 shadow-md transition-all"
+              >
+                <span className="inline-block text-[0.7rem] font-semibold uppercase tracking-[0.12em] bg-teal-100 text-navy-700 rounded-full px-2.5 py-0.5 mb-2">{t.chooseRecommended}</span>
+                <span className="block text-xl font-semibold">{t.chooseDetailed}</span>
+                <span className="block text-sm text-navy-50 mt-1.5 leading-relaxed">{t.chooseDetailedHint}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => startWith('simple')}
+                className="w-full text-left bg-white rounded-xl border border-navy-100 hover:border-teal-400 focus:border-teal-400 px-4 py-3 mt-3 transition-all"
+              >
+                <span className="block text-base font-medium text-navy-600">{t.chooseShort}</span>
+                <span className="block text-xs text-gray-500 mt-0.5">{t.chooseShortHint}</span>
+              </button>
             </div>
           </div>
         ) : (
