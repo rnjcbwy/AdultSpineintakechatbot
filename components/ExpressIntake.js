@@ -6,7 +6,7 @@ import { useLang, makeT, tx, COMMON, LANGUAGES, isRtl } from '../lib/i18n';
 import { SAFETY_CHOICES, SPECIALTY_CHOICES, serviceFor, isExpress, isExpressLead } from '../lib/express';
 import { SERVICES } from '../lib/service';
 import { belongsElsewhere, siteUrl } from '../lib/siteLock';
-import { CONSENT_ITEMS, consentTextVia } from '../lib/consent';
+import { CONSENT_ITEMS, SMS_CONSENT, consentTextVia } from '../lib/consent';
 import { fingerprintAnswers } from '../lib/noteFingerprint';
 import { submitIntake, finalizeSubmission, pollStatus } from '../lib/submitClient';
 import { IS_PRODUCTION_TIER, PRACTICE } from '../lib/deploymentTier';
@@ -29,6 +29,7 @@ const LOCAL = {
   'Last name': { es: 'Apellido', zh: '姓' },
   'Date of birth': { es: 'Fecha de nacimiento', zh: '出生日期' },
   'Phone': { es: 'Teléfono', zh: '电话' },
+  'Privacy Policy': { es: 'Política de privacidad', zh: '隐私政策' },
   'Email': { es: 'Correo electrónico', zh: '电子邮箱' },
   'Insurance': { es: 'Seguro médico', zh: '医疗保险' },
   'Member ID': { es: 'Número de miembro', zh: '会员编号' },
@@ -192,6 +193,8 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
     specialty: /_ortho$/.test(x.service || '') ? 'ortho' : 'spine',
     accurate: false,
     contact: false,
+    // Optional texting consent: unchecked by default, never required (lib/consent.js SMS_CONSENT).
+    sms: false,
   }));
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
@@ -236,7 +239,7 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
     const now = new Date().toISOString();
     const demographics = { ...d, firstName, lastName, dob: form.dob, phone, email, insuranceProvider, memberId, visitReason: 'Appointment request from the website form' };
     const chiefComplaint = { ...(data.chiefComplaint || {}), mainReason: problem };
-    const consent = { ...(data.consent || {}), accurate: true, contact: true, signatureName: `${firstName} ${lastName}`, signedAt: now };
+    const consent = { ...(data.consent || {}), accurate: true, contact: true, sms: form.sms === true, smsAt: form.sms ? now : null, signatureName: `${firstName} ${lastName}`, signedAt: now };
     // The office calls in the language the patient chose at the top. The
     // visit type names the service (lib/service.js); on a site that serves
     // one service, another service's questionnaire lives on its own site.
@@ -376,6 +379,13 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
             <span>{consentTextVia(item, lang, tx)}</span>
           </label>
         ))}
+        <label className="flex items-start gap-3 text-sm text-gray-700 cursor-pointer">
+          <input type="checkbox" className="mt-1" checked={form.sms} onChange={(e) => setForm((f) => ({ ...f, sms: e.target.checked }))} />
+          <span>
+            {consentTextVia(SMS_CONSENT, lang, tx)}{' '}
+            <a href={SMS_CONSENT.link} target="_blank" rel="noopener noreferrer" className="underline">{t('Privacy Policy')}</a>
+          </span>
+        </label>
       </div>
 
       {error && <p className="mt-4 text-sm text-red-600" role="alert">{error}</p>}
