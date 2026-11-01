@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useIntake, useService, defaultIntakeData } from '../lib/store';
 import { useLang, makeT, tx, COMMON, LANGUAGES, isRtl } from '../lib/i18n';
-import { SAFETY_CHOICES, SERVICE_CHOICES, isExpress, isExpressLead } from '../lib/express';
-import { SERVICES, ageOn } from '../lib/service';
+import { SAFETY_CHOICES, SPECIALTY_CHOICES, serviceFor, isExpress, isExpressLead } from '../lib/express';
+import { SERVICES } from '../lib/service';
 import { belongsElsewhere, siteUrl } from '../lib/siteLock';
 import { CONSENT_ITEMS, consentTextVia } from '../lib/consent';
 import { fingerprintAnswers } from '../lib/noteFingerprint';
@@ -15,10 +15,8 @@ import FinishLater from './FinishLater';
 const LOCAL = {
   'Book a consult': { es: 'Reservar una consulta', zh: '预约咨询' },
   'This visit is for': { es: 'Esta visita es para', zh: '本次就诊是为了' },
-  'Adult: neck or back': { es: 'Adulto: cuello o espalda', zh: '成人：颈部或背部' },
-  'Child or teen: scoliosis or spine': { es: 'Niño o adolescente: escoliosis o columna', zh: '儿童或青少年：脊柱侧弯或脊柱' },
-  'Child or teen: bone, joint or injury': { es: 'Niño o adolescente: hueso, articulación o lesión', zh: '儿童或青少年：骨骼、关节或受伤' },
-  'Adult: bone, joint or injury': { es: 'Adulto: hueso, articulación o lesión', zh: '成人：骨骼、关节或受伤' },
+  'Spine: neck, back or scoliosis': { es: 'Columna: cuello, espalda o escoliosis', zh: '脊柱：颈部、背部或脊柱侧弯' },
+  'Orthopaedic: bone, joint or injury': { es: 'Ortopedia: hueso, articulación o lesión', zh: '骨科：骨骼、关节或受伤' },
   'Right now, do you have any of these: a bone or wound through the skin, a limb that is cold, pale or numb, severe pain that is getting worse quickly, or a fever with a red, hot or swollen joint?': {
     es: 'En este momento, ¿tiene alguno de estos: un hueso o una herida que atraviesa la piel, una extremidad fría, pálida o entumecida, dolor intenso que empeora rápidamente, o fiebre con una articulación roja, caliente o hinchada?',
     zh: '您现在是否有以下任何情况：骨头或伤口穿破皮肤、肢体发凉、苍白或麻木、迅速加重的剧烈疼痛，或发烧伴关节发红、发热或肿胀？',
@@ -189,8 +187,7 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
     memberId: d.memberId || '',
     problem: data.chiefComplaint?.mainReason || '',
     safety: x.safety || '',
-    service: x.service || 'adult_spine',
-    serviceTouched: !!x.service,
+    specialty: /_ortho$/.test(x.service || '') ? 'ortho' : 'spine',
     accurate: false,
     contact: false,
   }));
@@ -198,18 +195,10 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
   const [sending, setSending] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  // The date of birth moves an untouched selection between the adult and the
-  // child form of the same specialty; a choice the patient made stays.
-  useEffect(() => {
-    if (form.serviceTouched || !/^\d{4}-\d{2}-\d{2}$/.test(form.dob)) return;
-    const age = ageOn(form.dob);
-    if (Number.isNaN(age)) return;
-    const spec = SERVICES[form.service]?.specialty || 'spine';
-    const want = `${age < 18 ? 'peds' : 'adult'}_${spec}`;
-    if (want !== form.service) setForm((f) => ({ ...f, service: want }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.dob]);
-  const specialty = SERVICES[form.service]?.specialty || 'spine';
+  // The specialty is the patient's choice; the date of birth decides the
+  // adult or the child form (lib/express.js serviceFor).
+  const specialty = form.specialty === 'ortho' ? 'ortho' : 'spine';
+  const serviceKey = serviceFor(specialty, form.dob);
   const safetyQuestion = specialty === 'ortho'
     ? 'Right now, do you have any of these: a bone or wound through the skin, a limb that is cold, pale or numb, severe pain that is getting worse quickly, or a fever with a red, hot or swollen joint?'
     : 'Right now, do you have any of these: new trouble controlling your bladder or bowels, numbness around the groin or inner thighs, weakness that is getting worse quickly, or a fever with back pain?';
@@ -249,7 +238,7 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
     // The office calls in the language the patient chose at the top. The
     // visit type names the service (lib/service.js); on a site that serves
     // one service, another service's questionnaire lives on its own site.
-    const svc = SERVICES[form.service] || SERVICES.adult_spine;
+    const svc = SERVICES[serviceKey] || SERVICES.adult_spine;
     const service = { patient: svc.patient, specialty: svc.specialty, key: svc.key, how: 'manual' };
     const elsewhere = belongsElsewhere(svc.key);
     const nextUrl = elsewhere ? siteUrl(svc.key, `?lang=${encodeURIComponent(lang)}`) : '';
@@ -307,14 +296,14 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
         <div className="sm:col-span-2">
           <p className="form-label" id="x-service">{t('This visit is for')}</p>
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="x-service">
-            {SERVICE_CHOICES.map((c) => (
+            {SPECIALTY_CHOICES.map((c) => (
               <button
                 key={c.key}
                 type="button"
                 role="radio"
-                aria-checked={form.service === c.key}
-                onClick={() => setForm((f) => ({ ...f, service: c.key, serviceTouched: true }))}
-                className={`chip ${form.service === c.key ? 'chip-selected' : 'chip-unselected'}`}
+                aria-checked={form.specialty === c.key}
+                onClick={() => setForm((f) => ({ ...f, specialty: c.key }))}
+                className={`chip ${form.specialty === c.key ? 'chip-selected' : 'chip-unselected'}`}
               >
                 {t(c.label)}
               </button>
