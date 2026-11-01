@@ -6,6 +6,8 @@ import { emailConfigured, sendEmail, isEmail } from '../../../lib/server/email';
 import { getApiKey, practiceHubConfigured } from '../../../lib/server/practicehub';
 import crypto from 'node:crypto';
 import { SITES } from '../../../lib/siteLock';
+import { intakeEmail } from '../../../lib/server/intakeEmail';
+import { PRACTICE } from '../../../lib/deploymentTier';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,16 +30,6 @@ function siteUrl(request) {
  * the practice's own intake sites (lib/siteLock.js), replaces the finish-later
  * link in the message when the questionnaire lives on another site.
  */
-const MESSAGES = {
-  draft: {
-    subject: 'Your link to finish your spine intake form',
-    text: (url) => `Here is the link to pick up your spine intake form where you left off:\n\n${url}\n\nIt works for 30 days and opens the answers you have given so far, so please do not forward it. Any records you attached stay on the device you added them from; you can attach them again or bring them to your visit.\n\nIf you did not ask for this link, you can ignore this message.`,
-  },
-  express: {
-    subject: "Welcome from Dr. Aaron Wey's office: your pre-visit questionnaire",
-    text: (url) => `Welcome to our practice, and thank you for contacting Dr. Aaron Wey's office. We look forward to meeting you. The office will contact you within 24 to 48 hours to schedule your appointment.\n\nIn the meantime, please complete your pre-visit questionnaire using the secure link below. It takes about 15 minutes, saves as you go, can be finished on a phone, tablet or computer, and really helps our team prepare for your visit:\n\n${url}\n\nThe link works for 30 days and opens the answers you have already given, so please do not forward it.\n\nThis email was sent automatically; please do not reply to it. For any question before we call, call our office at (201) 836-1663. If you did not ask for this link, you can ignore this message.\n\nDr. Aaron Wey's office\nAdult and Pediatric Spine Surgery\n870 Palisade Ave, Teaneck, NJ 07666\n(201) 836-1663`,
-  },
-};
 /** Practice Hub saves phone-intake drafts with the shared service key; those are not rate-limited by IP. */
 async function fromPracticeHub(request) {
   const auth = request.headers.get('authorization') || '';
@@ -84,8 +76,21 @@ export async function POST(request) {
       else if (!emailConfigured()) emailError = 'not-configured';
       else {
         try {
-          const message = MESSAGES[body.purpose === 'express' ? 'express' : 'draft'];
-          await sendEmail({ to, subject: message.subject, text: message.text(next || url) });
+          // The letter Practice Hub sends, in the patient's language: the welcome
+          // after the Book a consult form, or the finish-later link.
+          const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          const mail = intakeEmail({
+            url: next || url,
+            expires: `${String(expires.getUTCMonth() + 1).padStart(2, '0')}/${String(expires.getUTCDate()).padStart(2, '0')}/${expires.getUTCFullYear()}`,
+            patientFirstName: String(intake.demographics?.firstName || ''),
+            isMinor: /^peds_/.test(String(intake.service?.key || intake.express?.service || '')),
+            officePhone: PRACTICE.officePhone,
+            logoUrl: `${siteUrl(request)}/icons/holyname-logo.png`,
+            lang: intake.language || null,
+            occasion: body.purpose === 'express' ? 'express' : 'resume',
+            siteLink: !!next,
+          });
+          await sendEmail({ to, subject: mail.subject, text: mail.text, html: mail.html });
           emailed = true;
         } catch (err) {
           logError('draft.email_failed', err);
