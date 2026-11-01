@@ -15,8 +15,10 @@ import FinishLater from './FinishLater';
 const LOCAL = {
   'Book a consult': { es: 'Reservar una consulta', zh: '预约咨询' },
   'This visit is for': { es: 'Esta visita es para', zh: '本次就诊是为了' },
-  'Spine: neck, back or scoliosis': { es: 'Columna: cuello, espalda o escoliosis', zh: '脊柱：颈部、背部或脊柱侧弯' },
-  'Orthopaedic: bone, joint or injury': { es: 'Ortopedia: hueso, articulación o lesión', zh: '骨科：骨骼、关节或受伤' },
+  'Spine': { es: 'Columna', zh: '脊柱' },
+  'Neck or back problem, scoliosis': { es: 'Problema de cuello o espalda, escoliosis', zh: '颈部或背部问题、脊柱侧弯' },
+  'Orthopaedic': { es: 'Ortopedia', zh: '骨科' },
+  'Bone, joint, or injury, not spine': { es: 'Hueso, articulación o lesión, no de la columna', zh: '骨骼、关节或受伤，非脊柱' },
   'Right now, do you have any of these: a bone or wound through the skin, a limb that is cold, pale or numb, severe pain that is getting worse quickly, or a fever with a red, hot or swollen joint?': {
     es: 'En este momento, ¿tiene alguno de estos: un hueso o una herida que atraviesa la piel, una extremidad fría, pálida o entumecida, dolor intenso que empeora rápidamente, o fiebre con una articulación roja, caliente o hinchada?',
     zh: '您现在是否有以下任何情况：骨头或伤口穿破皮肤、肢体发凉、苍白或麻木、迅速加重的剧烈疼痛，或发烧伴关节发红、发热或肿胀？',
@@ -295,19 +297,23 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <p className="form-label" id="x-service">{t('This visit is for')}</p>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="x-service">
-            {SPECIALTY_CHOICES.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                role="radio"
-                aria-checked={form.specialty === c.key}
-                onClick={() => setForm((f) => ({ ...f, specialty: c.key }))}
-                className={`chip ${form.specialty === c.key ? 'chip-selected' : 'chip-unselected'}`}
-              >
-                {t(c.label)}
-              </button>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-labelledby="x-service">
+            {SPECIALTY_CHOICES.map((c) => {
+              const on = form.specialty === c.key;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => setForm((f) => ({ ...f, specialty: c.key }))}
+                  className={`rounded-xl border px-4 py-3 text-center transition-colors ${on ? 'border-navy-600 bg-navy-600 text-white' : 'border-gray-300 bg-white text-navy-600 hover:border-navy-400'}`}
+                >
+                  <span className="block font-semibold">{t(c.label)}</span>
+                  <span className={`block text-sm mt-0.5 ${on ? 'text-white/85' : 'text-gray-600'}`}>{t(c.detail)}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
         <div>
