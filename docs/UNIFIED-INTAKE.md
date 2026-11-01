@@ -183,8 +183,10 @@ Older patients found the full adult spine form too long, so:
   DEFAULT on intake.aaronweymd.com (mode `simple`, set on load and kept
   across "start a new form" when the site lock is adult_spine). The spine
   site's welcome is one decision point (2026-10-31, the user's wording):
-  a short paragraph saying more detail helps and is appreciated, then two
-  cards, "Detailed form" (15 to 20 minutes) and "Short form" (5 minutes);
+  a short paragraph asking, if they have the time, for the comprehensive
+  questionnaire (it helps us prepare; take your time, describe symptoms,
+  treatments and workup), then two cards, "Comprehensive questionnaire"
+  (15 to 20 minutes) and "Quick questionnaire" (5 minutes);
   the card sets the mode and opens the first screen. The short form's
   first screen asks "Have you seen this doctor before?", which is the
   branch (a return visit gets the shorter "what has changed" path), and
