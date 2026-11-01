@@ -93,6 +93,7 @@ const STEP_OF = {
 import ProgressBar from './ProgressBar';
 import FinishLater from './FinishLater';
 import KioskGuard from './KioskGuard';
+import InviteDobGate from './InviteDobGate';
 import Welcome from './steps/Welcome';
 import Triage from './steps/Triage';
 import { PEDS_STEP_COMPONENTS } from './steps/peds';
@@ -204,6 +205,8 @@ export default function IntakeWizard() {
 
   return (
     <div className={`min-h-screen bg-cream-100${kiosk ? ' kiosk' : ''}${data.mode === 'simple' ? ' simple' : ''}`}>
+      {/* A link that may pre-fill waits for the patient's date of birth. */}
+      <InviteDobGate />
       {/* Header */}
       {showChrome && (
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">

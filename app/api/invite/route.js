@@ -23,7 +23,11 @@ export async function GET(request) {
   if (!practiceHubConfigured()) return NextResponse.json({ status: 'unknown' });
   try {
     const key = await getApiKey();
-    const query = code ? `code=${encodeURIComponent(code)}` : `token=${encodeURIComponent(token)}`;
+    // The patient's date of birth unlocks the pre-fill on links that allow it
+    // (Practice Hub never pre-fills links that were sent by text).
+    const dob = url.searchParams.get('dob') || '';
+    const dobPart = /^\d{4}-\d{2}-\d{2}$/.test(dob) ? `&dob=${encodeURIComponent(dob)}` : '';
+    const query = (code ? `code=${encodeURIComponent(code)}` : `token=${encodeURIComponent(token)}`) + dobPart;
     const res = await fetch(`${practiceHubUrl()}/api/intake/invite?${query}`, {
       headers: { Authorization: `Bearer ${key}` },
       cache: 'no-store',
