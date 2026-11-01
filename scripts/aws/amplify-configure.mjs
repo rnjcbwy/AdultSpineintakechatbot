@@ -11,6 +11,9 @@
 //   - the environment variables (bucket, worker, model ids, Practice Hub URL)
 //   - the branch framework and stage
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 const arg = (name, d) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -36,8 +39,15 @@ const role = outputs.ComputeRoleArn;
 console.log(`Stack ${stack}: bucket ${outputs.SubmissionsBucket}, worker ${outputs.WorkerFunctionName}`);
 console.log(`Attaching compute role ${role} and ${Object.keys(env).length} environment variables to app ${appId}`);
 
-const envArg = Object.entries(env).map(([k, v]) => `${k}=${v}`).join(',');
-aws(['amplify', 'update-app', '--app-id', appId, '--platform', 'WEB_COMPUTE', '--compute-role-arn', role, '--environment-variables', envArg]);
+// As a JSON file, not the CLI's k=v shorthand: values such as the sender name
+// ("Dr. Aaron Wey's office <...>") carry characters the shorthand cannot.
+const envFile = path.join(os.tmpdir(), `amplify-env-${appId}.json`);
+fs.writeFileSync(envFile, JSON.stringify(env));
+try {
+  aws(['amplify', 'update-app', '--app-id', appId, '--platform', 'WEB_COMPUTE', '--compute-role-arn', role, '--environment-variables', `file://${envFile}`]);
+} finally {
+  fs.rmSync(envFile, { force: true });
+}
 aws(['amplify', 'update-branch', '--app-id', appId, '--branch-name', branch, '--framework', 'Next.js - SSR', '--stage', 'PRODUCTION']);
 
 const app = JSON.parse(aws(['amplify', 'get-app', '--app-id', appId])).app;
