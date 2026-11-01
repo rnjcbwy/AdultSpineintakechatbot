@@ -1,5 +1,5 @@
-// Step id -> component for the short adult spine form (lib/simple.js).
-// Merged into the wizard's map; lib/services/spine/flow.js decides the order.
+// Step id -> component for the quick questionnaire (lib/simple.js).
+// Merged into the wizard's map; lib/flows.js decides the order.
 import SimpleBasics from './SimpleBasics';
 import SimpleStory from './SimpleStory';
 import SimpleQuestions from './SimpleQuestions';

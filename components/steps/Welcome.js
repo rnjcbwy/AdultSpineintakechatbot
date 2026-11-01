@@ -5,6 +5,7 @@ import { lockedSpecialty, otherAdultSite, pedsSiteFor } from '../../lib/siteLock
 import { useState } from 'react';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
+import { simpleStart } from '../../lib/simple';
 import { LANGUAGES, translateDeep, useLang } from '../../lib/i18n';
 
 const T = {
@@ -258,7 +259,7 @@ function KneeLogo() {
 export default function Welcome({ onNext }) {
   const { data, resetIntake, setLanguage, setNested, kiosk } = useIntake();
   // The short form or the detailed one (lib/simple.js); the choice survives a reset.
-  const setMode = (mode) => { setNested('mode', mode); if (mode === 'simple') { setNested('service', { patient: 'adult', specialty: 'spine', key: 'adult_spine', how: 'site' }); setNested('triage.who', 'Myself'); } };
+  const setMode = (mode) => { setNested('mode', mode); if (mode === 'simple') for (const [path, value] of Object.entries(simpleStart())) setNested(path, value); };
   const hasExisting = data.lastUpdated && data.demographics?.firstName;
   // The clinic tablet: a code the office read out opens a form sent from the chart.
   const [codeOpen, setCodeOpen] = useState(false);
@@ -291,9 +292,9 @@ export default function Welcome({ onNext }) {
   const simple = data.mode === 'simple';
   // A one-service site (lib/siteLock.js) has its own title, mark and links.
   const lockSpec = lockedSpecialty();
-  // The spine site's welcome is the one decision point: the detailed form or
-  // the short one, as two cards. Neither mode shows the old switch link.
-  const chooser = lockSpec === 'spine' && !fracture;
+  // An adult site's welcome is the one decision point: the comprehensive
+  // questionnaire or the quick one, as two cards. Neither mode shows the old switch link.
+  const chooser = (lockSpec === 'spine' || lockSpec === 'ortho') && !fracture;
   const canSwitch = false;
 
   // Start the chosen form: the mode is set, then straight into the first
@@ -325,10 +326,10 @@ export default function Welcome({ onNext }) {
         </div>
 
         <h1 className="font-serif text-[2rem] md:text-[2.6rem] leading-tight font-semibold text-navy-600 mb-3">
-          {fracture ? t.fxTitle : simple ? t.simpleTitle : lockSpec === 'spine' ? t.spineTitle : lockSpec === 'ortho' ? t.orthoTitle : t.title}
+          {fracture ? t.fxTitle : lockSpec === 'ortho' ? t.orthoTitle : simple ? t.simpleTitle : lockSpec === 'spine' ? t.spineTitle : t.title}
         </h1>
         <p className="text-base md:text-lg text-gray-500 leading-relaxed max-w-md mx-auto mb-7">
-          {fracture ? t.fxSubtitle : chooser ? t.spineSubtitle : simple ? t.simpleSubtitle : lockSpec === 'spine' ? t.spineSubtitle : lockSpec === 'ortho' ? t.orthoSubtitle : t.subtitle}
+          {fracture ? t.fxSubtitle : chooser ? (lockSpec === 'ortho' ? t.orthoSubtitle : t.spineSubtitle) : simple ? t.simpleSubtitle : lockSpec === 'spine' ? t.spineSubtitle : lockSpec === 'ortho' ? t.orthoSubtitle : t.subtitle}
         </p>
 
         {/* Language selector */}

@@ -457,11 +457,21 @@ export default function FinalReview({ onBack, onGoToStep }) {
             title="A few questions"
             onEdit={() => go('simple-questions')}
             items={[
-              { label: 'Numbness or tingling', value: t(data.hpiData?.overall?.numbness === 'yes' ? 'Yes' : 'No') },
-              { label: 'Weakness', value: t(data.hpiData?.overall?.weakness === 'yes' ? 'Yes' : 'No') },
-              { label: 'Trouble walking', value: t(data.hpiData?.overall?.gaitChanges === 'yes' ? 'Yes' : 'No') },
-              { label: 'Bladder or bowel trouble', value: t(data.hpiData?.overall?.bowelBladder === 'yes' ? 'Yes' : 'No') },
-              { label: 'Spine surgery before', value: data.simple?.priorSurgery === 'Yes' ? data.simple?.priorSurgeryText || t('Yes') : t('No') },
+              ...(service.specialty === 'ortho'
+                ? [
+                  { label: 'Numbness or tingling', value: t(data.hpiData?.overall?.numbness === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Weakness', value: t(data.hpiData?.overall?.weakness === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Hot, red, swollen joint or fever', value: t(data.hpiData?.overall?.hotJoint === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Calf swelling or shortness of breath', value: t(data.hpiData?.overall?.dvtSymptoms === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Surgery on this area before', value: data.simple?.priorSurgery === 'Yes' ? data.simple?.priorSurgeryText || t('Yes') : t('No') },
+                ]
+                : [
+                  { label: 'Numbness or tingling', value: t(data.hpiData?.overall?.numbness === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Weakness', value: t(data.hpiData?.overall?.weakness === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Trouble walking', value: t(data.hpiData?.overall?.gaitChanges === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Bladder or bowel trouble', value: t(data.hpiData?.overall?.bowelBladder === 'yes' ? 'Yes' : 'No') },
+                  { label: 'Spine surgery before', value: data.simple?.priorSurgery === 'Yes' ? data.simple?.priorSurgeryText || t('Yes') : t('No') },
+                ]),
               ...(data.visit?.workInjury && data.visit.workInjury !== 'No' ? [{ label: 'Claim', value: t(data.visit.workInjury) }] : []),
               ...((data.simple?.tried || []).length ? [{ label: 'Already tried', value: data.simple.tried.map((x) => t(x)).join(', ') }] : []),
             ]}
@@ -561,7 +571,8 @@ export default function FinalReview({ onBack, onGoToStep }) {
           />
         )}
 
-        {(has('chief-complaint') || !!String(data.chiefComplaint?.mainReason || '').trim()) && (
+        {/* The quick questionnaire's story card already shows the main concern. */}
+        {!has('simple-story') && (has('chief-complaint') || !!String(data.chiefComplaint?.mainReason || '').trim()) && (
           <ReviewCard
             t={t}
             title="Your main concern"

@@ -13,7 +13,7 @@ const LOCAL = {
 };
 
 /**
- * The short form's review of systems: the spine screen list (the same
+ * The quick questionnaire's review of systems: the service's screen list (the same
  * questions the full form's "short list" asks) as big buttons, plus "None of
  * these". A tap stores 'yes' exactly where the full review would, so the note
  * and Practice Hub read it as an ordinary screening review (mode 'screen').

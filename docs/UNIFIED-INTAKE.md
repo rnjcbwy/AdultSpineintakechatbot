@@ -297,3 +297,29 @@ Older patients found the full adult spine form too long, so:
 - Every patient-facing string goes through `t()`; the Spanish and Chinese
   dictionaries are inline, the other nine come from `scripts/translate-ui.mjs`.
 - Do not run `next build` while the dev server is running (it wipes `.next`).
+
+## The quick questionnaire on the orthopaedic site (2026-10-31)
+
+- The welcome of BOTH adult sites is the same decision point: a paragraph
+  asking, if the patient has the time, for the "Comprehensive Pre-visit
+  Questionnaire" (a filled card with a Recommended tag) and a smaller
+  "Quick Questionnaire" box. `components/steps/Welcome.js` `chooser` is true
+  for a spine or ortho lock; `lib/simple.js simpleByDefault()` makes the
+  quick questionnaire the default on both; `simpleStart()` sets the locked
+  service, not adult_spine.
+- The quick questionnaire's steps are in `lib/flows.js` (`SIMPLE_FLOWS`,
+  labels in `STEP_LABELS`), the same for every adult service; the spine
+  `flow.js` no longer carries them.
+- What differs by service (`lib/simple.js`): the places (spine areas, or
+  `ORTHO_SIMPLE_AREAS` joints plus a side, folded by `orthoRegions` into
+  the sided ids the comprehensive form stores, e.g. right-knee), the safety
+  questions (`SIMPLE_SAFETY`: spine asks walking and bladder or bowel;
+  ortho asks a hot, red, swollen joint or fever and calf swelling or
+  shortness of breath, stored as hpiData.overall.hotJoint / dvtSymptoms so
+  the red flags and the screening review pick them up), the surgery
+  question ("on this joint or area", stored with isSpineSurgery false and
+  the joints as bodyRegion) and the treatments ("Brace, splint or boot" ->
+  braces.tried in place of the chiropractor). The ortho note prompt got
+  the same listPending and accident-without-lawsuit lines as the spine one.
+- The review hides the comprehensive form's "Your main concern" card when
+  the quick story card is present (it repeated it).
