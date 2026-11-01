@@ -1,8 +1,8 @@
 import ExpressApp from './ExpressApp';
 
 export const metadata = {
-  title: 'Request an appointment',
-  description: "Request an appointment with Dr. Aaron Wey's office. The office contacts you within 24 to 48 hours to schedule.",
+  title: 'Book a consult',
+  description: "Book a consult with Dr. Aaron Wey's office. The office contacts you within 24 to 48 hours to schedule.",
 };
 
 /**

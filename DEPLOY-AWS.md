@@ -137,10 +137,12 @@ is why.
   another device. The answers so far go to `drafts/<id>/draft.json` in the
   bucket (same KMS key), the link carries a bearer code (hash stored), it
   expires after 30 days and is deleted when the intake is submitted. Emailing
-  the link needs a verified Amazon SES identity: set `emailFrom` in
-  `cdk.json` (e.g. `"Dr. Aaron Wey's office <office@example.com>"`), verify
-  that address in SES (and move the account out of the SES sandbox so it can
-  mail any patient), then `npx cdk deploy` and re-run
+  the link needs a sender: `emailFrom` in `cdk.json` (`"Dr. Aaron Wey's
+  office <no-reply@aaronweymd.com>"`) plus, since 2026-11-01, the practice's
+  Google Workspace SMTP relay (`smtpHost`, `smtpUser`, `smtpPasswordSecret`:
+  the Secrets Manager secret `practicehub/SMTP_PASSWORD` that Practice Hub
+  also reads; Amazon refused SES production access, so SES is only the
+  fallback when `smtpUser` is empty). Then `npx cdk deploy` and re-run
   `scripts/aws/amplify-configure.mjs`. Until then the form offers the link to
   copy or to open in the patient's own mail app. The email holds the link
   only, never a name or any answer.

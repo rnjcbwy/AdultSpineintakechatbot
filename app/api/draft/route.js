@@ -5,6 +5,7 @@ import { saveDraft, loadDraft, parseCode, MAX_DRAFT_BYTES } from '../../../lib/s
 import { emailConfigured, sendEmail, isEmail } from '../../../lib/server/email';
 import { getApiKey, practiceHubConfigured } from '../../../lib/server/practicehub';
 import crypto from 'node:crypto';
+import { SITES } from '../../../lib/siteLock';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,11 +20,13 @@ function siteUrl(request) {
 /**
  * POST /api/draft — save the answers so far and get a link to finish later.
  *
- * Body: { intakeData, draft?: { id, token }, email?, purpose? }
+ * Body: { intakeData, draft?: { id, token }, email?, purpose?, nextUrl? }
  * A `draft` from an earlier save overwrites that draft (the link stays the
  * same). With `email`, the link is sent by Amazon SES when EMAIL_FROM is set;
  * the message holds the link only. `purpose: 'express'` words the message as
- * the pre-visit questionnaire that follows the website chat.
+ * the pre-visit questionnaire that follows the website form. `nextUrl`, one of
+ * the practice's own intake sites (lib/siteLock.js), replaces the finish-later
+ * link in the message when the questionnaire lives on another site.
  */
 const MESSAGES = {
   draft: {
@@ -71,6 +74,8 @@ export async function POST(request) {
     const saved = (await saveDraft(intake, existing)) || (await saveDraft(intake, null));
     const code = `${saved.id}.${saved.token}`;
     const url = `${siteUrl(request)}/?resume=${code}`;
+    const wanted = String(body.nextUrl || '');
+    const next = Object.values(SITES).some((s) => wanted === s || wanted.startsWith(`${s}/`)) ? wanted : '';
     let emailed = false;
     let emailError = null;
     const to = String(body.email || '').trim();
@@ -80,7 +85,7 @@ export async function POST(request) {
       else {
         try {
           const message = MESSAGES[body.purpose === 'express' ? 'express' : 'draft'];
-          await sendEmail({ to, subject: message.subject, text: message.text(url) });
+          await sendEmail({ to, subject: message.subject, text: message.text(next || url) });
           emailed = true;
         } catch (err) {
           logError('draft.email_failed', err);
@@ -89,7 +94,7 @@ export async function POST(request) {
       }
     }
     logEvent('draft.saved', { draftId: saved.id, refreshed: !!existing, emailed, source: trusted ? String(body.source || 'practicehub').slice(0, 20) : 'patient' });
-    return NextResponse.json({ id: saved.id, token: saved.token, url, emailed, emailError, emailAvailable: emailConfigured() });
+    return NextResponse.json({ id: saved.id, token: saved.token, url, next: next || null, emailed, emailError, emailAvailable: emailConfigured() });
   } catch (err) {
     logError('draft.save_failed', err);
     return NextResponse.json({ error: 'Could not save the draft. Please try again in a moment.' }, { status: 500 });

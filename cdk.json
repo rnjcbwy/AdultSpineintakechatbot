@@ -17,6 +17,9 @@
     "@aws-cdk/aws-iam:minimizePolicies": true,
     "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
     "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": true,
-    "emailFrom": "Dr. Aaron Wey's office <no-reply@aaronweymd.com>"
+    "emailFrom": "Dr. Aaron Wey's office <no-reply@aaronweymd.com>",
+    "smtpHost": "smtp-relay.gmail.com",
+    "smtpUser": "admin@aaronweymd.com",
+    "smtpPasswordSecret": "practicehub/SMTP_PASSWORD"
   }
 }

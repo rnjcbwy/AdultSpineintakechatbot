@@ -46,8 +46,13 @@ class SpineIntakeStack extends cdk.Stack {
     const practiceHubUrl = ctx('practiceHubUrl', '');
     const practiceHubSecretName = ctx('practiceHubSecretName', 'practicehub/INTAKE_API_KEY');
     const practiceHubKmsKeyArn = ctx('practiceHubKmsKeyArn', '');
-    // A verified SES identity for emailing finish-later links; empty = not sent.
+    // The sender for emailed links; empty = not sent. With smtpUser set the
+    // mail goes through the practice's Google Workspace relay (the password is
+    // the Secrets Manager secret Practice Hub also reads); otherwise Amazon SES.
     const emailFrom = ctx('emailFrom', '');
+    const smtpHost = ctx('smtpHost', 'smtp-relay.gmail.com');
+    const smtpUser = ctx('smtpUser', '');
+    const smtpPasswordSecretName = ctx('smtpPasswordSecret', 'practicehub/SMTP_PASSWORD');
     const allowedOrigins = ctx('allowedOrigins', ['http://localhost:3000']);
     const noteModelId = ctx('noteModelId', 'us.anthropic.claude-opus-4-6-v1');
     const chatModelId = ctx('chatModelId', 'us.anthropic.claude-sonnet-4-6');
@@ -91,6 +96,7 @@ class SpineIntakeStack extends cdk.Stack {
 
     // ---- Practice Hub service key (owned by the Practice Hub stack) -----
     const practiceHubSecret = secretsmanager.Secret.fromSecretNameV2(this, 'PracticeHubKey', practiceHubSecretName);
+    const smtpSecret = smtpUser ? secretsmanager.Secret.fromSecretNameV2(this, 'SmtpPassword', smtpPasswordSecretName) : null;
 
     const runtimeEnv = {
       NODE_ENV: 'production',
@@ -106,10 +112,11 @@ class SpineIntakeStack extends cdk.Stack {
       // "Finish later" links are emailed from this verified SES identity.
       // Empty: the form offers the link to copy or to open in a mail app.
       ...(emailFrom ? { EMAIL_FROM: emailFrom } : {}),
+      ...(emailFrom && smtpUser ? { SMTP_HOST: smtpHost, SMTP_USER: smtpUser, SMTP_PASSWORD_SECRET_ID: smtpPasswordSecretName } : {}),
     };
 
     // The web tier emails finish-later links (a link only, no health data).
-    const sesPolicy = emailFrom
+    const sesPolicy = emailFrom && !smtpUser
       ? new iam.PolicyStatement({ actions: ['ses:SendEmail', 'ses:SendRawEmail'], resources: ['*'] })
       : null;
 
@@ -174,6 +181,7 @@ class SpineIntakeStack extends cdk.Stack {
     key.grantEncryptDecrypt(computeRole);
     computeRole.addToPolicy(bedrockPolicy);
     practiceHubSecret.grantRead(computeRole);
+    if (smtpSecret) smtpSecret.grantRead(computeRole);
     if (practiceHubKmsPolicy) computeRole.addToPolicy(practiceHubKmsPolicy);
     if (sesPolicy) computeRole.addToPolicy(sesPolicy);
     worker.grantInvoke(computeRole);

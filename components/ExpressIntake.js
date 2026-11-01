@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useIntake, useService, defaultIntakeData } from '../lib/store';
 import { useLang, makeT, tx, COMMON, LANGUAGES, isRtl } from '../lib/i18n';
-import { SAFETY_CHOICES, isExpress, isExpressLead } from '../lib/express';
+import { SAFETY_CHOICES, SERVICE_CHOICES, isExpress, isExpressLead } from '../lib/express';
+import { SERVICES, ageOn } from '../lib/service';
+import { belongsElsewhere, siteUrl } from '../lib/siteLock';
 import { CONSENT_ITEMS, consentTextVia } from '../lib/consent';
 import { fingerprintAnswers } from '../lib/noteFingerprint';
 import { submitIntake, finalizeSubmission, pollStatus } from '../lib/submitClient';
@@ -11,7 +13,16 @@ import { IS_PRODUCTION_TIER, PRACTICE } from '../lib/deploymentTier';
 import FinishLater from './FinishLater';
 
 const LOCAL = {
-  'Request an appointment': { es: 'Solicitar una cita', zh: '预约就诊' },
+  'Book a consult': { es: 'Reservar una consulta', zh: '预约咨询' },
+  'This visit is for': { es: 'Esta visita es para', zh: '本次就诊是为了' },
+  'Adult: neck or back': { es: 'Adulto: cuello o espalda', zh: '成人：颈部或背部' },
+  'Child or teen: scoliosis or spine': { es: 'Niño o adolescente: escoliosis o columna', zh: '儿童或青少年：脊柱侧弯或脊柱' },
+  'Child or teen: bone, joint or injury': { es: 'Niño o adolescente: hueso, articulación o lesión', zh: '儿童或青少年：骨骼、关节或受伤' },
+  'Adult: bone, joint or injury': { es: 'Adulto: hueso, articulación o lesión', zh: '成人：骨骼、关节或受伤' },
+  'Right now, do you have any of these: a bone or wound through the skin, a limb that is cold, pale or numb, severe pain that is getting worse quickly, or a fever with a red, hot or swollen joint?': {
+    es: 'En este momento, ¿tiene alguno de estos: un hueso o una herida que atraviesa la piel, una extremidad fría, pálida o entumecida, dolor intenso que empeora rápidamente, o fiebre con una articulación roja, caliente o hinchada?',
+    zh: '您现在是否有以下任何情况：骨头或伤口穿破皮肤、肢体发凉、苍白或麻木、迅速加重的剧烈疼痛，或发烧伴关节发红、发热或肿胀？',
+  },
   "Dr. Aaron Wey's office": { es: 'Consultorio del Dr. Aaron Wey', zh: 'Aaron Wey 医生诊室' },
   'Language': { es: 'Idioma', zh: '语言' },
   'First name': { es: 'Nombre', zh: '名' },
@@ -81,7 +92,7 @@ const SAFETY_DICT = {
  * "we will contact you" screen that leads into the full pre-visit
  * questionnaire. The languages sit as buttons above the form so a patient
  * sees their own language at once. Lives at /express; opened from every
- * "Request an Appointment" button on the practice website in a slide-over
+ * "Book Consult" button on the practice website in a slide-over
  * panel, or on its own. State is the shared intake store, so the answers
  * carry straight into the questionnaire.
  */
@@ -119,9 +130,9 @@ export default function ExpressIntake() {
         <div className={`mx-auto px-4 ${embedded ? 'max-w-xl py-3' : 'max-w-2xl py-4'}`}>
           {/* Inside the website panel the panel's own header carries the title. */}
           {embedded
-            ? <h1 className="sr-only">{t('Request an appointment')}</h1>
+            ? <h1 className="sr-only">{t('Book a consult')}</h1>
             : <div className="mb-3">
-                <h1 className="text-base font-semibold text-navy-600 leading-tight">{t('Request an appointment')}</h1>
+                <h1 className="text-base font-semibold text-navy-600 leading-tight">{t('Book a consult')}</h1>
                 <p className="text-xs text-gray-400">{t("Dr. Aaron Wey's office")} · {PRACTICE.surgeon}</p>
               </div>}
           <nav aria-label={t('Language')} className="flex flex-wrap gap-1.5">
@@ -178,12 +189,30 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
     memberId: d.memberId || '',
     problem: data.chiefComplaint?.mainReason || '',
     safety: x.safety || '',
+    service: x.service || 'adult_spine',
+    serviceTouched: !!x.service,
     accurate: false,
     contact: false,
   }));
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // The date of birth moves an untouched selection between the adult and the
+  // child form of the same specialty; a choice the patient made stays.
+  useEffect(() => {
+    if (form.serviceTouched || !/^\d{4}-\d{2}-\d{2}$/.test(form.dob)) return;
+    const age = ageOn(form.dob);
+    if (Number.isNaN(age)) return;
+    const spec = SERVICES[form.service]?.specialty || 'spine';
+    const want = `${age < 18 ? 'peds' : 'adult'}_${spec}`;
+    if (want !== form.service) setForm((f) => ({ ...f, service: want }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.dob]);
+  const specialty = SERVICES[form.service]?.specialty || 'spine';
+  const safetyQuestion = specialty === 'ortho'
+    ? 'Right now, do you have any of these: a bone or wound through the skin, a limb that is cold, pale or numb, severe pain that is getting worse quickly, or a fever with a red, hot or swollen joint?'
+    : 'Right now, do you have any of these: new trouble controlling your bladder or bowels, numbness around the groin or inner thighs, weakness that is getting worse quickly, or a fever with back pain?';
 
   // The same safety check the full intake runs, over what will be sent.
   const preview = useMemo(() => ({
@@ -217,9 +246,16 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
     const demographics = { ...d, firstName, lastName, dob: form.dob, phone, email, insuranceProvider, memberId, visitReason: 'Appointment request from the website form' };
     const chiefComplaint = { ...(data.chiefComplaint || {}), mainReason: problem };
     const consent = { ...(data.consent || {}), accurate: true, contact: true, signatureName: `${firstName} ${lastName}`, signedAt: now };
-    // The office calls in the language the patient chose at the top.
-    let express = { ...x, channel: 'form', safety: form.safety, callLanguage: lang, completedAt: now, phase: 'done' };
-    let intake = { ...data, demographics, chiefComplaint, consent, express, language: lang };
+    // The office calls in the language the patient chose at the top. The
+    // visit type names the service (lib/service.js); on a site that serves
+    // one service, another service's questionnaire lives on its own site.
+    const svc = SERVICES[form.service] || SERVICES.adult_spine;
+    const service = { patient: svc.patient, specialty: svc.specialty, key: svc.key, how: 'manual' };
+    const elsewhere = belongsElsewhere(svc.key);
+    const nextUrl = elsewhere ? siteUrl(svc.key, `?lang=${encodeURIComponent(lang)}`) : '';
+    let express = { ...x, channel: 'form', safety: form.safety, callLanguage: lang, service: svc.key, completedAt: now, phase: 'done' };
+    let intake = { ...data, demographics, chiefComplaint, consent, express, service, language: lang };
+    if (!elsewhere) setNested('service', service);
     setSection('demographics', demographics);
     setSection('chiefComplaint', chiefComplaint);
     setSection('consent', consent);
@@ -234,10 +270,10 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
         // the lead note can say whether the email went out. The link only
         // ever travels to the patient: the submission carries the outcome,
         // never the link itself.
-        const sent = await saveQuestionnaireLink(continuationOf(intake, null), draft, email).catch(() => null);
+        const sent = await saveQuestionnaireLink(continuationOf(intake, null), draft, email, nextUrl).catch(() => null);
         if (sent) {
           draft = { id: sent.id, token: sent.token };
-          setNested('draft', { id: sent.id, token: sent.token, url: sent.url, savedAt: now });
+          setNested('draft', { id: sent.id, token: sent.token, url: nextUrl || sent.url, savedAt: now });
           express = { ...express, linkEmailed: !!sent.emailed, linkEmailError: sent.emailed ? '' : (sent.emailError || '') };
         } else {
           express = { ...express, linkEmailed: false, linkEmailError: 'save-failed' };
@@ -268,6 +304,23 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
   return (
     <form className="animate-fade-in card" onSubmit={submit} noValidate>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <p className="form-label" id="x-service">{t('This visit is for')}</p>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="x-service">
+            {SERVICE_CHOICES.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                role="radio"
+                aria-checked={form.service === c.key}
+                onClick={() => setForm((f) => ({ ...f, service: c.key, serviceTouched: true }))}
+                className={`chip ${form.service === c.key ? 'chip-selected' : 'chip-unselected'}`}
+              >
+                {t(c.label)}
+              </button>
+            ))}
+          </div>
+        </div>
         <div>
           <label className="form-label" htmlFor="x-first">{t('First name')}</label>
           <input id="x-first" type="text" value={form.firstName} onChange={set('firstName')} autoComplete="given-name" />
@@ -301,7 +354,7 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
           <textarea id="x-problem" rows={4} value={form.problem} onChange={set('problem')} maxLength={2000} />
         </div>
         <div className="sm:col-span-2">
-          <p className="form-label" id="x-safety">{t('Right now, do you have any of these: new trouble controlling your bladder or bowels, numbness around the groin or inner thighs, weakness that is getting worse quickly, or a fever with back pain?')}</p>
+          <p className="form-label" id="x-safety">{t(safetyQuestion)}</p>
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="x-safety">
             {SAFETY_CHOICES.map((c) => (
               <button
@@ -375,11 +428,11 @@ function continuationOf(data, leadId) {
  * given) and, with `email`, sends the link to the patient. Resolves to the
  * draft route's answer: { id, token, url, emailed, emailError }.
  */
-async function saveQuestionnaireLink(intake, draft, email) {
+async function saveQuestionnaireLink(intake, draft, email, nextUrl) {
   const res = await fetch('/api/draft', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ intakeData: intake, draft: draft || undefined, email: email || undefined, purpose: 'express' }),
+    body: JSON.stringify({ intakeData: intake, draft: draft || undefined, email: email || undefined, purpose: 'express', nextUrl: nextUrl || undefined }),
   });
   const r = await res.json();
   if (!res.ok || !r.url) throw new Error(r.error || 'save failed');
@@ -395,6 +448,8 @@ function DoneScreen({ data, t, lang, embedded, setNested, dispatch, resetIntake 
   const [error, setError] = useState('');
   const urgent = x.safety === 'yes' || (data.redFlags || []).some((f) => f.severity === 'urgent');
   const link = data.draft?.url || '';
+  // The questionnaire for another service lives on that service's own site.
+  const elsewhere = belongsElsewhere(x.service);
 
   const copy = async () => {
     try {
@@ -406,6 +461,10 @@ function DoneScreen({ data, t, lang, embedded, setNested, dispatch, resetIntake 
 
   const continueNow = async () => {
     setError('');
+    if (elsewhere && link) {
+      if (embedded) window.open(link, '_blank', 'noopener'); else window.location.href = link;
+      return;
+    }
     setOpening(true);
     try {
       const continuedAt = new Date().toISOString();
@@ -465,7 +524,7 @@ function DoneScreen({ data, t, lang, embedded, setNested, dispatch, resetIntake 
           <button type="button" onClick={continueNow} disabled={opening} className="btn-primary flex-1 disabled:opacity-60">
             {opening ? t('Opening…') : t('Continue the questionnaire')}
           </button>
-          <button type="button" onClick={() => setFinishLater(true)} className="btn-secondary flex-1">{t('Get a link to finish later')}</button>
+          {!elsewhere && <button type="button" onClick={() => setFinishLater(true)} className="btn-secondary flex-1">{t('Get a link to finish later')}</button>}
         </div>
         {error && <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>}
       </div>
