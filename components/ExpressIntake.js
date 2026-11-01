@@ -29,7 +29,7 @@ const LOCAL = {
   'Last name': { es: 'Apellido', zh: '姓' },
   'Date of birth': { es: 'Fecha de nacimiento', zh: '出生日期' },
   'Phone': { es: 'Teléfono', zh: '电话' },
-  'Privacy Policy': { es: 'Política de privacidad', zh: '隐私政策' },
+  'Texting terms': { es: 'Términos de mensajes de texto', zh: '短信条款' },
   'Email': { es: 'Correo electrónico', zh: '电子邮箱' },
   'Insurance': { es: 'Seguro médico', zh: '医疗保险' },
   'Member ID': { es: 'Número de miembro', zh: '会员编号' },
@@ -383,7 +383,7 @@ function RequestForm({ data, t, lang, setNested, setSection, setRedFlags, setSum
           <input type="checkbox" className="mt-1" checked={form.sms} onChange={(e) => setForm((f) => ({ ...f, sms: e.target.checked }))} />
           <span>
             {consentTextVia(SMS_CONSENT, lang, tx)}{' '}
-            <a href={SMS_CONSENT.link} target="_blank" rel="noopener noreferrer" className="underline">{t('Privacy Policy')}</a>
+            <a href={SMS_CONSENT.link} target="_blank" rel="noopener noreferrer" className="underline">{t('Texting terms')}</a>
           </span>
         </label>
       </div>
