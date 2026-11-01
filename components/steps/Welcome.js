@@ -1,7 +1,7 @@
 'use client';
 
 import { useIntake } from '../../lib/store';
-import { lockedSpecialty, otherAdultSite, SITES } from '../../lib/siteLock';
+import { lockedSpecialty, otherAdultSite, pedsSiteFor } from '../../lib/siteLock';
 import { useState } from 'react';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
@@ -419,8 +419,8 @@ export default function Welcome({ onNext }) {
             </p>
             <p>
               {t.under18Prefix}
-              {/* Children and teenagers start at the general pediatric orthopaedic form, whichever adult site they reached. */}
-              <a href={SITES.peds_ortho} className="font-semibold text-teal-500 underline hover:text-teal-600">{t.under18Link}</a>.
+              {/* The pediatric form for this site's specialty: spine site to the scoliosis form, orthopaedic site to the children's orthopaedic form. */}
+              <a href={pedsSiteFor(lockSpec)} className="font-semibold text-teal-500 underline hover:text-teal-600">{t.under18Link}</a>.
             </p>
           </div>
         )}
