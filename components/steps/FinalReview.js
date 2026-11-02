@@ -13,15 +13,10 @@ import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 import { CONSENT_ITEMS, consentTextVia, consentComplete, signatureDrawn } from '../../lib/consent';
 import SignaturePad from '../SignaturePad';
 import EducationOffer from '../EducationOffer';
-import ElaborateOffer from '../ElaborateOffer';
 import { GROWTH_STRINGS, MENARCHE_ONSET } from './peds/Growth';
 
 // Patient-facing UI strings for this component (display-only translation).
 const LOCAL = {
-  'What you told the office on the phone is already with them; it is joined with this form when you submit.': {
-    es: 'Lo que le dijo al consultorio por teléfono ya lo tienen; se une a este formulario cuando lo envíe.',
-    zh: '您在电话中告诉诊室的内容诊室已经收到；提交后会与本表格合并。',
-  },
   // Header
   'Review & Submit': { es: 'Revisar y enviar', zh: '审核并提交' },
   'Please review your information below. You can go back to any section to make changes. When everything looks correct, submit your intake form.': {
@@ -395,11 +390,6 @@ export default function FinalReview({ onBack, onGoToStep }) {
         <p className="section-subtitle">
           {t('Please review your information below. You can go back to any section to make changes. When everything looks correct, submit your intake form.')}
         </p>
-        {data.journey?.ref && (
-          <p className="mt-3 rounded-xl border border-teal-200 bg-teal-50/60 px-4 py-3 text-sm text-gray-700">
-            {t('What you told the office on the phone is already with them; it is joined with this form when you submit.')}
-          </p>
-        )}
       </div>
 
       {/* Red flag alerts */}
@@ -1000,9 +990,6 @@ function SubmittedView({ data, onGoToStep }) {
 
       {/* Patient education chosen for what they told us, in their language. */}
       <EducationOffer submission={sub} />
-
-      {/* Optional: tell the doctor more in their own words, on a call with a code. */}
-      <ElaborateOffer submission={sub} />
 
       {/* Red flags summary for patient */}
       {(summary.redFlags || []).filter(f => f.severity === 'urgent').length > 0 && (

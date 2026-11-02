@@ -67,14 +67,7 @@ export default function PROMs({ onNext, onBack }) {
   const proms = data.proms || {};
 
   // Determine which questionnaires to show
-  // The rest of an intake begun on the phone skips the chief-complaint step;
-  // the call's body regions (never shown) choose the questionnaires instead.
-  const applicableIds = useMemo(() => {
-    const regions = data.chiefComplaint?.symptomRegions || [];
-    const fromCall = data.journey?.regions || [];
-    const withRegions = !regions.length && fromCall.length ? { ...data, chiefComplaint: { ...(data.chiefComplaint || {}), symptomRegions: fromCall } } : data;
-    return getApplicableQuestionnaires(withRegions);
-  }, [data, getApplicableQuestionnaires]);
+  const applicableIds = useMemo(() => getApplicableQuestionnaires(data), [data, getApplicableQuestionnaires]);
 
   // Track which questionnaire is currently active
   const [activeIndex, setActiveIndex] = useState(0);

@@ -3,7 +3,6 @@
 import { useIntake } from '../../lib/store';
 import { lockedSpecialty, otherAdultSite, pedsSiteFor } from '../../lib/siteLock';
 import { useState } from 'react';
-import PhoneOffer from '../PhoneOffer';
 import { IS_PRODUCTION_TIER } from '../../lib/deploymentTier';
 
 import { simpleStart } from '../../lib/simple';
@@ -515,9 +514,6 @@ export default function Welcome({ onNext }) {
           </button>
           )}
         </div>
-
-        {/* An intake by phone with the office's assistant, or finishing one here. */}
-        {!kiosk && !fracture && <PhoneOffer />}
 
         {!IS_PRODUCTION_TIER && (
           <p className="mt-8 text-sm font-medium text-amber-600">{t.hipaa}</p>

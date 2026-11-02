@@ -95,7 +95,6 @@ import FinishLater from './FinishLater';
 import KioskGuard from './KioskGuard';
 import InviteDobGate from './InviteDobGate';
 import Welcome from './steps/Welcome';
-import JourneyStart from './steps/JourneyStart';
 import Triage from './steps/Triage';
 import { PEDS_STEP_COMPONENTS } from './steps/peds';
 import { SIMPLE_STEP_COMPONENTS } from './steps/simple';
@@ -122,7 +121,6 @@ import FinalReview from './steps/FinalReview';
 // Step id -> component. The order comes from the visit type (lib/flows.js).
 const STEP_COMPONENTS = {
   welcome: Welcome,
-  'journey-start': JourneyStart,
   triage: Triage,
   'work-injury': WorkInjury,
   'legal-injury': LegalInjury,
