@@ -18,6 +18,11 @@ const LOCAL = {
   'Allergies': { es: 'Alergias', zh: '过敏' },
   'Family history': { es: 'Antecedentes familiares', zh: '家族史' },
   'Questionnaires': { es: 'Cuestionarios', zh: '问卷' },
+  'Other symptoms': { es: 'Otros síntomas', zh: '其他症状' },
+  'Registration and signature': { es: 'Registro y firma', zh: '登记与签名' },
+  'Please check your details and sign the office\'s forms. It takes about five minutes.': { es: 'Revise sus datos y firme los formularios del consultorio. Toma unos cinco minutos.', zh: '请核对您的信息并签署诊室的表格，大约需要五分钟。' },
+  'Here is what is left of your intake.': { es: 'Esto es lo que falta de su admisión.', zh: '以下是登记还需完成的部分。' },
+  'Already done': { es: 'Ya hecho', zh: '已完成' },
 };
 
 /** What each phone-covered section is called on this screen. */
@@ -28,28 +33,34 @@ const DONE_LABELS = {
   medications: 'Medicines',
   allergies: 'Allergies',
   family: 'Family history',
+  ros: 'Other symptoms',
   proms: 'Questionnaires',
 };
 
 /**
- * The first screen of the rest of an intake begun on the phone
- * (lib/store.js startJourney): what was done on the call (names of sections
- * only) and what is left here.
+ * The first screen of the rest of an intake begun on the phone, of the rest
+ * of an unfinished one, or of the registration page alone (a code from the
+ * office; lib/store.js startJourney): what was done (names of sections only)
+ * and what is left here.
  */
 export default function JourneyStart({ onNext }) {
   const { data } = useIntake();
   const service = useService();
   const t = makeT(LOCAL, useLang());
-  const done = (data.journey?.doneSections || []).filter((id) => DONE_LABELS[id]).map((id) => DONE_LABELS[id]);
+  const registration = data.journey?.kind === 'registration';
+  const done = registration ? [] : (data.journey?.doneSections || []).filter((id) => DONE_LABELS[id]).map((id) => DONE_LABELS[id]);
+  const fromCall = (data.journey?.doneSections || []).length > 0;
   const left = stepsForVisit(data.visit?.type, service, data).filter((s) => s.id !== 'journey-start');
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
       <div className="max-w-[560px] w-full animate-fade-in">
-        <h1 className="font-serif text-[2rem] font-semibold text-navy-600 mb-2">{t('Welcome back')}</h1>
-        <p className="text-base text-gray-600 mb-6">{t('Thank you for your call. Here is what is left of your intake.')}</p>
+        <h1 className="font-serif text-[2rem] font-semibold text-navy-600 mb-2">{t(registration ? 'Registration and signature' : 'Welcome back')}</h1>
+        <p className="text-base text-gray-600 mb-6">
+          {t(registration ? 'Please check your details and sign the office\'s forms. It takes about five minutes.' : fromCall ? 'Thank you for your call. Here is what is left of your intake.' : 'Here is what is left of your intake.')}
+        </p>
         {done.length > 0 && (
           <div className="mb-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-400 mb-2">{t('Done on the phone')}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-400 mb-2">{t('Already done')}</p>
             <ul className="bg-white rounded-2xl border border-navy-100 p-2">
               {done.map((label) => (
                 <li key={label} className="flex items-center gap-3 px-4 py-2 text-gray-600">

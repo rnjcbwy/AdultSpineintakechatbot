@@ -7,9 +7,9 @@ import { belongsElsewhere, siteUrl } from '../lib/siteLock';
 
 const LOCAL = {
   'Finish your intake': { es: 'Termine su admisión', zh: '完成您的登记' },
-  'Enter the code from your phone call and the patient\'s date of birth. The parts you already did on the phone are done; you will only see what is left.': {
-    es: 'Ingrese el código de su llamada y la fecha de nacimiento del paciente. Lo que ya hizo por teléfono está listo; solo verá lo que falta.',
-    zh: '请输入通话中获得的代码和患者的出生日期。电话里已完成的部分无需重做，您只会看到剩余部分。',
+  'Enter your code (from your phone call, text or email) and the patient\'s date of birth. Anything already done is skipped; you will only see what is left.': {
+    es: 'Ingrese su código (de su llamada, mensaje de texto o correo electrónico) y la fecha de nacimiento del paciente. Lo que ya está hecho se omite; solo verá lo que falta.',
+    zh: '请输入您的代码（来自通话、短信或电子邮件）和患者的出生日期。已完成的部分会被跳过，您只会看到剩余部分。',
   },
   'Code': { es: 'Código', zh: '代码' },
   'Date of birth': { es: 'Fecha de nacimiento', zh: '出生日期' },
@@ -78,7 +78,7 @@ export default function ContinueWithCode() {
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-10">
       <form onSubmit={submit} className="card w-full max-w-md space-y-4">
         <h1 className="font-serif text-[1.8rem] font-semibold text-navy-600">{t('Finish your intake')}</h1>
-        <p className="text-gray-700">{t('Enter the code from your phone call and the patient\'s date of birth. The parts you already did on the phone are done; you will only see what is left.')}</p>
+        <p className="text-gray-700">{t('Enter your code (from your phone call, text or email) and the patient\'s date of birth. Anything already done is skipped; you will only see what is left.')}</p>
         <div>
           <label className="form-label" htmlFor="cw-code">{t('Code')}</label>
           <input
