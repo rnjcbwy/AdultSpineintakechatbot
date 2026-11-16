@@ -10,7 +10,7 @@
       "http://localhost:3000"
     ],
     "noteModelId": "us.anthropic.claude-opus-4-6-v1",
-    "chatModelId": "us.anthropic.claude-sonnet-4-6",
+    "chatModelId": "us.anthropic.claude-opus-4-6-v1",
     "createCloudTrail": true,
     "@aws-cdk/core:newStyleStackSynthesis": true,
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
